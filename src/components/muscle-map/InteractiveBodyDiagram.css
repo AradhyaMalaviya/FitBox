@@ -1,553 +1,781 @@
-/* ========================================
-   MuscleMap - Interactive Body Diagram
-   Scoped under .musclemap-root
-======================================== */
+/* ==========================================================
+   MuscleWiki Exact Layout & Theme - Scoped CSS
+   Container: .musclewiki-theme-root
+   ========================================================== */
 
-/* CSS Variables (scoped) */
-.musclemap-root {
-    --mm-bg-primary: #0a0a0f;
-    --mm-bg-secondary: #12121a;
-    --mm-bg-tertiary: #1a1a25;
-    --mm-bg-glass: rgba(255, 255, 255, 0.03);
-    --mm-bg-glass-hover: rgba(255, 255, 255, 0.06);
-    
-    --mm-text-primary: #ffffff;
-    --mm-text-secondary: rgba(255, 255, 255, 0.7);
-    --mm-text-muted: rgba(255, 255, 255, 0.4);
-    
-    --mm-accent-cyan: #00d4ff;
-    --mm-accent-cyan-glow: rgba(0, 212, 255, 0.4);
-    --mm-accent-orange: #ff6b35;
-    --mm-accent-orange-glow: rgba(255, 107, 53, 0.4);
-    --mm-accent-purple: #a855f7;
-    --mm-accent-green: #10b981;
-    
-    --mm-muscle-base: #3a3a4a;
-    --mm-muscle-hover: #00d4ff;
-    --mm-muscle-active: #ff6b35;
-    --mm-body-outline: #4a4a5a;
-    
-    --mm-border-color: rgba(255, 255, 255, 0.1);
-    --mm-border-glow: rgba(0, 212, 255, 0.3);
-    
-    --mm-radius-sm: 6px;
-    --mm-radius-md: 12px;
-    --mm-radius-lg: 20px;
-    --mm-radius-full: 9999px;
-    
-    --mm-shadow-glow-cyan: 0 0 20px var(--mm-accent-cyan-glow), 0 0 40px var(--mm-accent-cyan-glow);
-    --mm-shadow-glow-orange: 0 0 20px var(--mm-accent-orange-glow), 0 0 40px var(--mm-accent-orange-glow);
-    
-    --mm-transition-fast: 150ms ease-out;
-    --mm-transition-normal: 250ms ease-out;
-    
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    color: var(--mm-text-primary);
-    
-    /* Container background */
-    background: var(--mm-bg-primary);
-    background-image: 
-        radial-gradient(ellipse at 20% 0%, rgba(0, 212, 255, 0.08) 0%, transparent 50%),
-        radial-gradient(ellipse at 80% 100%, rgba(255, 107, 53, 0.06) 0%, transparent 50%),
-        radial-gradient(ellipse at 50% 50%, rgba(168, 85, 247, 0.04) 0%, transparent 60%);
-    border-radius: var(--mm-radius-lg);
-    overflow: hidden;
+.musclewiki-theme-root {
+  --mw-bg-stage: #0e1015;
+  --mw-bg-card: #14171f;
+  --mw-bg-card-hover: #1a1e29;
+  --mw-border-subtle: #232733;
+  --mw-border-focus: #3b82f6;
+
+  --mw-blue-card: #184c8a;
+  --mw-blue-card-hover: #1c569c;
+  --mw-switch-active: #2563eb;
+  --mw-switch-bg: rgba(0, 0, 0, 0.4);
+
+  --mw-muscle-red: #ea384c;
+  --mw-muscle-coral: #ff385c;
+  --mw-muscle-base: #4d515a;
+  --mw-muscle-stroke: #ffffff;
+
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif;
+  color: #ffffff;
+  background: var(--mw-bg-stage);
+  border-radius: 16px;
+  border: 1px solid var(--mw-border-subtle);
+  overflow: hidden;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85);
+  position: relative;
 }
 
-/* ========================================
-   Header
-======================================== */
-.musclemap-root .mm-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem 2rem;
-    background: rgba(10, 10, 15, 0.85);
-    backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--mm-border-color);
+/* ─── MAIN DUAL-PANEL LAYOUT ─── */
+.musclewiki-theme-root .mw-main-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 720px;
 }
 
-.musclemap-root .mm-logo {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+@media (min-width: 1024px) {
+  .musclewiki-theme-root .mw-main-layout {
+    flex-direction: row;
+    align-items: stretch;
+  }
 }
 
-.musclemap-root .mm-logo-icon {
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, var(--mm-accent-cyan), var(--mm-accent-purple));
-    border-radius: var(--mm-radius-md);
-    padding: 6px;
+/* ─── LEFT: ANATOMICAL DIAGRAM STAGE ─── */
+.musclewiki-theme-root .mw-diagram-stage {
+  flex: 1;
+  background: #0e1015;
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid var(--mw-border-subtle);
+  position: relative;
+  overflow: hidden;
 }
 
-.musclemap-root .mm-logo-icon svg {
-    width: 100%;
-    height: 100%;
-    stroke: white;
+@media (min-width: 1024px) {
+  .musclewiki-theme-root .mw-diagram-stage {
+    border-bottom: none;
+    border-right: 1px solid var(--mw-border-subtle);
+  }
 }
 
-.musclemap-root .mm-logo-text {
-    font-size: 1.25rem;
-    font-weight: 700;
-    background: linear-gradient(135deg, var(--mm-accent-cyan), var(--mm-accent-purple));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+.musclewiki-theme-root .mw-stage-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.85rem 1.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(14, 16, 21, 0.95);
 }
 
-.musclemap-root .mm-header-controls {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
+.musclewiki-theme-root .mw-brand-title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  color: #ffffff;
 }
 
-/* Toggle Group */
-.musclemap-root .mm-toggle-group {
-    display: flex;
-    background: var(--mm-bg-glass);
-    border: 1px solid var(--mm-border-color);
-    border-radius: var(--mm-radius-full);
-    padding: 4px;
+.musclewiki-theme-root .mw-brand-pill {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 0.15rem 0.45rem;
+  background: rgba(234, 56, 76, 0.15);
+  color: #ff5266;
+  border: 1px solid rgba(234, 56, 76, 0.3);
+  border-radius: 9999px;
 }
 
-.musclemap-root .mm-toggle-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 42px;
-    height: 42px;
-    border: none;
-    background: transparent;
-    border-radius: var(--mm-radius-full);
-    cursor: pointer;
-    transition: all var(--mm-transition-normal);
-    color: var(--mm-text-muted);
+.musclewiki-theme-root .mw-zoom-btn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: #181c26;
+  border: 1px solid #282d3d;
+  color: #94a3b8;
+  transition: all 0.15s ease;
 }
 
-.musclemap-root .mm-toggle-btn svg {
-    width: 20px;
-    height: 20px;
+.musclewiki-theme-root .mw-zoom-btn:hover {
+  background: #232938;
+  color: #ffffff;
+  border-color: #3b4254;
 }
 
-.musclemap-root .mm-toggle-btn:hover {
-    color: var(--mm-text-primary);
-    background: var(--mm-bg-glass-hover);
+/* ─── CANVAS & SIDE-BY-SIDE FIGURES ─── */
+.musclewiki-theme-root .mw-canvas-wrapper {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.5rem 1rem;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center center;
+  min-height: 580px;
 }
 
-.musclemap-root .mm-toggle-btn.active {
-    background: var(--mm-accent-cyan);
-    color: var(--mm-bg-primary);
-    box-shadow: var(--mm-shadow-glow-cyan);
+@media (min-width: 640px) {
+  .musclewiki-theme-root .mw-canvas-wrapper {
+    gap: 2.5rem;
+    padding: 2rem 1.5rem;
+  }
 }
 
-/* ========================================
-   Main Content
-======================================== */
-.musclemap-root .mm-main-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 2rem;
-    gap: 2rem;
+.musclewiki-theme-root .mw-figure-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  max-width: 320px;
 }
 
-/* Instruction Banner */
-.musclemap-root .mm-instruction-banner {
-    text-align: center;
-    padding: 1rem 2rem;
-    background: var(--mm-bg-glass);
-    border: 1px solid var(--mm-border-color);
-    border-radius: var(--mm-radius-full);
-    color: var(--mm-text-secondary);
-    font-size: 0.9rem;
+.musclewiki-theme-root .mw-figure-caption {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 0.75rem;
+  user-select: none;
 }
 
-.musclemap-root .mm-instruction-banner strong {
-    color: var(--mm-accent-cyan);
+.musclewiki-theme-root .mw-body-svg-box {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-/* ========================================
-   Body Diagram Container
-======================================== */
-.musclemap-root .mm-body-diagram-container {
-    display: flex;
-    justify-content: center;
-    gap: 3rem;
-    max-width: 1000px;
-    width: 100%;
+/* SVG Responsiveness & Muscle Styling */
+.musclewiki-theme-root .mw-body-svg-box svg {
+  width: 100% !important;
+  max-width: 280px !important;
+  height: auto !important;
+  display: block;
+  filter: drop-shadow(0 10px 25px rgba(0, 0, 0, 0.75));
 }
 
-.musclemap-root .mm-body-view {
-    flex: 1;
-    max-width: 400px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    animation: mm-fadeInUp 0.6s ease-out backwards;
+@media (min-width: 1280px) {
+  .musclewiki-theme-root .mw-body-svg-box svg {
+    max-width: 310px !important;
+  }
 }
 
-.musclemap-root .mm-body-view:nth-child(1) { animation-delay: 0.1s; }
-.musclemap-root .mm-body-view:nth-child(2) { animation-delay: 0.2s; }
-
-.musclemap-root .mm-view-label {
-    font-size: 0.85rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    color: var(--mm-text-muted);
-    margin-bottom: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+/* Muscle Part Path Hover & Transitions */
+.musclewiki-theme-root .mw-body-svg-box svg path {
+  transition: fill 0.18s ease, filter 0.18s ease, stroke-width 0.18s ease;
 }
 
-.musclemap-root .mm-view-label::before,
-.musclemap-root .mm-view-label::after {
-    content: '';
-    width: 20px;
-    height: 1px;
-    background: var(--mm-border-color);
+.musclewiki-theme-root .mw-body-svg-box svg path[id]:not([id*="outline"]):hover {
+  fill: var(--mw-muscle-coral) !important;
+  cursor: pointer;
+  filter: drop-shadow(0 0 8px rgba(255, 56, 92, 0.7));
 }
 
-.musclemap-root .mm-body-wrapper {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 1 / 1.8;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+/* ─── STAGE FOOTER & SPLIT CONTROLS ─── */
+.musclewiki-theme-root .mw-stage-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0.75rem 1.25rem;
+  background: rgba(14, 16, 21, 0.95);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.musclemap-root .mm-body-wrapper svg {
-    width: 100%;
-    height: 100%;
-    max-height: 550px;
+.musclewiki-theme-root .mw-split-pill {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  background: #181c26;
+  border: 1px solid #282d3d;
+  color: #94a3b8;
+  transition: all 0.15s ease;
 }
 
-/* ========================================
-   SVG Muscle Styling
-======================================== */
-.musclemap-root .muscle-group {
-    fill: var(--mm-muscle-base);
-    stroke: var(--mm-body-outline);
-    stroke-width: 0.5;
-    cursor: pointer;
-    transition: all var(--mm-transition-normal);
-    transform-origin: center;
+.musclewiki-theme-root .mw-split-pill:hover {
+  background: #232938;
+  color: #ffffff;
+  border-color: #3b4254;
 }
 
-.musclemap-root .muscle-group:hover,
-.musclemap-root .muscle-group.hover {
-    fill: var(--mm-muscle-hover);
-    filter: drop-shadow(0 0 8px var(--mm-accent-cyan-glow)) drop-shadow(0 0 16px var(--mm-accent-cyan-glow));
-    stroke: var(--mm-accent-cyan);
-    stroke-width: 1;
+.musclewiki-theme-root .mw-split-pill.active {
+  background: #ea384c;
+  color: #ffffff;
+  border-color: #ff5266;
+  box-shadow: 0 2px 10px rgba(234, 56, 76, 0.4);
 }
 
-.musclemap-root .muscle-group.active {
-    fill: var(--mm-muscle-active);
-    filter: drop-shadow(0 0 10px var(--mm-accent-orange-glow)) drop-shadow(0 0 20px var(--mm-accent-orange-glow));
-    stroke: var(--mm-accent-orange);
-    stroke-width: 1.5;
+.musclewiki-theme-root .mw-mini-search {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #181c26;
+  border: 1px solid #282d3d;
+  border-radius: 9999px;
+  padding: 0.25rem 0.75rem;
 }
 
-.musclemap-root .body-outline {
-    fill: none;
-    stroke: var(--mm-body-outline);
-    stroke-width: 1.5;
-    pointer-events: none;
+.musclewiki-theme-root .mw-mini-search input {
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 0.75rem;
+  color: #ffffff;
+  width: 110px;
 }
 
-.musclemap-root .body-base {
-    fill: var(--mm-bg-tertiary);
-    stroke: var(--mm-body-outline);
-    stroke-width: 1;
+.musclewiki-theme-root .mw-mini-search input::placeholder {
+  color: #64748b;
 }
 
-/* ========================================
-   Muscle Info Panel
-======================================== */
-.musclemap-root .mm-muscle-info-panel {
-    width: 100%;
-    max-width: 500px;
-    background: var(--mm-bg-glass);
-    border: 1px solid var(--mm-border-color);
-    border-radius: var(--mm-radius-lg);
-    overflow: hidden;
-    backdrop-filter: blur(10px);
-    transition: all var(--mm-transition-normal);
+/* ─── RIGHT: SIDEBAR (TOP BLUE CARD + EQUIPMENT CHECKLIST + EXERCISES) ─── */
+.musclewiki-theme-root .mw-sidebar {
+  width: 100%;
+  background: #12141a;
+  display: flex;
+  flex-direction: column;
 }
 
-.musclemap-root .mm-muscle-info-panel.active {
-    border-color: var(--mm-accent-orange);
-    box-shadow: var(--mm-shadow-glow-orange);
+@media (min-width: 1024px) {
+  .musclewiki-theme-root .mw-sidebar {
+    width: 380px;
+    max-height: 820px;
+    overflow-y: auto;
+  }
 }
 
-.musclemap-root .mm-panel-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1.5rem;
-    background: var(--mm-bg-glass);
-    border-bottom: 1px solid var(--mm-border-color);
+@media (min-width: 1280px) {
+  .musclewiki-theme-root .mw-sidebar {
+    width: 420px;
+  }
 }
 
-.musclemap-root .mm-muscle-name {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--mm-text-primary);
-    margin: 0;
+/* Scrollbar styling for sidebar */
+.musclewiki-theme-root .mw-sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+.musclewiki-theme-root .mw-sidebar::-webkit-scrollbar-track {
+  background: #12141a;
+}
+.musclewiki-theme-root .mw-sidebar::-webkit-scrollbar-thumb {
+  background: #282d3d;
+  border-radius: 3px;
+}
+.musclewiki-theme-root .mw-sidebar::-webkit-scrollbar-thumb:hover {
+  background: #3b4254;
 }
 
-.musclemap-root .mm-muscle-badge {
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    padding: 0.25rem 1rem;
-    background: var(--mm-bg-tertiary);
-    border-radius: var(--mm-radius-full);
-    color: var(--mm-text-muted);
+/* ─── TOP BLUE CONTROL CARD (Matching Screenshot) ─── */
+.musclewiki-theme-root .mw-top-control-card {
+  background: linear-gradient(135deg, #184c8a 0%, #153e72 100%);
+  margin: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  box-shadow: 0 4px 20px rgba(24, 76, 138, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
-.musclemap-root .mm-muscle-badge.front {
-    background: linear-gradient(135deg, var(--mm-accent-cyan), var(--mm-accent-purple));
-    color: white;
+.musclewiki-theme-root .mw-control-unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
 }
 
-.musclemap-root .mm-muscle-badge.back {
-    background: linear-gradient(135deg, var(--mm-accent-orange), var(--mm-accent-purple));
-    color: white;
+.musclewiki-theme-root .mw-control-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #ffffff;
+  user-select: none;
 }
 
-.musclemap-root .mm-panel-body {
-    padding: 1.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
+/* Custom Switch Toggle */
+.musclewiki-theme-root .mw-switch-toggle {
+  width: 48px;
+  height: 26px;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 9999px;
+  padding: 2px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  position: relative;
 }
 
-.musclemap-root .mm-muscle-description {
-    color: var(--mm-text-secondary);
-    line-height: 1.7;
-    margin: 0;
+.musclewiki-theme-root .mw-switch-toggle.active,
+.musclewiki-theme-root .mw-switch-toggle.active-male {
+  background: #2563eb;
+  border-color: #60a5fa;
+  box-shadow: 0 0 10px rgba(37, 99, 235, 0.5);
 }
 
-.musclemap-root .mm-exercise-count {
-    display: flex;
-    align-items: baseline;
-    gap: 0.5rem;
-    padding: 1rem;
-    background: var(--mm-bg-tertiary);
-    border-radius: var(--mm-radius-md);
+.musclewiki-theme-root .mw-switch-toggle.active-female {
+  background: #d946ef;
+  border-color: #f0abfc;
+  box-shadow: 0 0 10px rgba(217, 70, 239, 0.5);
 }
 
-.musclemap-root .mm-count-number {
-    font-size: 2.5rem;
-    font-weight: 800;
-    background: linear-gradient(135deg, var(--mm-accent-cyan), var(--mm-accent-orange));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+.musclewiki-theme-root .mw-switch-thumb {
+  width: 20px;
+  height: 20px;
+  background: #ffffff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #1e3a8a;
+  transform: translateX(0);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-.musclemap-root .mm-count-label {
-    font-size: 0.9rem;
-    color: var(--mm-text-muted);
+.musclewiki-theme-root .mw-switch-toggle.active .mw-switch-thumb,
+.musclewiki-theme-root .mw-switch-toggle.active-male .mw-switch-thumb {
+  transform: translateX(22px);
 }
 
-/* Explore Button */
-.musclemap-root .mm-explore-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 1rem 1.5rem;
-    background: linear-gradient(135deg, var(--mm-accent-cyan), var(--mm-accent-purple));
-    border: none;
-    border-radius: var(--mm-radius-md);
-    color: white;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all var(--mm-transition-normal);
-    position: relative;
-    overflow: hidden;
+.musclewiki-theme-root .mw-switch-toggle.active-female .mw-switch-thumb {
+  transform: translateX(22px);
+  color: #a21caf;
 }
 
-.musclemap-root .mm-explore-btn::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-    transition: all 0.5s ease;
+/* ─── EQUIPMENT FILTER SECTION (2-Column Grid) ─── */
+.musclewiki-theme-root .mw-equipment-section {
+  padding: 0.25rem 1rem 1rem;
+  border-bottom: 1px solid var(--mw-border-subtle);
 }
 
-.musclemap-root .mm-explore-btn:hover::before {
-    left: 100%;
+.musclewiki-theme-root .mw-equipment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.25rem 0.75rem;
+  cursor: pointer;
+  user-select: none;
 }
 
-.musclemap-root .mm-explore-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+.musclewiki-theme-root .mw-section-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.2px;
 }
 
-.musclemap-root .mm-explore-btn:not(:disabled):hover {
-    transform: translateY(-2px);
-    box-shadow: var(--mm-shadow-glow-cyan);
+.musclewiki-theme-root .mw-filter-count-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.1rem 0.4rem;
+  background: #2563eb;
+  color: #ffffff;
+  border-radius: 9999px;
 }
 
-.musclemap-root .mm-explore-btn svg {
-    width: 20px;
-    height: 20px;
-    transition: transform var(--mm-transition-normal);
+.musclewiki-theme-root .mw-collapse-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease;
 }
 
-.musclemap-root .mm-explore-btn:not(:disabled):hover svg {
-    transform: translateX(4px);
+.musclewiki-theme-root .mw-collapse-btn:hover {
+  color: #ffffff;
 }
 
-/* ========================================
-   Mobile View Toggle
-======================================== */
-.musclemap-root .mm-mobile-view-toggle {
-    display: none;
-    justify-content: center;
-    background: var(--mm-bg-secondary);
-    border: 1px solid var(--mm-border-color);
-    border-radius: var(--mm-radius-full);
-    padding: 4px;
-    margin: 0 auto 1rem;
+.musclewiki-theme-root .mw-equipment-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 1rem;
 }
 
-.musclemap-root .mm-view-toggle-btn {
-    padding: 0.5rem 1.5rem;
-    border: none;
-    background: transparent;
-    color: var(--mm-text-muted);
-    font-size: 0.9rem;
-    font-weight: 500;
-    border-radius: var(--mm-radius-full);
-    cursor: pointer;
-    transition: all var(--mm-transition-normal);
+.musclewiki-theme-root .mw-eq-column {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
 }
 
-.musclemap-root .mm-view-toggle-btn.active {
-    background: var(--mm-accent-cyan);
-    color: var(--mm-bg-primary);
+.musclewiki-theme-root .mw-eq-item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.35rem 0.45rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  user-select: none;
 }
 
-/* ========================================
-   Tooltip
-======================================== */
-.mm-tooltip {
-    position: fixed;
-    padding: 0.5rem 1rem;
-    background: #12121a;
-    border: 1px solid #00d4ff;
-    border-radius: 6px;
-    color: #ffffff;
-    font-size: 0.85rem;
-    font-weight: 500;
-    pointer-events: none;
+.musclewiki-theme-root .mw-eq-item:hover {
+  background: #1c202b;
+}
+
+.musclewiki-theme-root .mw-eq-item.checked {
+  background: rgba(37, 99, 235, 0.1);
+}
+
+.musclewiki-theme-root .mw-checkbox {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: 1.5px solid #475569;
+  background: #181c26;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.musclewiki-theme-root .mw-checkbox.checked {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
+.musclewiki-theme-root .mw-eq-icon {
+  width: 17px;
+  height: 17px;
+  color: #94a3b8;
+  flex-shrink: 0;
+  transition: color 0.15s ease;
+}
+
+.musclewiki-theme-root .mw-eq-item:hover .mw-eq-icon,
+.musclewiki-theme-root .mw-eq-item.checked .mw-eq-icon {
+  color: #ffffff;
+}
+
+.musclewiki-theme-root .mw-eq-name {
+  font-size: 0.8rem;
+  color: #cbd5e1;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.musclewiki-theme-root .mw-eq-item.checked .mw-eq-name {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+/* ─── EXERCISES & ACTIVE MUSCLE SECTION ─── */
+.musclewiki-theme-root .mw-exercise-section {
+  padding: 1rem;
+  flex: 1;
+}
+
+.musclewiki-theme-root .mw-active-muscle-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.musclewiki-theme-root .mw-muscle-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--mw-border-subtle);
+}
+
+.musclewiki-theme-root .mw-muscle-name {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.3px;
+}
+
+.musclewiki-theme-root .mw-category-tag {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 0.15rem 0.45rem;
+  background: rgba(37, 99, 235, 0.2);
+  color: #60a5fa;
+  border-radius: 4px;
+}
+
+.musclewiki-theme-root .mw-latin-name {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-style: italic;
+  margin-top: 0.15rem;
+}
+
+.musclewiki-theme-root .mw-close-muscle-btn {
+  background: #181c26;
+  border: 1px solid #282d3d;
+  color: #94a3b8;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.musclewiki-theme-root .mw-close-muscle-btn:hover {
+  background: #282d3d;
+  color: #ffffff;
+}
+
+.musclewiki-theme-root .mw-biomechanics-box {
+  background: #181c26;
+  border: 1px solid #282d3d;
+  border-radius: 8px;
+  padding: 0.75rem;
+}
+
+.musclewiki-theme-root .mw-exercise-summary-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.musclewiki-theme-root .mw-library-link {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #ea384c;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.musclewiki-theme-root .mw-library-link:hover {
+  color: #ff5266;
+  text-decoration: underline;
+}
+
+.musclewiki-theme-root .mw-exercise-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 380px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.musclewiki-theme-root .mw-exercise-list::-webkit-scrollbar {
+  width: 4px;
+}
+.musclewiki-theme-root .mw-exercise-list::-webkit-scrollbar-thumb {
+  background: #282d3d;
+  border-radius: 2px;
+}
+
+.musclewiki-theme-root .mw-exercise-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: #181c26;
+  border: 1px solid #282d3d;
+  border-radius: 8px;
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.musclewiki-theme-root .mw-exercise-item:hover {
+  background: #202636;
+  border-color: #3b4254;
+  transform: translateX(2px);
+}
+
+.musclewiki-theme-root .mw-ex-thumb {
+  width: 52px;
+  height: 52px;
+  border-radius: 6px;
+  background: #10131a;
+  overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.musclewiki-theme-root .mw-thumb-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #141722;
+}
+
+.musclewiki-theme-root .mw-play-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.musclewiki-theme-root .mw-exercise-item:hover .mw-play-overlay {
+  opacity: 1;
+}
+
+.musclewiki-theme-root .mw-ex-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.musclewiki-theme-root .mw-ex-name {
+  font-size: 0.825rem;
+  font-weight: 700;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 0.2rem;
+}
+
+.musclewiki-theme-root .mw-no-exercises {
+  padding: 1.5rem;
+  text-align: center;
+  font-size: 0.8rem;
+  color: #94a3b8;
+  background: #181c26;
+  border-radius: 8px;
+  border: 1px dashed #282d3d;
+}
+
+.musclewiki-theme-root .mw-reset-eq-btn {
+  margin-top: 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.musclewiki-theme-root .mw-reset-eq-btn:hover {
+  background: #1d4ed8;
+}
+
+/* ─── EMPTY SELECTION PROMPT ─── */
+.musclewiki-theme-root .mw-empty-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 2rem 1rem;
+}
+
+.musclewiki-theme-root .mw-empty-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(234, 56, 76, 0.12);
+  border: 1px solid rgba(234, 56, 76, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.85rem;
+}
+
+.musclewiki-theme-root .mw-quick-shortcuts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-top: 1.25rem;
+}
+
+.musclewiki-theme-root .mw-shortcut-chip {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  background: #181c26;
+  border: 1px solid #282d3d;
+  color: #cbd5e1;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.musclewiki-theme-root .mw-shortcut-chip:hover {
+  background: #242a38;
+  color: #ffffff;
+  border-color: #3b4254;
+}
+
+/* ─── FLOATING CURSOR TOOLTIP ─── */
+.musclewiki-theme-root .mw-floating-tooltip {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  background: rgba(14, 16, 21, 0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+  transform: translateY(-50%);
+  animation: mwFadeIn 0.15s ease-out;
+}
+
+@keyframes mwFadeIn {
+  from {
     opacity: 0;
-    transform: translateY(8px);
-    transition: all 150ms ease-out;
-    z-index: 1000;
-    box-shadow: 0 0 20px rgba(0, 212, 255, 0.4), 0 0 40px rgba(0, 212, 255, 0.4);
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
-
-.mm-tooltip.visible {
+    transform: translateY(-45%) scale(0.95);
+  }
+  to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(-50%) scale(1);
+  }
 }
 
-/* ========================================
-   Footer
-======================================== */
-.musclemap-root .mm-footer {
-    text-align: center;
-    padding: 1.5rem;
-    color: var(--mm-text-muted);
-    font-size: 0.85rem;
-    border-top: 1px solid var(--mm-border-color);
+.musclewiki-theme-root .mw-tip-name {
+  font-size: 0.825rem;
+  font-weight: 800;
+  color: #ffffff;
 }
 
-/* ========================================
-   Responsive Design
-======================================== */
-@media (max-width: 900px) {
-    .musclemap-root .mm-body-diagram-container {
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    .musclemap-root .mm-body-view {
-        max-width: 350px;
-    }
-    
-    .musclemap-root .mm-body-view:not(.visible) {
-        display: none;
-    }
-    
-    .musclemap-root .mm-mobile-view-toggle {
-        display: flex;
-    }
-    
-    .musclemap-root .mm-main-content {
-        padding-bottom: 1.5rem;
-    }
+.musclewiki-theme-root .mw-tip-latin {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  margin-top: -0.1rem;
 }
 
-@media (max-width: 600px) {
-    .musclemap-root .mm-header {
-        padding: 1rem;
-    }
-    
-    .musclemap-root .mm-logo-text {
-        display: none;
-    }
-    
-    .musclemap-root .mm-main-content {
-        padding: 1rem;
-    }
-    
-    .musclemap-root .mm-instruction-banner {
-        font-size: 0.8rem;
-        padding: 0.5rem 1rem;
-    }
-    
-    .musclemap-root .mm-body-view {
-        max-width: 280px;
-    }
-    
-    .musclemap-root .mm-muscle-name {
-        font-size: 1.25rem;
-    }
-    
-    .musclemap-root .mm-count-number {
-        font-size: 2rem;
-    }
-}
-
-/* ========================================
-   Animations
-======================================== */
-@keyframes mm-fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+.musclewiki-theme-root .mw-tip-count {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #ff5266;
+  margin-top: 0.25rem;
 }

@@ -1,537 +1,898 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { getMuscleRoute, getExerciseGroupFromDiagramId } from "@/lib/muscleMapping";
+import Body, { ExtendedBodyPart, Slug } from "react-muscle-highlighter";
+import {
+  MUSCLE_MAPPINGS,
+  SPLIT_PRESETS,
+  getExercisesForMuscle,
+  getMuscleRoute,
+  type MuscleMapping,
+} from "@/lib/muscleMapping";
+import { exercises, type Exercise } from "@/data/exercises";
+import { ExerciseVideoPlayer } from "@/components/exercise/ExerciseVideoPlayer";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {
+  Search,
+  X,
+  ZoomIn,
+  ZoomOut,
+  RotateCcw,
+  Sparkles,
+  ChevronDown,
+  ChevronUp,
+  PlayCircle,
+  Dumbbell,
+  ExternalLink,
+  Activity,
+  Layers,
+  Check,
+} from "lucide-react";
 import "./InteractiveBodyDiagram.css";
 
-// ────────────────────────────────────────
-// Muscle data with exercise counts & descriptions
-// ────────────────────────────────────────
-interface MuscleInfo {
+// ─── EQUIPMENT DEFINITIONS (Matching MuscleWiki 2-Column Checklist) ───
+interface EquipmentItem {
+  id: string;
   name: string;
-  view: "front" | "back";
-  exercises: number;
-  description: string;
+  column: 1 | 2;
+  filterKeywords: string[];
 }
 
-const muscleData: Record<string, MuscleInfo> = {
-  neck: { name: "Neck", view: "front", exercises: 12, description: "The neck muscles support the head and enable a range of movements. Training includes neck curls, extensions, and isometric holds." },
-  shoulders: { name: "Shoulders (Deltoids)", view: "front", exercises: 45, description: "The deltoids are responsible for arm rotation and lifting. Key exercises include shoulder press, lateral raises, and front raises." },
-  chest: { name: "Chest (Pectorals)", view: "front", exercises: 52, description: "The pectoralis major and minor muscles are key for pushing movements. Train with bench press, push-ups, and chest flies." },
-  biceps: { name: "Biceps", view: "front", exercises: 38, description: "The biceps brachii flexes the elbow and rotates the forearm. Classic exercises include barbell curls, hammer curls, and preacher curls." },
-  forearms: { name: "Forearms", view: "front", exercises: 24, description: "Forearm muscles control wrist and finger movements. Build grip strength with wrist curls, reverse curls, and farmer walks." },
-  abs: { name: "Abs (Rectus Abdominis)", view: "front", exercises: 67, description: 'The rectus abdominis is the "six-pack" muscle. Key exercises include crunches, leg raises, planks, and cable crunches.' },
-  obliques: { name: "Obliques", view: "front", exercises: 34, description: "The oblique muscles enable torso rotation and lateral flexion. Train with Russian twists, side planks, and woodchops." },
-  quads: { name: "Quadriceps", view: "front", exercises: 48, description: "The quadriceps extend the knee and are essential for walking, running, and jumping. Key exercises include squats, leg press, and lunges." },
-  adductors: { name: "Adductors (Inner Thigh)", view: "front", exercises: 18, description: "The adductor muscles bring the legs together. Train with adductor machine, sumo squats, and Copenhagen planks." },
-  calves_front: { name: "Calves (Tibialis)", view: "front", exercises: 22, description: "The tibialis anterior on the front of the lower leg helps with dorsiflexion. Train with toe raises and tibialis raises." },
-  traps: { name: "Trapezius", view: "back", exercises: 28, description: "The trapezius extends from the neck to the mid-back. Key exercises include shrugs, face pulls, and upright rows." },
-  rear_delts: { name: "Rear Deltoids", view: "back", exercises: 22, description: "The posterior deltoid is crucial for shoulder stability. Train with reverse flies, face pulls, and rear delt rows." },
-  lats: { name: "Latissimus Dorsi", view: "back", exercises: 42, description: "The lats are the largest back muscles, enabling pulling movements. Key exercises include pull-ups, lat pulldowns, and rows." },
-  rhomboids: { name: "Rhomboids", view: "back", exercises: 26, description: "The rhomboids retract the scapula. Strengthen with rows, reverse flies, and scapular squeezes." },
-  lower_back: { name: "Lower Back (Erector Spinae)", view: "back", exercises: 32, description: "The erector spinae muscles run along the spine. Train with deadlifts, back extensions, and good mornings." },
-  triceps: { name: "Triceps", view: "back", exercises: 36, description: "The triceps brachii extends the elbow. Key exercises include tricep dips, pushdowns, skull crushers, and close-grip bench press." },
-  glutes: { name: "Glutes", view: "back", exercises: 44, description: "The gluteus muscles are the largest in the body. Build with hip thrusts, squats, deadlifts, and glute bridges." },
-  hamstrings: { name: "Hamstrings", view: "back", exercises: 38, description: "The hamstrings flex the knee and extend the hip. Key exercises include Romanian deadlifts, leg curls, and Nordic curls." },
-  calves_back: { name: "Calves (Gastrocnemius)", view: "back", exercises: 22, description: "The gastrocnemius and soleus enable plantar flexion. Train with standing and seated calf raises." },
+const EQUIPMENT_ITEMS: EquipmentItem[] = [
+  // Column 1
+  { id: "featured", name: "Featured", column: 1, filterKeywords: [] },
+  { id: "dumbbells", name: "Dumbbells", column: 1, filterKeywords: ["dumbbell", "dumbbells"] },
+  { id: "machine", name: "Machine", column: 1, filterKeywords: ["machine", "lever", "hack", "smith"] },
+  { id: "kettlebells", name: "Kettlebells", column: 1, filterKeywords: ["kettlebell", "kettlebells"] },
+  { id: "cables", name: "Cables", column: 1, filterKeywords: ["cable", "cables", "pulley"] },
+  { id: "plate", name: "Plate", column: 1, filterKeywords: ["plate", "weight plate"] },
+  { id: "yoga", name: "Yoga", column: 1, filterKeywords: ["yoga", "mat", "mobility", "stretch"] },
+  { id: "cardio", name: "Cardio", column: 1, filterKeywords: ["cardio", "jump", "burpee", "hiit"] },
+  { id: "recovery", name: "Recovery", column: 1, filterKeywords: ["foam roller", "stretch", "recovery", "mobility"] },
+
+  // Column 2
+  { id: "barbell", name: "Barbell", column: 2, filterKeywords: ["barbell", "olympic bar", "ez bar"] },
+  { id: "bodyweight", name: "Bodyweight", column: 2, filterKeywords: ["bodyweight", "calisthenics", "none"] },
+  { id: "medicine_ball", name: "Medicine Ball", column: 2, filterKeywords: ["medicine ball", "slam ball"] },
+  { id: "stretches", name: "Stretches", column: 2, filterKeywords: ["stretch", "stretches", "flexibility"] },
+  { id: "band", name: "Band", column: 2, filterKeywords: ["band", "resistance band", "loop band"] },
+  { id: "trx", name: "TRX", column: 2, filterKeywords: ["trx", "suspension", "straps"] },
+  { id: "bosu_ball", name: "Bosu Ball", column: 2, filterKeywords: ["bosu", "balance ball", "dome"] },
+  { id: "smith_machine", name: "Smith Machine", column: 2, filterKeywords: ["smith machine", "smith"] },
+  { id: "pilates", name: "Pilates", column: 2, filterKeywords: ["pilates", "reformer", "ring"] },
+];
+
+// ─── MINIMALIST VECTOR ICONS FOR EQUIPMENT ───
+const EquipmentIcon: React.FC<{ id: string }> = ({ id }) => {
+  switch (id) {
+    case "featured":
+      return (
+        <svg className="mw-eq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+        </svg>
+      );
+    case "dumbbells":
+      return (
+        <svg className="mw-eq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M6 5v14M18 5v14M3 9v6M21 9v6M6 12h12" strokeLinecap="round" />
+        </svg>
+      );
+    case "machine":
+      return (
+        <svg className="mw-eq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <rect x="4" y="4" width="16" height="16" rx="2" />
+          <path d="M9 9h6M9 13h6M9 17h6M12 4v16" strokeLinecap="round" />
+        </svg>
+      );
+    case "kettlebells":
+      return (
+        <svg className="mw-eq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M8 8a4 4 0 0 1 8 0v2H8V8z" />
+          <circle cx="12" cy="15" r="6" />
+        </svg>
+      );
+    case "cables":
+      return (
+        <svg className="mw-eq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="12" cy="5" r="3" />
+          <path d="M12 8v12M9 20h6" strokeLinecap="round" />
+        </svg>
+      );
+    case "plate":
+      return (
+        <svg className="mw-eq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="12" cy="12" r="9" />
+          <circle cx="12" cy="12" r="3" />
+        </svg>
+      );
+    case "yoga":
+      return (
+        <svg className="mw-eq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <ellipse cx="12" cy="7" rx="3" ry="5" />
+          <path d="M6 19c2-5 5-7 6-7s4 2 6 7" strokeLinecap="round" />
+        </svg>
+      );
+    case "cardio":
+      return (
+        <svg className="mw-eq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+          <path d="M3.22 12H9.5l1.5-3 2 6 1.5-3h6.28" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      );
+    case "recovery":
+      return (
+        <svg className="mw-eq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="12" cy="12" r="9" />
+          <path d="M12 7v5l3 3" strokeLinecap="round" />
+        </svg>
+      );
+    case "barbell":
+      return (
+        <svg className="mw-eq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M2 12h20M5 7v10M19 7v10M7 9v6M17 9v6" strokeLinecap="round" />
+        </svg>
+      );
+    case "bodyweight":
+      return (
+        <svg className="mw-eq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="12" cy="5" r="2" />
+          <path d="M12 7v7M9 10l3 2 3-2M9 20l3-6 3 6" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      );
+    case "medicine_ball":
+      return (
+        <svg className="mw-eq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="12" cy="12" r="9" />
+          <path d="M12 3a9 9 0 0 1 0 18M3 12a9 9 0 0 1 18 0" />
+        </svg>
+      );
+    case "stretches":
+      return (
+        <svg className="mw-eq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="14" cy="4" r="2" />
+          <path d="M6 19l4-8 5 2 4-5M9 13l-4 8" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      );
+    case "band":
+      return (
+        <svg className="mw-eq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <ellipse cx="12" cy="12" rx="8" ry="4" transform="rotate(-25 12 12)" />
+        </svg>
+      );
+    case "trx":
+      return (
+        <svg className="mw-eq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M12 2v6M8 8l-4 12M16 8l4 12M3 20h4M17 20h4" strokeLinecap="round" />
+        </svg>
+      );
+    case "bosu_ball":
+      return (
+        <svg className="mw-eq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M4 17a8 8 0 0 1 16 0z" />
+          <rect x="2" y="17" width="20" height="3" rx="1.5" />
+        </svg>
+      );
+    case "smith_machine":
+      return (
+        <svg className="mw-eq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M5 3v18M19 3v18M3 10h18M3 14h18" strokeLinecap="round" />
+        </svg>
+      );
+    case "pilates":
+      return (
+        <svg className="mw-eq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="12" cy="12" r="8" />
+          <path d="M4 10h16M4 14h16" strokeLinecap="round" />
+        </svg>
+      );
+    default:
+      return <Dumbbell className="mw-eq-icon" />;
+  }
 };
 
-// Map new diagram IDs to closest existing exercise route IDs
-const routeMuscleMap: Record<string, string> = {
-  neck: "shoulders",
-  shoulders: "shoulders",
-  chest: "chest",
-  biceps: "biceps",
-  forearms: "forearms",
-  abs: "abs",
-  obliques: "obliques",
-  quads: "quads",
-  adductors: "quads",
-  calves_front: "calves",
-  traps: "traps",
-  rear_delts: "shoulders",
-  lats: "lats",
-  rhomboids: "back",
-  lower_back: "lower_back",
-  triceps: "triceps",
-  glutes: "glutes",
-  hamstrings: "hamstrings",
-  calves_back: "calves",
-};
-
-// ────────────────────────────────────────
-// SVG Generators
-// ────────────────────────────────────────
-interface MusclePathProps {
-  d: string;
-  muscle: string;
-  hoveredMuscle: string | null;
-  selectedMuscle: string | null;
-  onMouseEnter: (e: React.MouseEvent, muscleId: string) => void;
-  onMouseLeave: () => void;
-  onMouseMove: (e: React.MouseEvent) => void;
-  onClick: (muscleId: string) => void;
-}
-
-const MusclePath = ({ d, muscle, hoveredMuscle, selectedMuscle, onMouseEnter, onMouseLeave, onMouseMove, onClick }: MusclePathProps) => {
-  const classes = [
-    "muscle-group",
-    hoveredMuscle === muscle ? "hover" : "",
-    selectedMuscle === muscle ? "active" : "",
-  ].filter(Boolean).join(" ");
-
-  return (
-    <path
-      d={d}
-      className={classes}
-      data-muscle={muscle}
-      onMouseEnter={(e) => onMouseEnter(e, muscle)}
-      onMouseLeave={onMouseLeave}
-      onMouseMove={onMouseMove}
-      onClick={() => onClick(muscle)}
-      onTouchStart={(e) => { e.preventDefault(); onClick(muscle); }}
-    />
-  );
-};
-
-interface BodySVGProps {
-  isMale: boolean;
-  hoveredMuscle: string | null;
-  selectedMuscle: string | null;
-  onMouseEnter: (e: React.MouseEvent, muscleId: string) => void;
-  onMouseLeave: () => void;
-  onMouseMove: (e: React.MouseEvent) => void;
-  onClick: (muscleId: string) => void;
-}
-
-const FrontBodySVG = (props: BodySVGProps) => {
-  const { isMale, ...handlers } = props;
-  const mp = (d: string, muscle: string) => (
-    <MusclePath key={`${muscle}-${d.slice(0,30)}`} d={d} muscle={muscle} {...handlers} />
-  );
-
-  return (
-    <svg viewBox="0 0 200 380" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="bodyGradientFront" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style={{ stopColor: "#3a3a4a", stopOpacity: 1 }} />
-          <stop offset="100%" style={{ stopColor: "#2a2a35", stopOpacity: 1 }} />
-        </linearGradient>
-      </defs>
-
-      {/* Head */}
-      <ellipse cx="100" cy="28" rx={isMale ? 20 : 19} ry="24" className="body-base" />
-
-      {/* Neck */}
-      {mp("M90 50 L90 68 L110 68 L110 50", "neck")}
-
-      {/* Traps (Front) */}
-      {mp("M90 68 L76 75 L76 82 L90 76 Z", "traps")}
-      {mp("M110 68 L124 75 L124 82 L110 76 Z", "traps")}
-
-      {/* Shoulders */}
-      {mp("M76 75 Q60 78 48 90 Q42 105 45 120 L58 118 Q62 100 68 88 L76 82 Z", "shoulders")}
-      {mp("M124 75 Q140 78 152 90 Q158 105 155 120 L142 118 Q138 100 132 88 L124 82 Z", "shoulders")}
-
-      {/* Chest */}
-      {mp("M76 82 Q68 85 65 95 Q63 108 68 116 L85 118 Q92 112 100 110 Q100 90 76 82", "chest")}
-      {mp("M124 82 Q132 85 135 95 Q137 108 132 116 L115 118 Q108 112 100 110 Q100 90 124 82", "chest")}
-
-      {/* Abs */}
-      {mp("M85 120 L85 135 L100 135 L100 118 Q92 116 85 120", "abs")}
-      {mp("M115 120 L115 135 L100 135 L100 118 Q108 116 115 120", "abs")}
-      {mp("M85 135 L85 152 L100 152 L100 135 Z", "abs")}
-      {mp("M115 135 L115 152 L100 152 L100 135 Z", "abs")}
-      {mp("M85 152 L85 168 Q92 172 100 172 L100 152 Z", "abs")}
-      {mp("M115 152 L115 168 Q108 172 100 172 L100 152 Z", "abs")}
-
-      {/* Obliques */}
-      {mp("M68 116 Q65 140 68 168 L85 168 L85 120 Q76 116 68 116", "obliques")}
-      {mp("M132 116 Q135 140 132 168 L115 168 L115 120 Q124 116 132 116", "obliques")}
-
-      {/* Biceps */}
-      {mp("M45 120 Q38 128 35 145 Q35 165 42 175 L52 172 Q55 155 55 140 Q56 125 58 118 L45 120", "biceps")}
-      {mp("M155 120 Q162 128 165 145 Q165 165 158 175 L148 172 Q145 155 145 140 Q144 125 142 118 L155 120", "biceps")}
-
-      {/* Forearms */}
-      {mp("M42 175 Q35 190 30 215 Q28 240 32 255 L45 258 Q48 235 50 210 Q52 188 52 172 L42 175", "forearms")}
-      {mp("M158 175 Q165 190 170 215 Q172 240 168 255 L155 258 Q152 235 150 210 Q148 188 148 172 L158 175", "forearms")}
-
-      {/* Hands */}
-      <path d="M32 255 Q25 260 22 275 Q25 285 35 288 Q45 285 48 275 Q48 262 45 258 L32 255" className="body-base" />
-      <path d="M168 255 Q175 260 178 275 Q175 285 165 288 Q155 285 152 275 Q152 262 155 258 L168 255" className="body-base" />
-
-      {/* Hip */}
-      <path d="M68 168 Q68 180 65 195 Q75 210 100 215 Q125 210 135 195 Q132 180 132 168 Q108 176 100 176 Q92 176 68 168" className="body-base" />
-
-      {/* Adductors */}
-      {mp("M85 200 L82 270 L94 270 L96 200 Q90 198 85 200", "adductors")}
-      {mp("M115 200 L118 270 L106 270 L104 200 Q110 198 115 200", "adductors")}
-
-      {/* Quads */}
-      {mp("M65 195 Q52 220 48 250 Q48 275 52 295 L68 298 Q72 285 75 270 L82 270 L85 200 Q75 195 65 195", "quads")}
-      {mp("M135 195 Q148 220 152 250 Q152 275 148 295 L132 298 Q128 285 125 270 L118 270 L115 200 Q125 195 135 195", "quads")}
-
-      {/* Knees */}
-      <ellipse cx="60" cy="305" rx="12" ry="8" className="body-base" />
-      <ellipse cx="140" cy="305" rx="12" ry="8" className="body-base" />
-
-      {/* Calves Front */}
-      {mp("M52 310 Q48 335 50 360 L68 360 Q70 340 68 315 Q60 310 52 310", "calves_front")}
-      {mp("M148 310 Q152 335 150 360 L132 360 Q130 340 132 315 Q140 310 148 310", "calves_front")}
-
-      {/* Ankles */}
-      <rect x="52" y="360" width="18" height="6" rx="2" className="body-base" />
-      <rect x="130" y="360" width="18" height="6" rx="2" className="body-base" />
-
-      {/* Feet */}
-      <path d="M50 366 Q42 372 40 378 Q50 382 65 380 Q72 375 70 366 L50 366" className="body-base" />
-      <path d="M150 366 Q158 372 160 378 Q150 382 135 380 Q128 375 130 366 L150 366" className="body-base" />
-    </svg>
-  );
-};
-
-const BackBodySVG = (props: BodySVGProps) => {
-  const { isMale, ...handlers } = props;
-  const mp = (d: string, muscle: string) => (
-    <MusclePath key={`${muscle}-${d.slice(0,30)}`} d={d} muscle={muscle} {...handlers} />
-  );
-  const yOff = isMale ? 180 : 185;
-  const yOff2 = isMale ? 185 : 190;
-
-  return (
-    <svg viewBox="0 0 200 380" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="bodyGradientBack" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style={{ stopColor: "#3a3a4a", stopOpacity: 1 }} />
-          <stop offset="100%" style={{ stopColor: "#2a2a35", stopOpacity: 1 }} />
-        </linearGradient>
-      </defs>
-
-      {/* Head */}
-      <ellipse cx="100" cy="30" rx={isMale ? 23 : 22} ry="27" className="body-base" />
-      <ellipse cx="75" cy="30" rx="4" ry="7" className="body-base" />
-      <ellipse cx="125" cy="30" rx="4" ry="7" className="body-base" />
-
-      {/* Neck */}
-      {mp("M88 54 C88 58 88 68 88 68 L112 68 C112 68 112 58 112 54", "neck")}
-
-      {/* Upper Traps */}
-      {mp("M88 68 Q100 62 112 68 L130 82 Q100 75 70 82 Z", "traps")}
-      {/* Middle Traps */}
-      {mp("M70 82 Q100 75 130 82 L125 110 Q100 105 75 110 Z", "traps")}
-
-      {/* Rear Delts */}
-      {mp("M70 82 L55 88 Q42 100 40 120 L55 125 Q60 105 70 95 L70 82", "rear_delts")}
-      {mp("M130 82 L145 88 Q158 100 160 120 L145 125 Q140 105 130 95 L130 82", "rear_delts")}
-
-      {/* Rhomboids */}
-      {mp("M78 110 L78 135 Q100 130 122 135 L122 110 Q100 105 78 110", "rhomboids")}
-
-      {/* Lats */}
-      {mp(`M55 125 Q50 145 52 170 L70 ${yOff} L78 135 Q70 125 55 125`, "lats")}
-      {mp(`M145 125 Q150 145 148 170 L130 ${yOff} L122 135 Q130 125 145 125`, "lats")}
-
-      {/* Triceps */}
-      {mp("M40 120 Q35 140 38 165 Q42 175 50 175 Q55 165 55 140 Q55 128 55 125 L40 120", "triceps")}
-      {mp("M160 120 Q165 140 162 165 Q158 175 150 175 Q145 165 145 140 Q145 128 145 125 L160 120", "triceps")}
-
-      {/* Lower Back */}
-      {mp(`M78 135 Q100 130 122 135 L130 ${yOff} Q100 ${yOff2} 70 ${yOff} Z`, "lower_back")}
-
-      {/* Forearms */}
-      <path d="M50 175 Q38 185 32 215 Q30 240 35 255 Q42 258 48 252 Q52 230 55 200 Q55 185 50 175" className="body-base" />
-      <path d="M150 175 Q162 185 168 215 Q170 240 165 255 Q158 258 152 252 Q148 230 145 200 Q145 185 150 175" className="body-base" />
-
-      {/* Hands */}
-      <ellipse cx="35" cy="268" rx="8" ry="14" className="body-base" />
-      <ellipse cx="165" cy="268" rx="8" ry="14" className="body-base" />
-
-      {/* Glutes */}
-      {mp(`M70 ${yOff} Q60 195 58 215 Q60 235 75 240 Q90 235 100 225 Q100 ${yOff2} 70 ${yOff}`, "glutes")}
-      {mp(`M130 ${yOff} Q140 195 142 215 Q140 235 125 240 Q110 235 100 225 Q100 ${yOff2} 130 ${yOff}`, "glutes")}
-
-      {/* Hamstrings */}
-      {mp("M58 240 Q55 270 55 300 Q58 312 68 315 L85 315 Q88 290 88 260 Q85 245 75 240 Q65 238 58 240", "hamstrings")}
-      {mp("M142 240 Q145 270 145 300 Q142 312 132 315 L115 315 Q112 290 112 260 Q115 245 125 240 Q135 238 142 240", "hamstrings")}
-
-      {/* Knees */}
-      <ellipse cx="70" cy="320" rx="14" ry="8" className="body-base" />
-      <ellipse cx="130" cy="320" rx="14" ry="8" className="body-base" />
-
-      {/* Calves Back */}
-      {mp("M55 325 Q52 342 55 358 Q60 368 72 368 Q82 365 85 358 Q88 342 85 325 Q72 330 55 325", "calves_back")}
-      {mp("M145 325 Q148 342 145 358 Q140 368 128 368 Q118 365 115 358 Q112 342 115 325 Q128 330 145 325", "calves_back")}
-
-      {/* Ankles */}
-      <rect x="62" y="368" width="18" height="8" rx="3" className="body-base" />
-      <rect x="120" y="368" width="18" height="8" rx="3" className="body-base" />
-
-      {/* Feet */}
-      <ellipse cx="71" cy="380" rx="14" ry="5" className="body-base" />
-      <ellipse cx="129" cy="380" rx="14" ry="5" className="body-base" />
-    </svg>
-  );
-};
-
-// ────────────────────────────────────────
-// Main Component
-// ────────────────────────────────────────
-export const InteractiveBodyDiagram = () => {
+export const InteractiveBodyDiagram: React.FC = () => {
   const navigate = useNavigate();
 
-  // State
+  // ─── STATE (Matching MuscleWiki Reference Layout) ───
   const [currentGender, setCurrentGender] = useState<"male" | "female">("male");
-  const [currentView, setCurrentView] = useState<"front" | "back">("front");
+  const [advancedMode, setAdvancedMode] = useState<boolean>(false);
+  const [jointsMode, setJointsMode] = useState<boolean>(false);
   const [selectedMuscle, setSelectedMuscle] = useState<string | null>(null);
   const [hoveredMuscle, setHoveredMuscle] = useState<string | null>(null);
+  const [selectedEquipment, setSelectedEquipment] = useState<string[]>(["featured"]);
+  const [isEquipmentOpen, setIsEquipmentOpen] = useState<boolean>(true);
+  const [activeSplit, setActiveSplit] = useState<"all" | "push" | "pull" | "legs" | "core">("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [previewExercise, setPreviewExercise] = useState<Exercise | null>(null);
 
-  // Tooltip
-  const [tooltipText, setTooltipText] = useState("");
-  const [tooltipVisible, setTooltipVisible] = useState(false);
-  const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
+  // Floating Cursor Tooltip State
+  const [tooltip, setTooltip] = useState<{
+    visible: boolean;
+    x: number;
+    y: number;
+    muscleId: string | null;
+  }>({
+    visible: false,
+    x: 0,
+    y: 0,
+    muscleId: null,
+  });
 
-  // Animated count
-  const [displayCount, setDisplayCount] = useState(0);
-  const animRef = useRef<number | null>(null);
-
-  // Window width for responsive
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth <= 900);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
-  }, []);
-
-  // Animate count
-  const animateCount = useCallback((target: number) => {
-    if (animRef.current) cancelAnimationFrame(animRef.current);
-    const startTime = performance.now();
-    const startVal = displayCount;
-    const duration = 500;
-
-    const update = (currentTime: number) => {
-      const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const easeOut = 1 - Math.pow(1 - progress, 3);
-      setDisplayCount(Math.floor(startVal + (target - startVal) * easeOut));
-      if (progress < 1) {
-        animRef.current = requestAnimationFrame(update);
-      }
-    };
-    animRef.current = requestAnimationFrame(update);
-  }, [displayCount]);
-
-  // Cleanup animation frame on unmount
-  useEffect(() => {
-    return () => {
-      if (animRef.current) cancelAnimationFrame(animRef.current);
-    };
-  }, []);
-
-  // Handlers
-  const handleMouseEnter = useCallback((e: React.MouseEvent, muscleId: string) => {
-    const data = muscleData[muscleId];
-    if (!data) return;
-    setHoveredMuscle(muscleId);
-    setTooltipText(data.name);
-    setTooltipVisible(true);
-    setTooltipPos({ x: e.clientX + 15, y: e.clientY - 10 });
-  }, []);
-
-  const handleMouseLeave = useCallback(() => {
-    setHoveredMuscle(null);
-    setTooltipVisible(false);
-  }, []);
-
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    setTooltipPos({ x: e.clientX + 15, y: e.clientY - 10 });
-  }, []);
-
-  const handleClick = useCallback((muscleId: string) => {
-    const data = muscleData[muscleId];
-    if (!data) return;
-    setSelectedMuscle(muscleId);
-    animateCount(data.exercises);
-  }, [animateCount]);
-
-  const handleExplore = useCallback(() => {
-    if (!selectedMuscle) return;
-    const routeId = routeMuscleMap[selectedMuscle] || selectedMuscle;
-    // Use existing route system
-    const exerciseGroup = getExerciseGroupFromDiagramId(routeId);
-    if (exerciseGroup) {
-      navigate(getMuscleRoute(routeId));
-    } else {
-      // Fallback: navigate with the ID directly
-      navigate(`/exercises/${routeId}`);
+  // ─── EQUIPMENT TOGGLE LOGIC ───
+  const handleToggleEquipment = (eqId: string) => {
+    if (eqId === "featured") {
+      setSelectedEquipment(["featured"]);
+      return;
     }
-  }, [selectedMuscle, navigate]);
 
-  const isMale = currentGender === "male";
-  const selectedData = selectedMuscle ? muscleData[selectedMuscle] : null;
-
-  const svgHandlers = {
-    hoveredMuscle,
-    selectedMuscle,
-    onMouseEnter: handleMouseEnter,
-    onMouseLeave: handleMouseLeave,
-    onMouseMove: handleMouseMove,
-    onClick: handleClick,
+    setSelectedEquipment((prev) => {
+      const withoutFeatured = prev.filter((id) => id !== "featured");
+      if (withoutFeatured.includes(eqId)) {
+        const next = withoutFeatured.filter((id) => id !== eqId);
+        return next.length === 0 ? ["featured"] : next;
+      } else {
+        return [...withoutFeatured, eqId];
+      }
+    });
   };
 
+  // ─── SEARCH & SPLIT HIGHLIGHT COMPUTATIONS ───
+  const searchedMuscles = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    const q = searchQuery.toLowerCase().trim();
+    const matches: string[] = [];
+
+    Object.entries(MUSCLE_MAPPINGS).forEach(([id, mapping]) => {
+      const nameMatch = mapping.displayName.toLowerCase().includes(q);
+      const latinMatch = mapping.latinName?.toLowerCase().includes(q);
+      const kwMatch = mapping.searchKeywords?.some((k) => k.toLowerCase().includes(q));
+      if (nameMatch || latinMatch || kwMatch) {
+        matches.push(id);
+      }
+    });
+
+    return matches;
+  }, [searchQuery]);
+
+  const splitMuscles = useMemo(() => {
+    if (activeSplit === "all") return [];
+    return SPLIT_PRESETS[activeSplit] || [];
+  }, [activeSplit]);
+
+  // Combined split or searched muscles
+  const activeHighlightedSlugs = useMemo(() => {
+    if (searchedMuscles.length > 0) return searchedMuscles;
+    return splitMuscles;
+  }, [searchedMuscles, splitMuscles]);
+
+  // ─── REACT-MUSCLE-HIGHLIGHTER DATA BINDINGS ───
+  const bodyData = useMemo(() => {
+    const list: ExtendedBodyPart[] = [];
+
+    // 1. Split preset or search highlights
+    activeHighlightedSlugs.forEach((slug) => {
+      list.push({
+        slug: slug as Slug,
+        color: "#1e3a8a",
+        styles: {
+          fill: "#1e3a8a",
+          stroke: "#60a5fa",
+          strokeWidth: 1.2,
+        },
+      });
+    });
+
+    // 2. Joints mode visual indication on knees & ankles
+    if (jointsMode) {
+      list.push(
+        {
+          slug: "knees" as Slug,
+          color: "#0284c7",
+          styles: {
+            fill: "#0284c7",
+            stroke: "#38bdf8",
+            strokeWidth: 1.5,
+          },
+        },
+        {
+          slug: "ankles" as Slug,
+          color: "#0284c7",
+          styles: {
+            fill: "#0284c7",
+            stroke: "#38bdf8",
+            strokeWidth: 1.5,
+          },
+        }
+      );
+    }
+
+    // 3. Hovered muscle (bright coral red)
+    if (hoveredMuscle && hoveredMuscle !== selectedMuscle) {
+      list.push({
+        slug: hoveredMuscle as Slug,
+        color: "#ff385c",
+        styles: {
+          fill: "#ff385c",
+          stroke: "#ffffff",
+          strokeWidth: 1.5,
+        },
+      });
+    }
+
+    // 4. Selected muscle (iconic MuscleWiki active crimson red)
+    if (selectedMuscle) {
+      list.push({
+        slug: selectedMuscle as Slug,
+        color: "#ea384c",
+        styles: {
+          fill: "#ea384c",
+          stroke: "#ffffff",
+          strokeWidth: 1.8,
+        },
+      });
+    }
+
+    return list;
+  }, [selectedMuscle, hoveredMuscle, activeHighlightedSlugs, jointsMode]);
+
+  // Disabled parts (when joints mode is off, knees and ankles remain neutral)
+  const disabledParts = useMemo(() => {
+    const disabled: Slug[] = ["hands", "feet", "head", "hair"];
+    if (!jointsMode) {
+      disabled.push("knees", "ankles");
+    }
+    return disabled;
+  }, [jointsMode]);
+
+  // ─── CLICK & HOVER EVENT HANDLERS ───
+  const handleMuscleClick = useCallback((slug?: string) => {
+    if (!slug) return;
+    setSelectedMuscle((prev) => (prev === slug ? null : slug));
+  }, []);
+
+  const handleStageMouseOver = useCallback((e: React.MouseEvent) => {
+    const target = e.target as SVGElement;
+    const path = target.closest("path");
+    if (path && path.id && !path.id.includes("outline")) {
+      const slug = path.id;
+      setHoveredMuscle(slug);
+      setTooltip({
+        visible: true,
+        x: e.clientX,
+        y: e.clientY,
+        muscleId: slug,
+      });
+    }
+  }, []);
+
+  const handleStageMouseMove = useCallback((e: React.MouseEvent) => {
+    setTooltip((prev) => {
+      if (!prev.visible) return prev;
+      return { ...prev, x: e.clientX, y: e.clientY };
+    });
+  }, []);
+
+  const handleStageMouseLeave = useCallback(() => {
+    setHoveredMuscle(null);
+    setTooltip((prev) => ({ ...prev, visible: false, muscleId: null }));
+  }, []);
+
+  // ─── DYNAMIC EXERCISE QUERYING & FILTERING ───
+  const { allExercises, mapping } = useMemo(() => {
+    if (!selectedMuscle) return { allExercises: [], mapping: null };
+    const res = getExercisesForMuscle(selectedMuscle);
+    return { allExercises: res.exercises, mapping: res.mapping };
+  }, [selectedMuscle]);
+
+  // Filter exercises according to checked equipment checklist
+  const filteredExercises = useMemo(() => {
+    if (!selectedMuscle || allExercises.length === 0) return [];
+    if (selectedEquipment.includes("featured")) {
+      return allExercises;
+    }
+
+    // Active equipment keywords
+    const activeKeywords: string[] = [];
+    selectedEquipment.forEach((eqId) => {
+      const item = EQUIPMENT_ITEMS.find((it) => it.id === eqId);
+      if (item) activeKeywords.push(...item.filterKeywords);
+    });
+
+    if (activeKeywords.length === 0) return allExercises;
+
+    return allExercises.filter((ex) => {
+      const eqLower = (ex.equipment || "").toLowerCase();
+      return activeKeywords.some((kw) => eqLower.includes(kw));
+    });
+  }, [selectedMuscle, allExercises, selectedEquipment]);
+
+  // Hovered muscle details for floating cursor badge
+  const hoveredInfo = useMemo(() => {
+    if (!tooltip.muscleId) return null;
+    const map = MUSCLE_MAPPINGS[tooltip.muscleId];
+    if (!map) return null;
+    const { count } = getExercisesForMuscle(tooltip.muscleId);
+    return {
+      name: map.displayName,
+      latin: map.latinName,
+      count,
+    };
+  }, [tooltip.muscleId]);
+
   return (
-    <>
-      <div className="musclemap-root">
-        {/* Header */}
-        <header className="mm-header">
-          <div className="mm-logo">
-            <div className="mm-logo-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="5" r="3" />
-                <path d="M12 8v8" />
-                <path d="M8 12h8" />
-                <path d="M9 21l3-5 3 5" />
-                <path d="M6 15l-2 6" />
-                <path d="M18 15l2 6" />
-              </svg>
+    <div className="musclewiki-theme-root">
+      {/* ─── MAIN DUAL-PANEL INTERFACE ─── */}
+      <div className="mw-main-layout">
+        {/* ─── LEFT COLUMN: DUAL ANATOMICAL VECTOR MODELS (FRONT & BACK) ─── */}
+        <div className="mw-diagram-stage">
+          {/* Quick Header / Stage Info */}
+          <div className="mw-stage-header">
+            <div className="flex items-center gap-2">
+              <span className="mw-brand-title">MuscleWiki Interactive Stage</span>
+              <span className="mw-brand-pill">Vector Dual-View</span>
             </div>
-            <span className="mm-logo-text">MuscleMap</span>
-          </div>
 
-          <div className="mm-header-controls">
-            <div className="mm-toggle-group">
+            {/* Quick Zoom & Reset Controls */}
+            <div className="flex items-center gap-1">
               <button
-                className={`mm-toggle-btn ${currentGender === "male" ? "active" : ""}`}
-                onClick={() => setCurrentGender("male")}
-                title="Male"
+                className="mw-zoom-btn"
+                onClick={() => setZoomLevel((z) => Math.min(z + 0.15, 1.4))}
+                title="Zoom In"
+                aria-label="Zoom in"
               >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="10" cy="14" r="5" />
-                  <line x1="19" y1="5" x2="13.5" y2="10.5" />
-                  <polyline points="15,5 19,5 19,9" />
-                </svg>
+                <ZoomIn className="w-3.5 h-3.5" />
               </button>
               <button
-                className={`mm-toggle-btn ${currentGender === "female" ? "active" : ""}`}
-                onClick={() => setCurrentGender("female")}
-                title="Female"
+                className="mw-zoom-btn"
+                onClick={() => setZoomLevel((z) => Math.max(z - 0.15, 0.85))}
+                title="Zoom Out"
+                aria-label="Zoom out"
               >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="8" r="5" />
-                  <line x1="12" y1="13" x2="12" y2="21" />
-                  <line x1="9" y1="18" x2="15" y2="18" />
-                </svg>
+                <ZoomOut className="w-3.5 h-3.5" />
               </button>
+              {zoomLevel !== 1 && (
+                <button
+                  className="mw-zoom-btn text-cyan-400"
+                  onClick={() => setZoomLevel(1)}
+                  title="Reset Zoom"
+                  aria-label="Reset zoom"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
           </div>
-        </header>
 
-        {/* Main Content */}
-        <main className="mm-main-content">
-          {/* Instruction */}
-          <div className="mm-instruction-banner">
-            <p>
-              👆 <strong>Hover</strong> over a muscle to highlight it •{" "}
-              <strong>Click</strong> to see exercises
-            </p>
+          {/* Side-by-Side Anatomical SVGs Canvas */}
+          <div
+            className="mw-canvas-wrapper"
+            style={{ transform: `scale(${zoomLevel})` }}
+            onMouseOver={handleStageMouseOver}
+            onMouseMove={handleStageMouseMove}
+            onMouseLeave={handleStageMouseLeave}
+          >
+            {/* Anterior (Front) Body */}
+            <div className="mw-figure-card">
+              <span className="mw-figure-caption">Anterior (Front)</span>
+              <div className="mw-body-svg-box">
+                <Body
+                  side="front"
+                  gender={currentGender}
+                  data={bodyData}
+                  scale={1.35}
+                  border="#ffffff"
+                  defaultFill="#4d515a"
+                  defaultStroke="#ffffff"
+                  defaultStrokeWidth={1.2}
+                  disabledParts={disabledParts}
+                  onBodyPartPress={(b) => handleMuscleClick(b.slug)}
+                />
+              </div>
+            </div>
+
+            {/* Posterior (Back) Body */}
+            <div className="mw-figure-card">
+              <span className="mw-figure-caption">Posterior (Back)</span>
+              <div className="mw-body-svg-box">
+                <Body
+                  side="back"
+                  gender={currentGender}
+                  data={bodyData}
+                  scale={1.35}
+                  border="#ffffff"
+                  defaultFill="#4d515a"
+                  defaultStroke="#ffffff"
+                  defaultStrokeWidth={1.2}
+                  disabledParts={disabledParts}
+                  onBodyPartPress={(b) => handleMuscleClick(b.slug)}
+                />
+              </div>
+            </div>
           </div>
 
-          {/* Mobile View Toggle */}
-          {isMobile && (
-            <div className="mm-mobile-view-toggle" style={{ display: "flex" }}>
-              <button
-                className={`mm-view-toggle-btn ${currentView === "front" ? "active" : ""}`}
-                onClick={() => setCurrentView("front")}
-              >
-                Front
-              </button>
-              <button
-                className={`mm-view-toggle-btn ${currentView === "back" ? "active" : ""}`}
-                onClick={() => setCurrentView("back")}
-              >
-                Back
-              </button>
+          {/* Quick Target System Split Selector */}
+          <div className="mw-stage-footer">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-xs text-slate-400 font-medium mr-1">Target Split:</span>
+              {(["all", "push", "pull", "legs", "core"] as const).map((split) => (
+                <button
+                  key={split}
+                  className={`mw-split-pill ${activeSplit === split ? "active" : ""}`}
+                  onClick={() => {
+                    setActiveSplit(split);
+                    setSearchQuery("");
+                  }}
+                >
+                  {split === "all" ? "All" : split.toUpperCase()}
+                </button>
+              ))}
             </div>
-          )}
 
-          {/* Body Diagram */}
-          <div className="mm-body-diagram-container">
-            {/* Front View */}
-            {(!isMobile || currentView === "front") && (
-              <div className="mm-body-view visible">
-                <h3 className="mm-view-label">Front</h3>
-                <div className="mm-body-wrapper">
-                  <FrontBodySVG isMale={isMale} {...svgHandlers} />
+            {/* Quick Live Search Filter */}
+            <div className="mw-mini-search">
+              <Search className="w-3.5 h-3.5 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Find muscle..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  if (e.target.value) setActiveSplit("all");
+                }}
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery("")} aria-label="Clear search">
+                  <X className="w-3 h-3 text-slate-400 hover:text-white" />
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* ─── RIGHT COLUMN: TOP BLUE SWITCHES + EQUIPMENT CHECKLIST + EXERCISES ─── */}
+        <div className="mw-sidebar">
+          {/* Top Blue Control Box (Male/Female, Advanced, Joints) */}
+          <div className="mw-top-control-card">
+            {/* 1. Gender Switch */}
+            <div className="mw-control-unit">
+              <div
+                className={`mw-switch-toggle ${currentGender === "male" ? "active-male" : "active-female"}`}
+                onClick={() => setCurrentGender((g) => (g === "male" ? "female" : "male"))}
+                role="button"
+                tabIndex={0}
+                title="Toggle Male / Female Silhouette"
+              >
+                <div className="mw-switch-thumb">
+                  <span>{currentGender === "male" ? "♂" : "♀"}</span>
                 </div>
               </div>
-            )}
-
-            {/* Back View */}
-            {(!isMobile || currentView === "back") && (
-              <div className="mm-body-view visible">
-                <h3 className="mm-view-label">Back</h3>
-                <div className="mm-body-wrapper">
-                  <BackBodySVG isMale={isMale} {...svgHandlers} />
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Muscle Info Panel */}
-          <div className={`mm-muscle-info-panel ${selectedData ? "active" : ""}`}>
-            <div className="mm-panel-header">
-              <h2 className="mm-muscle-name">
-                {selectedData ? selectedData.name : "Select a Muscle"}
-              </h2>
-              <span
-                className={`mm-muscle-badge ${selectedData ? selectedData.view : ""}`}
-              >
-                {selectedData ? selectedData.view : "--"}
+              <span className="mw-control-label">
+                {currentGender === "male" ? "Male" : "Female"}
               </span>
             </div>
-            <div className="mm-panel-body">
-              <p className="mm-muscle-description">
-                {selectedData
-                  ? selectedData.description
-                  : "Hover over or click on any muscle group on the body diagram to learn more about it and discover targeted exercises."}
-              </p>
-              <div className="mm-exercise-count">
-                <span className="mm-count-number">{displayCount}</span>
-                <span className="mm-count-label">Exercises Available</span>
-              </div>
-              <button
-                className="mm-explore-btn"
-                disabled={!selectedMuscle}
-                onClick={handleExplore}
+
+            {/* 2. Advanced Switch */}
+            <div className="mw-control-unit">
+              <div
+                className={`mw-switch-toggle ${advancedMode ? "active" : ""}`}
+                onClick={() => setAdvancedMode((v) => !v)}
+                role="button"
+                tabIndex={0}
+                title="Toggle Advanced Biomechanics"
               >
-                <span>Explore Exercises</span>
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
-              </button>
+                <div className="mw-switch-thumb" />
+              </div>
+              <span className="mw-control-label">Advanced</span>
+            </div>
+
+            {/* 3. Joints Switch */}
+            <div className="mw-control-unit">
+              <div
+                className={`mw-switch-toggle ${jointsMode ? "active" : ""}`}
+                onClick={() => setJointsMode((v) => !v)}
+                role="button"
+                tabIndex={0}
+                title="Toggle Interactive Joints (Knees & Ankles)"
+              >
+                <div className="mw-switch-thumb" />
+              </div>
+              <span className="mw-control-label">Joints</span>
             </div>
           </div>
-        </main>
 
-        {/* Footer */}
-        <footer className="mm-footer">
-          <p>Interactive anatomy diagram for fitness enthusiasts</p>
-        </footer>
+          {/* Equipment Checklist Section */}
+          <div className="mw-equipment-section">
+            <div
+              className="mw-equipment-header"
+              onClick={() => setIsEquipmentOpen((open) => !open)}
+              role="button"
+              tabIndex={0}
+            >
+              <div className="flex items-center gap-2">
+                <span className="mw-section-title">Equipment</span>
+                {!selectedEquipment.includes("featured") && (
+                  <span className="mw-filter-count-badge">
+                    {selectedEquipment.length} Active
+                  </span>
+                )}
+              </div>
+              <button className="mw-collapse-btn" aria-label="Toggle equipment view">
+                {isEquipmentOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </button>
+            </div>
+
+            {isEquipmentOpen && (
+              <div className="mw-equipment-grid">
+                {/* Column 1 */}
+                <div className="mw-eq-column">
+                  {EQUIPMENT_ITEMS.filter((item) => item.column === 1).map((item) => {
+                    const isChecked = selectedEquipment.includes(item.id);
+                    return (
+                      <div
+                        key={item.id}
+                        className={`mw-eq-item ${isChecked ? "checked" : ""}`}
+                        onClick={() => handleToggleEquipment(item.id)}
+                        role="checkbox"
+                        aria-checked={isChecked}
+                        tabIndex={0}
+                      >
+                        <div className={`mw-checkbox ${isChecked ? "checked" : ""}`}>
+                          {isChecked && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                        </div>
+                        <EquipmentIcon id={item.id} />
+                        <span className="mw-eq-name">{item.name}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Column 2 */}
+                <div className="mw-eq-column">
+                  {EQUIPMENT_ITEMS.filter((item) => item.column === 2).map((item) => {
+                    const isChecked = selectedEquipment.includes(item.id);
+                    return (
+                      <div
+                        key={item.id}
+                        className={`mw-eq-item ${isChecked ? "checked" : ""}`}
+                        onClick={() => handleToggleEquipment(item.id)}
+                        role="checkbox"
+                        aria-checked={isChecked}
+                        tabIndex={0}
+                      >
+                        <div className={`mw-checkbox ${isChecked ? "checked" : ""}`}>
+                          {isChecked && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                        </div>
+                        <EquipmentIcon id={item.id} />
+                        <span className="mw-eq-name">{item.name}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Muscle Detail & Targeted Exercises Card */}
+          <div className="mw-exercise-section">
+            {selectedMuscle && mapping ? (
+              <div className="mw-active-muscle-card">
+                {/* Active Muscle Header */}
+                <div className="mw-muscle-header">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="mw-muscle-name">{mapping.displayName}</h4>
+                      {mapping.category && (
+                        <span className="mw-category-tag">{mapping.category}</span>
+                      )}
+                    </div>
+                    {advancedMode && mapping.latinName && (
+                      <p className="mw-latin-name">Anatomical: {mapping.latinName}</p>
+                    )}
+                  </div>
+                  <button
+                    className="mw-close-muscle-btn"
+                    onClick={() => setSelectedMuscle(null)}
+                    title="Deselect muscle"
+                    aria-label="Close muscle view"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Advanced Mode: Biomechanics & Synergists */}
+                {advancedMode && mapping.functionDescription && (
+                  <div className="mw-biomechanics-box">
+                    <p className="text-xs text-slate-300 leading-relaxed mb-2">
+                      <strong>Biomechanics:</strong> {mapping.functionDescription}
+                    </p>
+                    {mapping.synergists && mapping.synergists.length > 0 && (
+                      <div className="flex items-center gap-1.5 flex-wrap text-[11px] text-slate-400">
+                        <span className="text-cyan-400 font-semibold">Synergists:</span>
+                        {mapping.synergists.join(", ")}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Exercises Count Bar */}
+                <div className="mw-exercise-summary-bar">
+                  <span>
+                    <strong>{filteredExercises.length}</strong> Exercises Found
+                  </span>
+                  <button
+                    className="mw-library-link"
+                    onClick={() => navigate(getMuscleRoute(selectedMuscle))}
+                  >
+                    <span>Full Library</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </button>
+                </div>
+
+                {/* Filtered Exercise Cards List */}
+                <div className="mw-exercise-list">
+                  {filteredExercises.length === 0 ? (
+                    <div className="mw-no-exercises">
+                      <p>No exercises match the selected equipment filter.</p>
+                      <button
+                        className="mw-reset-eq-btn"
+                        onClick={() => setSelectedEquipment(["featured"])}
+                      >
+                        Reset to Featured Equipment
+                      </button>
+                    </div>
+                  ) : (
+                    filteredExercises.slice(0, 10).map((ex) => (
+                      <div
+                        key={ex.id}
+                        className="mw-exercise-item"
+                        onClick={() => setPreviewExercise(ex)}
+                      >
+                        <div className="mw-ex-thumb">
+                          {ex.poster ? (
+                            <img
+                              src={ex.poster}
+                              alt={ex.name}
+                              className="w-full h-full object-cover"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <div className="mw-thumb-placeholder">
+                              <Dumbbell className="w-4 h-4 text-slate-500" />
+                            </div>
+                          )}
+                          <div className="mw-play-overlay">
+                            <PlayCircle className="w-4 h-4 text-white" />
+                          </div>
+                        </div>
+                        <div className="mw-ex-details">
+                          <h5 className="mw-ex-name">{ex.name}</h5>
+                          <div className="flex items-center gap-2 text-[11px] text-slate-400">
+                            <span className="text-slate-300">{ex.equipment || "Bodyweight"}</span>
+                            <span>•</span>
+                            <span
+                              className={
+                                ex.difficulty === "Beginner"
+                                  ? "text-emerald-400"
+                                  : ex.difficulty === "Intermediate"
+                                  ? "text-amber-400"
+                                  : "text-rose-400"
+                              }
+                            >
+                              {ex.difficulty}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            ) : (
+              /* Empty Selection State */
+              <div className="mw-empty-prompt">
+                <div className="mw-empty-icon-wrap">
+                  <Activity className="w-6 h-6 text-red-500" />
+                </div>
+                <h4 className="text-sm font-bold text-white mb-1">Click Any Muscle on the Diagram</h4>
+                <p className="text-xs text-slate-400 leading-relaxed max-w-xs">
+                  Select chest, biceps, quads, back, or shoulders to see targeted exercises matching your checked equipment.
+                </p>
+                <div className="mw-quick-shortcuts">
+                  {["chest", "quadriceps", "biceps", "upper-back", "gluteal"].map((m) => (
+                    <button
+                      key={m}
+                      className="mw-shortcut-chip"
+                      onClick={() => handleMuscleClick(m)}
+                    >
+                      {MUSCLE_MAPPINGS[m]?.displayName.split(" ")[0] || m}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
-      {/* Tooltip (rendered outside root for fixed positioning) */}
-      <div
-        className={`mm-tooltip ${tooltipVisible ? "visible" : ""}`}
-        style={{ left: tooltipPos.x, top: tooltipPos.y }}
+      {/* ─── FLOATING CURSOR TOOLTIP ─── */}
+      {tooltip.visible && hoveredInfo && (
+        <div
+          className="mw-floating-tooltip"
+          style={{ left: tooltip.x + 12, top: tooltip.y + 12 }}
+        >
+          <div className="mw-tip-name">{hoveredInfo.name}</div>
+          {hoveredInfo.latin && (
+            <div className="mw-tip-latin"><em>{hoveredInfo.latin}</em></div>
+          )}
+          <div className="mw-tip-count">
+            <Sparkles className="w-3 h-3 text-red-400" />
+            <span>{hoveredInfo.count} Exercises</span>
+          </div>
+        </div>
+      )}
+
+      {/* ─── EXERCISE VIDEO PREVIEW MODAL ─── */}
+      <Dialog
+        open={!!previewExercise}
+        onOpenChange={(open) => {
+          if (!open) setPreviewExercise(null);
+        }}
       >
-        {tooltipText}
-      </div>
-    </>
+        <DialogContent className="max-w-2xl bg-slate-950 border border-slate-800 text-white p-6">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold flex items-center justify-between">
+              <span>{previewExercise?.name}</span>
+            </DialogTitle>
+            <DialogDescription className="text-sm text-slate-400">
+              Target: {previewExercise?.muscleGroup} • Equipment: {previewExercise?.equipment} • Difficulty: {previewExercise?.difficulty}
+            </DialogDescription>
+          </DialogHeader>
+
+          {previewExercise && (
+            <div className="mt-4 space-y-4">
+              <div className="rounded-xl overflow-hidden border border-slate-800 bg-slate-900">
+                <ErrorBoundary
+                  fallback={
+                    <div className="p-8 text-center text-sm text-slate-400">
+                      Unable to play demonstration video.
+                    </div>
+                  }
+                >
+                  <ExerciseVideoPlayer
+                    exercise={previewExercise}
+                  />
+                </ErrorBoundary>
+              </div>
+
+              {previewExercise.description && (
+                <p className="text-sm text-slate-300 leading-relaxed">
+                  {previewExercise.description}
+                </p>
+              )}
+
+              <div className="flex justify-end pt-2">
+                <button
+                  className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5"
+                  onClick={() => {
+                    setPreviewExercise(null);
+                    if (selectedMuscle) navigate(getMuscleRoute(selectedMuscle));
+                  }}
+                >
+                  <span>Explore Exercise Guides</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 };
