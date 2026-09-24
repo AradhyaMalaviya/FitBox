@@ -58,7 +58,8 @@ const listFiles = async (relDir, depth = 0, maxDepth = 3) => {
 };
 
 const extractRoutes = (appTsx) => {
-  const matches = [...appTsx.matchAll(/<Route\s+path="([^"]+)"\s+element=\{<(\w+)>/g)];
+  // Match both direct and wrapper-wrapped route patterns
+  const matches = [...appTsx.matchAll(/<Route\s+path="([^"]+)"\s+element=\{<(?:(?:Public|Protected)Route>\s*<)?(\w+)/g)];
   if (!matches.length) return "(could not parse routes)";
   return matches.map((m) => `${m[1]} -> ${m[2]}`).join("\n");
 };

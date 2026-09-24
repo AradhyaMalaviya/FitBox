@@ -31,6 +31,7 @@ export default function GymBuddyChat() {
   const [sending, setSending] = useState(false);
   const [sessionModalOpen, setSessionModalOpen] = useState(false);
   const [floatingEmojis, setFloatingEmojis] = useState<{id: number, emoji: string}[]>([]);
+  const [isLiveWorkout] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const QUICK_REACTIONS = ["🔥", "💪", "👑", "⚡"];
@@ -88,9 +89,6 @@ export default function GymBuddyChat() {
       </div>
     );
   }
-
-  // Simulated live workout status
-  const isLiveWorkout = Math.random() > 0.5; // Simulate 50% chance they are working out for demo
 
   return (
     <div className="flex flex-col min-h-screen bg-background h-screen overflow-hidden relative">

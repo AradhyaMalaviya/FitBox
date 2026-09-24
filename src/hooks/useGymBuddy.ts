@@ -7,13 +7,14 @@ import { calculateCompatibilityScore } from '@/lib/compatibilityScore';
 export function useGymBuddy() {
   const { user, authUserId } = useAuth();
   const effectiveUserId = authUserId || user?.authUserId || user?.id;
+  const isGuest = user?.isGuest === true || effectiveUserId === 'guest';
 
   const [profile, setProfile] = useState<GymBuddyProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchProfile = useCallback(async () => {
-    if (!effectiveUserId) {
+    if (!effectiveUserId || isGuest) {
       setLoading(false);
       return;
     }
@@ -32,13 +33,14 @@ export function useGymBuddy() {
     } finally {
       setLoading(false);
     }
-  }, [effectiveUserId]);
+  }, [effectiveUserId, isGuest]);
 
   useEffect(() => {
     fetchProfile();
   }, [fetchProfile]);
 
   const saveProfile = async (updates: Partial<GymBuddyProfile>) => {
+    if (isGuest) throw new Error('Sign up to save your GymBuddy profile!');
     if (!effectiveUserId) throw new Error('No authenticated user found');
     try {
       const { data, error } = await supabase
@@ -62,6 +64,7 @@ export function useGymBuddy() {
   };
 
   const getCandidates = async (): Promise<GymBuddyCandidate[]> => {
+    if (isGuest) return [];
     if (!effectiveUserId || !profile) return [];
     
     try {
@@ -114,6 +117,7 @@ export function useGymBuddy() {
   };
 
   const swipe = async (targetId: string, direction: 'right' | 'left'): Promise<{ match: boolean }> => {
+    if (isGuest) throw new Error('Sign up to use GymBuddy matching!');
     if (!effectiveUserId) throw new Error('No authenticated user found');
     
     try {

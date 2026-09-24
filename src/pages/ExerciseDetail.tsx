@@ -7,10 +7,12 @@ import { Card } from "@/components/ui/card";
 import { exercises } from "@/data/exercises";
 import { ArrowLeft, Clock, Dumbbell, Target, Info, Zap, Play, AlertTriangle } from "lucide-react";
 import { ExerciseVideoPlayer } from "@/components/exercise/ExerciseVideoPlayer";
+import { useWorkout } from "@/contexts/WorkoutContext";
 
 const ExerciseDetail = () => {
     const { exerciseId } = useParams();
     const navigate = useNavigate();
+    const { activeWorkout, startWorkout, addExercise } = useWorkout();
 
     const exercise = exercises.find(e => e.id === exerciseId);
 
@@ -62,7 +64,13 @@ const ExerciseDetail = () => {
             <div className="px-4 pt-4 max-w-7xl mx-auto">
                 <Button
                     variant="ghost"
-                    onClick={() => navigate(-1)}
+                    onClick={() => {
+                        if (window.history.length > 1) {
+                            navigate(-1);
+                        } else {
+                            navigate('/exercises');
+                        }
+                    }}
                     className="gap-2 text-muted-foreground hover:text-foreground"
                 >
                     <ArrowLeft className="h-4 w-4" />
@@ -203,16 +211,33 @@ const ExerciseDetail = () => {
                             <Button
                                 size="lg"
                                 className="flex-1 gap-2 text-lg py-6"
-                                onClick={() => navigate('/workout/active')}
+                                onClick={() => {
+                                    if (!activeWorkout) {
+                                        startWorkout(`${exercise.muscleGroup} Workout`);
+                                        setTimeout(() => {
+                                            addExercise(exercise.name, exercise.id);
+                                        }, 0);
+                                    } else {
+                                        const alreadyAdded = activeWorkout.exercises.some(
+                                            (e) => e.exerciseId === exercise.id || e.exerciseName === exercise.name
+                                        );
+                                        if (!alreadyAdded) {
+                                            addExercise(exercise.name, exercise.id);
+                                        }
+                                    }
+                                    navigate('/workout/active');
+                                }}
                             >
                                 <Play className="h-5 w-5" />
-                                Start Workout
+                                {activeWorkout ? 'Add & Continue Workout' : 'Start Workout'}
                             </Button>
                             <Button
                                 size="lg"
                                 variant="outline"
                                 className="flex-1 gap-2"
-                                onClick={() => navigate('/generate-workout')}
+                                onClick={() => {
+                                    navigate('/generate-workout', { state: { preselectedExercise: exercise } });
+                                }}
                             >
                                 Add to Custom Workout
                             </Button>

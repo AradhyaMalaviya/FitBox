@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -14,9 +14,18 @@ const muscleGroups = ['Chest', 'Back', 'Legs', 'Arms', 'Shoulders', 'Core'];
 
 const GenerateWorkout = () => {
   const navigate = useNavigate();
-  const [step, setStep] = useState<'intro' | 'level' | 'bodyPart' | 'exercises'>('intro');
-  const [selectedLevel, setSelectedLevel] = useState<FitnessLevel>(null);
-  const [selectedBodyParts, setSelectedBodyParts] = useState<string[]>([]);
+  const location = useLocation();
+  const preselected = location.state?.preselectedExercise as Exercise | undefined;
+
+  const [step, setStep] = useState<'intro' | 'level' | 'bodyPart' | 'exercises'>(
+    preselected ? 'exercises' : 'intro'
+  );
+  const [selectedLevel, setSelectedLevel] = useState<FitnessLevel>(
+    preselected ? (preselected.difficulty as FitnessLevel) : null
+  );
+  const [selectedBodyParts, setSelectedBodyParts] = useState<string[]>(
+    preselected ? [preselected.muscleGroup] : []
+  );
 
   const handleBodyPartToggle = (bodyPart: string) => {
     setSelectedBodyParts(prev => 

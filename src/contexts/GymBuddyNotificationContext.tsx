@@ -121,11 +121,11 @@ export function GymBuddyNotificationProvider({ children }: { children: React.Rea
     if (!activeAuthUserId || matches.length === 0) return;
 
     const matchIds = matches.map(m => m.id);
-    const filterStr = `match_id=in.(${matchIds.join(',')})`;
 
     const channel = supabase.channel('gymbuddy_activity')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'gymbuddy_messages', filter: filterStr }, (payload) => {
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'gymbuddy_messages' }, (payload) => {
         const msg = payload.new;
+        if (!matchIds.includes(msg.match_id)) return;
         if (msg.sender_id !== activeAuthUserId) {
           if (location.pathname === `/gymbuddy/chat/${msg.match_id}`) return;
           
@@ -146,8 +146,9 @@ export function GymBuddyNotificationProvider({ children }: { children: React.Rea
           }
         }
       })
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'gymbuddy_session_logs', filter: filterStr }, (payload) => {
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'gymbuddy_session_logs' }, (payload) => {
         const log = payload.new;
+        if (!matchIds.includes(log.match_id)) return;
         if (log.logged_by !== activeAuthUserId) {
           const match = matches.find(m => m.id === log.match_id);
           if (match) {
@@ -166,9 +167,10 @@ export function GymBuddyNotificationProvider({ children }: { children: React.Rea
           }
         }
       })
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'gymbuddy_matches', filter: `id=in.(${matchIds.join(',')})` }, (payload) => {
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'gymbuddy_matches' }, (payload) => {
          const oldMatch = payload.old as GymBuddyMatch;
          const newMatch = payload.new as GymBuddyMatch;
+         if (!matchIds.includes(newMatch.id)) return;
          
          if (newMatch.shared_streak > (oldMatch.shared_streak || 0)) {
            const s = newMatch.shared_streak;

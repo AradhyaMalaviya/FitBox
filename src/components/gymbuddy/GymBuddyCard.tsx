@@ -68,11 +68,11 @@ export function GymBuddyCard({ candidate, index, onSwipe }: GymBuddyCardProps) {
 
   // Radar Data
   const radarData = [
-    { subject: 'Goals', A: 80, fullMark: 100 },
-    { subject: 'Split', A: candidate.workout_split === 'push_pull_legs' ? 90 : 60, fullMark: 100 },
-    { subject: 'Timing', A: 85, fullMark: 100 },
-    { subject: 'Location', A: 70, fullMark: 100 },
-    { subject: 'Exp', A: 75, fullMark: 100 },
+    { subject: 'Goals', A: (candidate.fitness_goals?.length || 1) * 20 + 40, fullMark: 100 },
+    { subject: 'Split', A: candidate.workout_split === 'push_pull_legs' ? 90 : 70, fullMark: 100 },
+    { subject: 'Timing', A: (candidate.preferred_timings?.length || 1) * 20 + 40, fullMark: 100 },
+    { subject: 'Location', A: candidate.gym_location ? 85 : 50, fullMark: 100 },
+    { subject: 'Exp', A: candidate.experience_level === 'advanced' ? 90 : 75, fullMark: 100 },
   ];
 
   return (
@@ -135,7 +135,7 @@ export function GymBuddyCard({ candidate, index, onSwipe }: GymBuddyCardProps) {
           </div>
         </div>
 
-        <div className="flex-1 p-5 flex flex-col gap-4 overflow-y-auto no-scrollbar pointer-events-none">
+        <div className="flex-1 p-5 flex flex-col gap-4 overflow-y-auto no-scrollbar pointer-events-auto">
           <div className="flex justify-between items-start">
             <div>
               <h2 className="text-2xl font-bold">{candidate.display_name}, {candidate.age_range_min}-{candidate.age_range_max}</h2>

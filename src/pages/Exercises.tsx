@@ -40,7 +40,7 @@ const Exercises = () => {
       <header className="py-8 px-6 border-b border-border/50 bg-card/30 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto">
           <Link 
-            to="/" 
+            to="/dashboard" 
             className="inline-flex items-center text-sm text-muted-foreground hover:text-primary transition-colors mb-4"
           >
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

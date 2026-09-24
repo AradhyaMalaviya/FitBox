@@ -44,6 +44,37 @@ export const WorkoutProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Restore from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('fitbox:activeWorkout');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Restore startedAt as Date
+        if (parsed.startedAt) {
+          parsed.startedAt = new Date(parsed.startedAt);
+        }
+        setActiveWorkout(parsed);
+      }
+    } catch (e) {
+      console.warn('Failed to restore workout:', e);
+      localStorage.removeItem('fitbox:activeWorkout');
+    }
+  }, []);
+
+  // Persist on change
+  useEffect(() => {
+    if (activeWorkout) {
+      try {
+        localStorage.setItem('fitbox:activeWorkout', JSON.stringify(activeWorkout));
+      } catch (e) {
+        console.warn('Failed to persist workout:', e);
+      }
+    } else {
+      localStorage.removeItem('fitbox:activeWorkout');
+    }
+  }, [activeWorkout]);
+
   // Timer logic
   const isWorkoutActive = !!activeWorkout;
   const workoutStartedAt = activeWorkout?.startedAt;

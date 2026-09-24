@@ -4,7 +4,7 @@ import { Plus, Dumbbell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
-import { useWorkout, WorkoutProvider } from '@/contexts/WorkoutContext';
+import { useWorkout } from '@/contexts/WorkoutContext';
 import { useWorkoutSave } from '@/hooks/useWorkoutSave';
 import { WorkoutHeader } from '@/components/workout/WorkoutHeader';
 import { ExerciseLogCard } from '@/components/workout/ExerciseLogCard';
@@ -21,7 +21,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
-const ActiveWorkoutContent = () => {
+const ActiveWorkout = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const {
@@ -59,10 +59,17 @@ const ActiveWorkoutContent = () => {
 
     saveWorkout(activeWorkout, {
       onSuccess: (result) => {
-        toast({
-          title: '🎉 Workout Complete!',
-          description: `Saved ${result.exerciseCount} exercises with ${result.setCount} sets.`,
-        });
+        if (result.isGuest) {
+          toast({
+            title: '🎉 Workout Complete!',
+            description: `Saved locally! Create an account anytime to sync your workouts.`,
+          });
+        } else {
+          toast({
+            title: '🎉 Workout Complete!',
+            description: `Saved ${result.exerciseCount} exercises with ${result.setCount} sets.`,
+          });
+        }
         endWorkout();
         navigate('/dashboard');
       },
@@ -161,14 +168,6 @@ const ActiveWorkoutContent = () => {
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  );
-};
-
-const ActiveWorkout = () => {
-  return (
-    <WorkoutProvider>
-      <ActiveWorkoutContent />
-    </WorkoutProvider>
   );
 };
 

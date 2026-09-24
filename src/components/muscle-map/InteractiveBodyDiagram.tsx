@@ -6,6 +6,7 @@ import {
   SPLIT_PRESETS,
   getExercisesForMuscle,
   getMuscleRoute,
+  normalizeMuscleSlug,
   type MuscleMapping,
 } from "@/lib/muscleMapping";
 import { exercises, type Exercise } from "@/data/exercises";
@@ -277,7 +278,8 @@ export const InteractiveBodyDiagram: React.FC = () => {
     const list: ExtendedBodyPart[] = [];
 
     // 1. Split preset or search highlights
-    activeHighlightedSlugs.forEach((slug) => {
+    activeHighlightedSlugs.forEach((rawSlug) => {
+      const slug = normalizeMuscleSlug(rawSlug);
       list.push({
         slug: slug as Slug,
         color: "#1e3a8a",
@@ -315,8 +317,9 @@ export const InteractiveBodyDiagram: React.FC = () => {
 
     // 3. Hovered muscle (bright coral red)
     if (hoveredMuscle && hoveredMuscle !== selectedMuscle) {
+      const slug = normalizeMuscleSlug(hoveredMuscle);
       list.push({
-        slug: hoveredMuscle as Slug,
+        slug: slug as Slug,
         color: "#ff385c",
         styles: {
           fill: "#ff385c",
@@ -328,8 +331,9 @@ export const InteractiveBodyDiagram: React.FC = () => {
 
     // 4. Selected muscle (iconic MuscleWiki active crimson red)
     if (selectedMuscle) {
+      const slug = normalizeMuscleSlug(selectedMuscle);
       list.push({
-        slug: selectedMuscle as Slug,
+        slug: slug as Slug,
         color: "#ea384c",
         styles: {
           fill: "#ea384c",

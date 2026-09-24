@@ -6,6 +6,7 @@ import { AnalyticsTracker } from "@/components/AnalyticsTracker";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { WorkoutProvider } from "@/contexts/WorkoutContext";
 import { GymBuddyNotificationProvider } from "@/contexts/GymBuddyNotificationContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ProjectAssistantChat } from "@/components/ProjectAssistantChat";
@@ -17,6 +18,7 @@ const ExerciseDetail = lazy(() => import("./pages/ExerciseDetail"));
 const GenerateWorkout = lazy(() => import("./pages/GenerateWorkout"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Auth = lazy(() => import("./pages/Auth"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Nutrition = lazy(() => import("./pages/Nutrition"));
 const NutritionQuestionnaire = lazy(() => import("./pages/NutritionQuestionnaire"));
 const NutritionRoadmap = lazy(() => import("./pages/NutritionRoadmap"));
@@ -59,6 +61,14 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
+  const hashParams = new URLSearchParams(window.location.hash.substring(1));
+  const searchParams = new URLSearchParams(window.location.search);
+  const isRecovery = hashParams.get('type') === 'recovery' || searchParams.get('type') === 'recovery';
+
+  if (isRecovery) {
+    return <Navigate to="/reset-password" replace />;
+  }
+
   if (user) {
     return <Navigate to="/dashboard" replace />;
   }
@@ -74,38 +84,41 @@ const App = () => (
       <BrowserRouter>
         <AnalyticsTracker />
         <AuthProvider>
-          <GymBuddyNotificationProvider>
-            <ErrorBoundary>
-              <Suspense fallback={<RouteLoader />}>
-              <Routes>
-                <Route path="/" element={<PublicRoute><LandingPage /></PublicRoute>} />
-                <Route path="/auth" element={<PublicRoute><Auth /></PublicRoute>} />
-                <Route path="/dashboard" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-                <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
-                <Route path="/exercises" element={<ProtectedRoute><Exercises /></ProtectedRoute>} />
-                <Route path="/exercises/:muscleId" element={<ProtectedRoute><Exercises /></ProtectedRoute>} />
-                <Route path="/exercise/:exerciseId" element={<ProtectedRoute><ExerciseDetail /></ProtectedRoute>} />
-                <Route path="/generate-workout" element={<ProtectedRoute><GenerateWorkout /></ProtectedRoute>} />
-                <Route path="/nutrition" element={<ProtectedRoute><Nutrition /></ProtectedRoute>} />
-                <Route path="/nutrition/questionnaire" element={<ProtectedRoute><NutritionQuestionnaire /></ProtectedRoute>} />
-                <Route path="/nutrition/roadmap" element={<ProtectedRoute><NutritionRoadmap /></ProtectedRoute>} />
-                <Route path="/workout/active" element={<ProtectedRoute><ActiveWorkout /></ProtectedRoute>} />
-                
-                {/* GymBuddy Routes */}
-                <Route path="/gymbuddy/setup" element={<ProtectedRoute><GymBuddyProfileSetup /></ProtectedRoute>} />
-                <Route path="/gymbuddy/discover" element={<ProtectedRoute><GymBuddyDiscover /></ProtectedRoute>} />
-                <Route path="/gymbuddy/matches" element={<ProtectedRoute><GymBuddyMatches /></ProtectedRoute>} />
-                <Route path="/gymbuddy/chat/:matchId" element={<ProtectedRoute><GymBuddyChat /></ProtectedRoute>} />
-                <Route path="/gymbuddy/settings" element={<ProtectedRoute><GymBuddySettings /></ProtectedRoute>} />
+          <WorkoutProvider>
+            <GymBuddyNotificationProvider>
+              <ErrorBoundary>
+                <Suspense fallback={<RouteLoader />}>
+                <Routes>
+                  <Route path="/" element={<PublicRoute><LandingPage /></PublicRoute>} />
+                  <Route path="/auth" element={<PublicRoute><Auth /></PublicRoute>} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/dashboard" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+                  <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
+                  <Route path="/exercises" element={<ProtectedRoute><Exercises /></ProtectedRoute>} />
+                  <Route path="/exercises/:muscleId" element={<ProtectedRoute><Exercises /></ProtectedRoute>} />
+                  <Route path="/exercise/:exerciseId" element={<ProtectedRoute><ExerciseDetail /></ProtectedRoute>} />
+                  <Route path="/generate-workout" element={<ProtectedRoute><GenerateWorkout /></ProtectedRoute>} />
+                  <Route path="/nutrition" element={<ProtectedRoute><Nutrition /></ProtectedRoute>} />
+                  <Route path="/nutrition/questionnaire" element={<ProtectedRoute><NutritionQuestionnaire /></ProtectedRoute>} />
+                  <Route path="/nutrition/roadmap" element={<ProtectedRoute><NutritionRoadmap /></ProtectedRoute>} />
+                  <Route path="/workout/active" element={<ProtectedRoute><ActiveWorkout /></ProtectedRoute>} />
+                  
+                  {/* GymBuddy Routes */}
+                  <Route path="/gymbuddy/setup" element={<ProtectedRoute><GymBuddyProfileSetup /></ProtectedRoute>} />
+                  <Route path="/gymbuddy/discover" element={<ProtectedRoute><GymBuddyDiscover /></ProtectedRoute>} />
+                  <Route path="/gymbuddy/matches" element={<ProtectedRoute><GymBuddyMatches /></ProtectedRoute>} />
+                  <Route path="/gymbuddy/chat/:matchId" element={<ProtectedRoute><GymBuddyChat /></ProtectedRoute>} />
+                  <Route path="/gymbuddy/settings" element={<ProtectedRoute><GymBuddySettings /></ProtectedRoute>} />
 
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-              {/* Global project-aware assistant (free Gemini direct, bottom-left) */}
-              <ProjectAssistantChat />
-            </ErrorBoundary>
-          </GymBuddyNotificationProvider>
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Suspense>
+                {/* Global project-aware assistant (free Gemini direct, bottom-left) */}
+                <ProjectAssistantChat />
+              </ErrorBoundary>
+            </GymBuddyNotificationProvider>
+          </WorkoutProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

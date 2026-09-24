@@ -1,4 +1,4 @@
-import { Trash2, Plus } from 'lucide-react';
+import { Trash2, Plus, X } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,11 +40,12 @@ export const ExerciseLogCard = ({
       </CardHeader>
       <CardContent className="pt-0">
         {/* Header row */}
-        <div className="grid grid-cols-[40px_1fr_1fr_50px] gap-2 mb-2 px-1">
+        <div className="grid grid-cols-[40px_1fr_1fr_50px_32px] gap-2 mb-2 px-1">
           <span className="text-xs font-medium text-muted-foreground text-center">SET</span>
           <span className="text-xs font-medium text-muted-foreground text-center">KG</span>
           <span className="text-xs font-medium text-muted-foreground text-center">REPS</span>
           <span className="text-xs font-medium text-muted-foreground text-center">DONE</span>
+          <span></span>
         </div>
 
         {/* Sets */}
@@ -86,7 +87,7 @@ const SetRow = ({ set, onRemove, onUpdate, canRemove }: SetRowProps) => {
   return (
     <div
       className={cn(
-        "grid grid-cols-[40px_1fr_1fr_50px] gap-2 items-center p-2 rounded-lg transition-colors",
+        "grid grid-cols-[40px_1fr_1fr_50px_32px] gap-2 items-center p-2 rounded-lg transition-colors",
         set.completed ? "bg-fitness-green/10" : "bg-muted/30"
       )}
     >
@@ -137,6 +138,22 @@ const SetRow = ({ set, onRemove, onUpdate, canRemove }: SetRowProps) => {
             set.completed && "bg-fitness-green border-fitness-green data-[state=checked]:bg-fitness-green"
           )}
         />
+      </div>
+
+      {/* Remove Button */}
+      <div className="flex items-center justify-center">
+        {canRemove ? (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+            onClick={onRemove}
+          >
+            <X className="w-4 h-4" />
+          </Button>
+        ) : (
+          <div className="w-8 h-8" />
+        )}
       </div>
     </div>
   );

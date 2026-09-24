@@ -12,8 +12,10 @@ import {
   cuttingDayPlan,
   proteinSwaps,
   type FoodItem,
-  type DietType
+  type DietType,
+  type MealPlanItem
 } from "@/data/indianFoodDatabase";
+import type { UserPreferencePayload } from "@/lib/onboarding";
 
 interface UserData {
   gender: string;
@@ -29,48 +31,136 @@ const NutritionRoadmap = () => {
   const [searchParams] = useSearchParams();
   const planType = searchParams.get("type") || "workout";
   const [userData, setUserData] = useState<UserData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [calories, setCalories] = useState(0);
   const [macros, setMacros] = useState({ protein: 0, carbs: 0, fats: 0 });
 
   useEffect(() => {
     const stored = localStorage.getItem("nutritionUserData");
+    const onboardingStored = localStorage.getItem("fitbox:onboarding");
+    let onboardingData: UserPreferencePayload | null = null;
+    if (onboardingStored) {
+      try {
+        onboardingData = JSON.parse(onboardingStored);
+      } catch (e) {
+        console.warn("Failed to parse onboarding data:", e);
+      }
+    }
+
     if (stored) {
       const data = JSON.parse(stored);
+      if (!data.dietaryPreference && onboardingData?.diet?.type) {
+        data.dietaryPreference = onboardingData.diet.type;
+      }
       setUserData(data);
-      calculateNutrition(data);
+      calculateNutrition(data, onboardingData);
+    } else if (onboardingData) {
+      // Fallback: derive initial nutrition profile from onboarding preferences
+      const fallbackGoal = onboardingData.inspiration?.tags?.some((t: string) => t.includes('shredded') || t.includes('cut')) 
+        ? 'cutting' 
+        : (onboardingData.inspiration?.tags?.some((t: string) => t.includes('bulk')) ? 'bulk' : 'recomp');
+
+      const derivedUserData: UserData = {
+        gender: 'male',
+        age: '25',
+        height: '175',
+        weight: '70',
+        goal: fallbackGoal,
+        dietaryPreference: onboardingData.diet?.type || 'omnivore',
+        activityLevel: 'moderate',
+      };
+      setUserData(derivedUserData);
+      calculateNutrition(derivedUserData, onboardingData);
     }
+    setIsLoading(false);
   }, []);
 
-  const calculateNutrition = (data: UserData) => {
+  const calculateNutrition = (data: UserData, onboardingData?: UserPreferencePayload | null) => {
     const weight = parseFloat(data.weight);
     const height = parseFloat(data.height);
     const age = parseFloat(data.age);
 
-    const bmr = data.gender === "male"
-      ? 10 * weight + 6.25 * height - 5 * age + 5
-      : 10 * weight + 6.25 * height - 5 * age - 161;
+    let tdee: number;
 
-    const activityMultiplier = data.activityLevel === "sedentary" ? 1.2
-      : data.activityLevel === "moderate" ? 1.55 : 1.725;
+    // Use specific calorie target if configured during onboarding
+    if (onboardingData?.diet?.calorieTarget && Number(onboardingData.diet.calorieTarget) > 1000) {
+      tdee = Number(onboardingData.diet.calorieTarget);
+    } else {
+      const bmr = data.gender === "male"
+        ? 10 * weight + 6.25 * height - 5 * age + 5
+        : 10 * weight + 6.25 * height - 5 * age - 161;
 
-    let tdee = bmr * activityMultiplier;
+      const activityMultiplier = data.activityLevel === "sedentary" ? 1.2
+        : data.activityLevel === "moderate" ? 1.55 : 1.725;
 
-    if (data.goal === "bulk") tdee += 500;
-    else if (data.goal === "lean-bulk") tdee += 250;
+      tdee = bmr * activityMultiplier;
+
+      if (data.goal === "bulk") tdee += 500;
+      else if (data.goal === "lean-bulk") tdee += 250;
+      else if (data.goal === "cutting") tdee -= 500;
+      // recomp preserves TDEE maintenance
+    }
 
     setCalories(Math.round(tdee));
 
     const protein = Math.round(weight * 2.2);
     const fats = Math.round((tdee * 0.25) / 9);
-    const carbs = Math.round((tdee - (protein * 4) - (fats * 9)) / 4);
+    const carbs = Math.max(0, Math.round((tdee - (protein * 4) - (fats * 9)) / 4));
 
     setMacros({ protein, carbs, fats });
   };
 
   const getDietType = (): DietType => {
     if (userData?.dietaryPreference === "vegan") return "vegan";
-    if (userData?.dietaryPreference === "vegetarian") return "veg";
+    if (userData?.dietaryPreference === "vegetarian" || userData?.dietaryPreference === "veg") return "veg";
     return "non-veg";
+  };
+
+  const getPersonalizedDayPlan = (goal: string, dietType: DietType): MealPlanItem[] => {
+    const isBulk = goal === "bulk" || goal === "lean-bulk";
+
+    if (dietType === "vegan") {
+      return isBulk
+        ? [
+            { meal: 'Breakfast', time: '7-8 AM', foods: 'Sprouted moong cheela (2-3) + tofu bhurji (100g) + green tea', protein: '30-35g', calories: '~520 kcal' },
+            { meal: 'Mid-morning', time: '10-11 AM', foods: 'Banana + 2 tbsp peanut butter on 2 multigrain rotis', protein: '~16g', calories: '~380 kcal' },
+            { meal: 'Lunch', time: '1-2 PM', foods: 'Soya chunk curry (60g dry) + 2 cups brown rice + fresh kachumber salad', protein: '~45g', calories: '~620 kcal' },
+            { meal: 'Pre-workout', time: '4-5 PM', foods: 'Roasted chana (50g) + 3-4 dates + black coffee', protein: '~13g', calories: '~260 kcal' },
+            { meal: 'Post-workout', time: '7-8 PM', foods: 'High-protein sattu drink (60g sattu) + soy milk smoothie', protein: '~32g', calories: '~450 kcal' },
+            { meal: 'Dinner', time: '9-10 PM', foods: 'Rajma / Chole chawal (1.5 bowls) + steamed spinach & carrots', protein: '~26g', calories: '~540 kcal' },
+            { meal: 'Late snack', time: '10-11 PM', foods: 'Roasted peanuts (30g) + makhana (fox nuts)', protein: '~11g', calories: '~210 kcal' }
+          ]
+        : [
+            { meal: 'Breakfast', time: '7-8 AM', foods: 'Besan & sprouted moong cheela + mint chutney + unsweetened green tea', protein: '~24g', calories: '~310 kcal' },
+            { meal: 'Mid-morning', time: '10-11 AM', foods: 'Roasted chana (35g) + lemon water with chia seeds', protein: '~12g', calories: '~160 kcal' },
+            { meal: 'Lunch', time: '1-2 PM', foods: 'Tofu & vegetable stir-fry (150g tofu) + 1 bowl yellow moong dal + 1 jowar roti', protein: '~34g', calories: '~420 kcal' },
+            { meal: 'Snack', time: '4-5 PM', foods: 'Sprouted moong & kala chana chaat + cucumber & tomato', protein: '~14g', calories: '~150 kcal' },
+            { meal: 'Dinner', time: '7-8 PM', foods: 'Soya chunk & broccoli stir-fry (50g dry soya) + large cucumber salad', protein: '~32g', calories: '~330 kcal' }
+          ];
+    }
+
+    if (dietType === "veg") {
+      return isBulk
+        ? [
+            { meal: 'Breakfast', time: '7-8 AM', foods: 'Paneer stuffed paratha (120g paneer) + 1 cup fresh curd + almonds', protein: '~35g', calories: '~620 kcal' },
+            { meal: 'Mid-morning', time: '10-11 AM', foods: 'Banana + peanut butter on toast + 200 ml milk', protein: '~16g', calories: '~350 kcal' },
+            { meal: 'Lunch', time: '1-2 PM', foods: 'Soya chunk curry (50g dry) + 2 rotis + 1 bowl dal + fresh curd', protein: '~46g', calories: '~630 kcal' },
+            { meal: 'Pre-workout', time: '4-5 PM', foods: 'Roasted chana (50g) + warm jaggery milk', protein: '~14g', calories: '~240 kcal' },
+            { meal: 'Post-workout', time: '7-8 PM', foods: 'Paneer bhurji (150g) + 1.5 cups jeera rice', protein: '~36g', calories: '~600 kcal' },
+            { meal: 'Dinner', time: '9-10 PM', foods: 'Rajma / Dal makhani + 2 rotis + salad', protein: '~25g', calories: '~520 kcal' },
+            { meal: 'Late snack', time: '10-11 PM', foods: 'Roasted chana + 1 glass warm turmeric milk', protein: '~14g', calories: '~220 kcal' }
+          ]
+        : [
+            { meal: 'Breakfast', time: '7-8 AM', foods: 'Sprouted moong cheela + 80g low-fat paneer + green tea', protein: '~28g', calories: '~340 kcal' },
+            { meal: 'Mid-morning', time: '10-11 AM', foods: 'Roasted chana (30g) + 1 glass cold chaas (buttermilk)', protein: '~13g', calories: '~160 kcal' },
+            { meal: 'Lunch', time: '1-2 PM', foods: 'Yellow dal (moong) + 1 multigrain roti + cucumber curd + 80g paneer salad', protein: '~36g', calories: '~440 kcal' },
+            { meal: 'Snack', time: '4-5 PM', foods: 'Fresh curd (150g) + roasted flaxseeds & cucumber sticks', protein: '~10g', calories: '~110 kcal' },
+            { meal: 'Dinner', time: '7-8 PM', foods: 'Soya chunks & capsicum stir-fry (50g dry) + steamed greens', protein: '~34g', calories: '~320 kcal' }
+          ];
+    }
+
+    // Default omnivore/non-veg
+    return isBulk ? bulkingDayPlan : cuttingDayPlan;
   };
 
   const getFilteredFoods = (role: string): FoodItem[] => {
@@ -123,6 +213,14 @@ const NutritionRoadmap = () => {
     </div>
   );
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-muted-foreground">Loading nutrition data...</div>
+      </div>
+    );
+  }
+
   if (!userData) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -136,10 +234,21 @@ const NutritionRoadmap = () => {
     );
   }
 
-  const currentMealPlan = userData.goal === "bulk" || userData.goal === "lean-bulk" ? bulkingDayPlan : cuttingDayPlan;
+  const currentMealPlan = getPersonalizedDayPlan(userData.goal, getDietType());
+
+  const handleDownloadPDF = () => {
+    window.print();
+  };
 
   return (
     <div className="min-h-screen bg-background">
+      <style>{`
+        @media print {
+          header, .fixed, button, nav, [role="tablist"] { display: none !important; }
+          body { background: white !important; }
+          .print\\:block { display: block !important; }
+        }
+      `}</style>
       <Header />
 
       <section className="py-12 px-6">
@@ -173,7 +282,7 @@ const NutritionRoadmap = () => {
               </div>
             </div>
 
-            <Button variant="outline" className="gap-2">
+            <Button variant="outline" className="gap-2" onClick={handleDownloadPDF}>
               <Download className="w-4 h-4" />
               Download Plan (PDF)
             </Button>
@@ -190,6 +299,11 @@ const NutritionRoadmap = () => {
                   ? "~2800-3000 kcal • ~175-185g protein"
                   : "~1600-1900 kcal • ~130-150g protein"}
               </CardDescription>
+              {getDietType() !== 'non-veg' && (
+                <div className="mt-2 text-sm text-amber-600 dark:text-amber-400 bg-amber-500/10 p-2 rounded">
+                  Note: This sample plan may contain non-vegetarian items. Please refer to the tabs below for filtered food recommendations tailored to your {userData.dietaryPreference} diet.
+                </div>
+              )}
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">

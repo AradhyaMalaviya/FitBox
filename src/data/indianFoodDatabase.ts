@@ -536,6 +536,15 @@ export const beverages: FoodItem[] = [
     { id: 'protein-smoothie', name: 'Protein Smoothie (Milk + Banana + PB)', serving: '300 ml', protein: 22.5, carbs: 40, fat: 18, calories: 450, costRange: '₹30-70', dietType: 'veg', mealRoles: ['post-workout', 'breakfast'], category: 'beverages' }
 ];
 
+// ==================== OILS, CONDIMENTS & HEALTHY FATS ====================
+export const oilsCondiments: FoodItem[] = [
+    { id: 'desi-ghee', name: 'Desi Cow Ghee', serving: '1 tbsp (15g)', protein: 0, carbs: 0, fat: 15, calories: 135, costRange: '₹10-25', dietType: 'veg', mealRoles: ['main-meal', 'breakfast'], notes: 'Rich in butyric acid and fat-soluble vitamins', category: 'oils-condiments' },
+    { id: 'mustard-oil', name: 'Mustard Oil (Kachi Ghani)', serving: '1 tbsp (15ml)', protein: 0, carbs: 0, fat: 14, calories: 124, costRange: '₹4-10', dietType: 'vegan', mealRoles: ['main-meal'], notes: 'Ideal ratio of omega-3 to omega-6 fatty acids', category: 'oils-condiments' },
+    { id: 'coconut-oil', name: 'Virgin Coconut Oil', serving: '1 tbsp (15ml)', protein: 0, carbs: 0, fat: 14, calories: 120, costRange: '₹8-20', dietType: 'vegan', mealRoles: ['main-meal', 'pre-workout'], notes: 'Contains MCTs for rapid energy delivery', category: 'oils-condiments' },
+    { id: 'peanut-butter', name: 'Peanut Butter (100% Natural)', serving: '2 tbsp (32g)', protein: 8, carbs: 6, fat: 16, calories: 190, costRange: '₹15-35', dietType: 'vegan', mealRoles: ['snack', 'breakfast', 'pre-workout'], notes: 'Unsweetened roasted peanuts; excellent plant protein & healthy fats', category: 'oils-condiments' },
+    { id: 'white-butter', name: 'White Butter (Homemade Makhan)', serving: '1 tbsp (15g)', protein: 0.1, carbs: 0.1, fat: 12, calories: 105, costRange: '₹5-15', dietType: 'veg', mealRoles: ['breakfast', 'main-meal'], notes: 'Natural probiotics, easily digestible fats', category: 'oils-condiments' }
+];
+
 // ==================== ALL FOODS COMBINED ====================
 export const allFoods: FoodItem[] = [
     ...dairyProducts,
@@ -546,7 +555,8 @@ export const allFoods: FoodItem[] = [
     ...nutsSnacks,
     ...preparedMeals,
     ...regionalSnacks,
-    ...beverages
+    ...beverages,
+    ...oilsCondiments
 ];
 
 // ==================== SAMPLE MEAL PLANS ====================

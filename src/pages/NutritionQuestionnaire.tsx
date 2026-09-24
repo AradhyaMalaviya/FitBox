@@ -138,6 +138,7 @@ const NutritionQuestionnaire = () => {
                       <SelectItem value="bulk">Bulk (Gain Muscle Mass)</SelectItem>
                       <SelectItem value="lean-bulk">Lean Bulk (Slow Muscle Gain)</SelectItem>
                       <SelectItem value="recomp">Body Recomposition</SelectItem>
+                      <SelectItem value="cutting">Cutting (Fat Loss)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

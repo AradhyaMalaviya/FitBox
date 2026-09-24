@@ -809,19 +809,51 @@ export const SPLIT_PRESETS: Record<"all" | "push" | "pull" | "legs" | "core", st
     "triceps"
   ],
   pull: [
-    "back", "lats", "traps", "traps_upper", "traps_mid_lower", "trapezius",
-    "rhomboids", "rhomboids_teres", "rear_delts", "upper-back",
-    "biceps", "forearms", "forearms_flexors", "forearms_extensors", "forearm",
-    "lower_back", "lower-back"
+    "back", "upper-back", "traps", "traps_upper", "traps_mid_lower", "trapezius",
+    "rhomboids", "rhomboids_teres", "rear_delts", 
+    "biceps", "forearm", "forearms_flexors", "forearms_extensors", 
+    "lower-back"
   ],
   legs: [
-    "legs", "quads", "quads_rectus", "quads_lateralis", "quads_medialis", "quadriceps",
-    "hamstrings", "hamstring", "glutes", "glutes_maximus", "glutes_medius", "gluteal",
+    "legs", "quadriceps", "quads_rectus", "quads_lateralis", "quads_medialis",
+    "hamstring", "gluteal", "glutes_maximus", "glutes_medius",
     "adductors", "calves", "calves_gastroc", "calves_soleus", "calves_tibialis", "calves_front", "tibialis",
     "knees", "ankles"
   ],
   core: [
     "abs", "abs_upper", "abs_mid", "abs_lower",
-    "obliques", "lower_back", "lower-back"
+    "obliques", "lower-back"
   ],
 };
+
+/**
+ * Canonical muscle taxonomy translation layer mapping common application aliases
+ * to the exact slugs expected by react-muscle-highlighter.
+ */
+export const CANONICAL_SLUG_MAP: Record<string, string> = {
+  quads: "quadriceps",
+  quadricep: "quadriceps",
+  hamstrings: "hamstring",
+  lats: "upper-back",
+  latissimus: "upper-back",
+  lower_back: "lower-back",
+  forearms: "forearm",
+  glutes: "gluteal",
+  traps: "trapezius",
+  delts: "deltoids",
+  shoulders: "deltoids",
+  chest: "chest",
+  biceps: "biceps",
+  triceps: "triceps",
+  abs: "abs",
+  obliques: "obliques",
+  calves: "calves",
+  adductors: "adductors",
+  tibialis: "tibialis",
+};
+
+export function normalizeMuscleSlug(slug: string): string {
+  if (!slug) return "";
+  const lower = slug.toLowerCase().replace(/_/g, "-");
+  return CANONICAL_SLUG_MAP[lower] || CANONICAL_SLUG_MAP[slug.toLowerCase()] || lower;
+}

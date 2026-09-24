@@ -7,6 +7,7 @@ interface SaveWorkoutResult {
   sessionId: string;
   exerciseCount: number;
   setCount: number;
+  isGuest?: boolean;
 }
 
 export const useWorkoutSave = () => {
@@ -16,8 +17,28 @@ export const useWorkoutSave = () => {
     mutationFn: async (workout: ActiveWorkout): Promise<SaveWorkoutResult> => {
       const activeProfileId = profileId || user?.profileId || user?.id;
 
-      if (!activeProfileId || activeProfileId === 'guest') {
-        throw new Error('User not authenticated or in guest mode');
+      if (!activeProfileId || activeProfileId === 'guest' || user?.isGuest) {
+        const guestSession = {
+          id: `guest-session-${Date.now()}`,
+          name: workout.name,
+          startedAt: workout.startedAt.toISOString(),
+          endedAt: new Date().toISOString(),
+          exercises: workout.exercises,
+        };
+        try {
+          const history = JSON.parse(localStorage.getItem('fitbox:guestWorkoutHistory') || '[]');
+          history.unshift(guestSession);
+          localStorage.setItem('fitbox:guestWorkoutHistory', JSON.stringify(history.slice(0, 20)));
+        } catch (e) {
+          console.warn('Failed to save guest workout history', e);
+        }
+        const totalSets = workout.exercises.reduce((acc, ex) => acc + ex.sets.filter(s => s.completed).length, 0);
+        return {
+          sessionId: guestSession.id,
+          exerciseCount: workout.exercises.length,
+          setCount: totalSets,
+          isGuest: true,
+        };
       }
 
       // 1. Create the workout session using profileId (FK target for workout_sessions.user_id)

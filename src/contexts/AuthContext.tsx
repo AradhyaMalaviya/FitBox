@@ -64,6 +64,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     '[AuthContext Dev Check] profile.id matches auth_user_id exactly. If schema has separate UUIDs, confirm ID mapping.'
                   );
                 }
+              } else {
+                console.warn('[AuthContext] Profile not found for authenticated user, creating minimal fallback user');
+                setUser({
+                  id: currentSession.user.id,
+                  profileId: currentSession.user.id,
+                  authUserId: currentSession.user.id,
+                  username: currentSession.user.email?.split('@')[0] || 'User',
+                  phoneNumber: '',
+                  isGuest: false,
+                });
               }
             } finally {
               setLoading(false);
@@ -113,6 +123,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               authUserId: existingSession.user.id,
               username: profile.username,
               phoneNumber: profile.phone_number || '',
+              isGuest: false,
+            });
+          } else {
+            console.warn('[AuthContext] Profile not found for authenticated user in getSession, creating minimal fallback user');
+            setUser({
+              id: existingSession.user.id,
+              profileId: existingSession.user.id,
+              authUserId: existingSession.user.id,
+              username: existingSession.user.email?.split('@')[0] || 'User',
+              phoneNumber: '',
               isGuest: false,
             });
           }
@@ -259,7 +279,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // The email link brings the user back to /auth where they can sign in
       // with the new password they set via Supabase's hosted reset page.
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${window.location.origin}/auth`,
+        redirectTo: `${window.location.origin}/reset-password`,
       });
       if (error) {
         if (error.message === "Failed to fetch") {

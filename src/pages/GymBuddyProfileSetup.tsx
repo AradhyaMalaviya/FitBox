@@ -61,7 +61,7 @@ const profileSchema = z.object({
   age_range_max: z.number().min(16).max(99),
   is_discoverable: z.boolean().default(true),
   profile_visibility: z.string().default("public"),
-});
+}).refine(data => data.age_range_max >= data.age_range_min, { message: 'Max age must be ≥ min age', path: ['age_range_max'] });
 
 export default function GymBuddyProfileSetup() {
   const { profile, loading, saveProfile } = useGymBuddy();
@@ -204,7 +204,7 @@ export default function GymBuddyProfileSetup() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Gender (Optional)</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select gender" />
@@ -237,7 +237,7 @@ export default function GymBuddyProfileSetup() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Experience Level *</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select your level" />
@@ -260,7 +260,7 @@ export default function GymBuddyProfileSetup() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Workout Split *</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select your split" />

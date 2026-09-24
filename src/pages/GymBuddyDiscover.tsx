@@ -8,6 +8,8 @@ import { GymBuddyEmpty } from "@/components/gymbuddy/GymBuddyEmpty";
 import { GymBuddyMatchOverlay } from "@/components/gymbuddy/GymBuddyMatchOverlay";
 import { GymBuddyRadar } from "@/components/gymbuddy/GymBuddyRadar";
 import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Flame, Users, Settings } from "lucide-react";
 
 export default function GymBuddyDiscover() {
   const { profile, loading, error, getCandidates, swipe } = useGymBuddy();
@@ -110,6 +112,51 @@ export default function GymBuddyDiscover() {
     <div className="min-h-screen bg-background overflow-hidden flex flex-col">
       <Header />
       
+      {/* GymBuddy Navigation Bar */}
+      <div className="border-b border-border/50 bg-card/30 backdrop-blur-sm px-4 py-2.5">
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-1 sm:gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/dashboard')}
+              className="text-xs text-muted-foreground hover:text-foreground gap-1.5"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              Dashboard
+            </Button>
+            <div className="h-4 w-px bg-border/60 mx-1 hidden sm:block" />
+            <Button
+              variant="secondary"
+              size="sm"
+              className="text-xs font-semibold gap-1.5 bg-primary/15 text-primary hover:bg-primary/20"
+            >
+              <Flame className="w-3.5 h-3.5" />
+              Discover
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/gymbuddy/matches')}
+              className="text-xs text-muted-foreground hover:text-foreground gap-1.5"
+            >
+              <Users className="w-3.5 h-3.5" />
+              Matches
+            </Button>
+          </div>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/gymbuddy/setup')}
+            className="text-xs text-muted-foreground hover:text-foreground gap-1.5"
+          >
+            <Settings className="w-3.5 h-3.5" />
+            Profile Setup
+          </Button>
+        </div>
+      </div>
+
       <main className="flex-1 relative flex items-center justify-center p-4 pt-12">
         {candidates.length > 0 ? (
           <div className="relative w-full max-w-sm h-[600px] mx-auto">

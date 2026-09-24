@@ -126,8 +126,8 @@ export const INSPIRATION_PRESETS: InspirationPreset[] = [
   {
     name: "Toji",
     imageUrl: "/images/presets/toji.jpg",
-    tags: ["lean", "dense-muscle", "sharp", "agile"],
-    description: "Leaner, dense muscle with sharp lines.",
+    tags: ["lean", "shredded", "sharp", "dense-muscle"],
+    description: "Leaner, dense muscle with sharp lines and maximum definition.",
   },
 ];
 
@@ -155,14 +155,14 @@ export function deriveInspirationScore(tags: string[]): InspirationScore {
 
   const has = (keyword: string) => lower.some((t) => t.includes(keyword));
 
+  if (has("cut") || has("shredded") || has("sharp") || has("definition")) {
+    return "cutting";
+  }
   if (has("bulky") || has("powerful") || has("strength")) {
     return "bulk";
   }
-  if (has("lean") && (has("explosive") || has("agile"))) {
+  if (has("lean") && (has("explosive") || has("agile") || has("high-energy"))) {
     return "athletic-performance";
-  }
-  if (has("cut") || has("shredded")) {
-    return "cutting";
   }
   // default hybrid if mixed or unknown
   return "strength-hybrid";

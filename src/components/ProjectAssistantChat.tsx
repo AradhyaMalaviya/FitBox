@@ -56,8 +56,11 @@ export const ProjectAssistantChat = () => {
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
         apikey: supabasePublishableKey,
-        Authorization: `Bearer ${session?.access_token ?? supabasePublishableKey}`,
       };
+
+      if (session?.access_token) {
+        headers.Authorization = `Bearer ${session.access_token}`;
+      }
 
       const resp = await fetch(CHAT_URL, {
         method: "POST",

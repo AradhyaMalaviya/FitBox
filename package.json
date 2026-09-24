@@ -8,9 +8,11 @@
     "build": "tsc -b && vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
+    "test": "node scripts/verify-all-fixes.mjs",
     "preview": "vite preview",
     "upload:exercise-media": "node scripts/upload-exercise-media.mjs",
-    "build:knowledge": "node scripts/build-project-knowledge.mjs"
+    "build:knowledge": "node scripts/build-project-knowledge.mjs",
+    "deploy:pages": "wrangler pages deploy dist"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

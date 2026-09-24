@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +16,7 @@ import {
   InspirationPresetName,
   parseAllergies,
   deriveInspirationScore,
+  onboardingSchema,
   type UserPreferencePayload,
 } from "@/lib/onboarding";
 import { cn } from "@/lib/utils";
@@ -31,6 +33,7 @@ const MAX_UPLOAD_SIZE = 5 * 1024 * 1024; // 5MB
 
 const Onboarding = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const [step, setStep] = useState<Step>(1);
 
@@ -172,10 +175,38 @@ const Onboarding = () => {
       const now = new Date().toISOString();
       const userId = user?.id ?? "guest";
 
+      const uploadedImageUrls: string[] = [];
+      for (const img of inspirationImages) {
+        if (img.file && user && !user.isGuest) {
+          const fileName = `onboarding/${user.authUserId}/${Date.now()}-${img.file.name}`;
+          const { data, error } = await supabase.storage
+            .from('exercise-media')
+            .upload(fileName, img.file, { contentType: img.file.type, upsert: true });
+          
+          if (!error && data) {
+            const { data: urlData } = supabase.storage
+              .from('exercise-media')
+              .getPublicUrl(data.path);
+            uploadedImageUrls.push(urlData.publicUrl);
+          } else {
+            // Fallback: don't include the image if upload fails
+            console.warn('Image upload failed:', error?.message);
+          }
+        } else {
+          // Guest users or no file: keep base64 for localStorage only, don't persist to DB
+          uploadedImageUrls.push(img.src);
+        }
+      }
+
+      const presetItem = INSPIRATION_PRESETS.find((p) => p.name === selectedPreset);
+      const finalImages = uploadedImageUrls.length > 0 
+        ? uploadedImageUrls 
+        : (presetItem?.imageUrl ? [presetItem.imageUrl] : []);
+
       const payload: UserPreferencePayload = {
         userId,
         inspiration: {
-          images: inspirationImages.map((img) => img.src),
+          images: finalImages,
           preset: selectedPreset ?? null,
           tags: inspirationTags,
           notes: inspirationNotes.trim(),
@@ -206,6 +237,11 @@ const Onboarding = () => {
         createdAt: now,
       };
 
+      const validation = onboardingSchema.safeParse(payload);
+      if (!validation.success) {
+        throw new Error(validation.error.errors[0]?.message || "Invalid onboarding preferences");
+      }
+
       // Always keep a local copy so the wizard result survives even if the
       // user is a guest or the network write fails.
       try {
@@ -232,6 +268,7 @@ const Onboarding = () => {
       setSubmitSuccess(
         "Nice. Plan saved. Time to actually lift something heavier than your phone. 🏋️‍♂️"
       );
+      setTimeout(() => navigate('/dashboard'), 2000);
       console.log("Onboarding saved", payload, { inspirationScore });
     } catch (error) {
       console.error(error);
