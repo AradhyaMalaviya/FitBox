@@ -16,6 +16,8 @@ import {
   type MealPlanItem
 } from "@/data/indianFoodDatabase";
 import type { UserPreferencePayload } from "@/lib/onboarding";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 interface UserData {
   gender: string;
@@ -35,45 +37,114 @@ const NutritionRoadmap = () => {
   const [calories, setCalories] = useState(0);
   const [macros, setMacros] = useState({ protein: 0, carbs: 0, fats: 0 });
 
+  const { user } = useAuth();
+
   useEffect(() => {
-    const stored = localStorage.getItem("nutritionUserData");
-    const onboardingStored = localStorage.getItem("fitbox:onboarding");
-    let onboardingData: UserPreferencePayload | null = null;
-    if (onboardingStored) {
-      try {
-        onboardingData = JSON.parse(onboardingStored);
-      } catch (e) {
-        console.warn("Failed to parse onboarding data:", e);
-      }
-    }
+    let isMounted = true;
 
-    if (stored) {
-      const data = JSON.parse(stored);
-      if (!data.dietaryPreference && onboardingData?.diet?.type) {
-        data.dietaryPreference = onboardingData.diet.type;
+    const loadData = async () => {
+      const stored = localStorage.getItem("nutritionUserData");
+      const onboardingStored = localStorage.getItem("fitbox:onboarding");
+      let onboardingData: UserPreferencePayload | null = null;
+      if (onboardingStored) {
+        try {
+          onboardingData = JSON.parse(onboardingStored);
+        } catch (e) {
+          console.warn("Failed to parse onboarding data:", e);
+        }
       }
-      setUserData(data);
-      calculateNutrition(data, onboardingData);
-    } else if (onboardingData) {
-      // Fallback: derive initial nutrition profile from onboarding preferences
-      const fallbackGoal = onboardingData.inspiration?.tags?.some((t: string) => t.includes('shredded') || t.includes('cut')) 
-        ? 'cutting' 
-        : (onboardingData.inspiration?.tags?.some((t: string) => t.includes('bulk')) ? 'bulk' : 'recomp');
 
-      const derivedUserData: UserData = {
-        gender: 'male',
-        age: '25',
-        height: '175',
-        weight: '70',
-        goal: fallbackGoal,
-        dietaryPreference: onboardingData.diet?.type || 'omnivore',
-        activityLevel: 'moderate',
-      };
-      setUserData(derivedUserData);
-      calculateNutrition(derivedUserData, onboardingData);
-    }
-    setIsLoading(false);
-  }, []);
+      let data: UserData | null = null;
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          if (parsed && typeof parsed === 'object' && parsed.weight && parsed.height) {
+            data = parsed as UserData;
+          } else {
+            console.warn('Malformed nutritionUserData, discarding');
+            localStorage.removeItem('nutritionUserData');
+          }
+        } catch (parseErr) {
+          console.warn('Corrupted nutritionUserData, discarding:', parseErr);
+          localStorage.removeItem('nutritionUserData');
+        }
+      }
+
+      // If user is authenticated, check cloud profile preferences for canonical nutrition data
+      if (user && !user.isGuest) {
+        try {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("preferences")
+            .eq("auth_user_id", user.authUserId)
+            .maybeSingle();
+
+          const prefs = profile?.preferences as Record<string, unknown> | null;
+          const cloudNutrition = prefs?.nutrition as UserData | undefined;
+
+          if (cloudNutrition && cloudNutrition.weight && cloudNutrition.height) {
+            if (!data) {
+              data = cloudNutrition;
+              try {
+                localStorage.setItem("nutritionUserData", JSON.stringify(cloudNutrition));
+              } catch (storageErr) {
+                console.warn("Failed to write to localStorage:", storageErr);
+              }
+            }
+          } else if (data) {
+            // Local data exists but cloud does not: sync local to cloud
+            await supabase
+              .from("profiles")
+              .update({
+                preferences: {
+                  ...(prefs || {}),
+                  nutrition: data,
+                  nutritionUpdatedAt: new Date().toISOString(),
+                }
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              } as any)
+              .eq("auth_user_id", user.authUserId);
+          }
+        } catch (cloudErr) {
+          console.warn("Failed to synchronize cloud nutrition data:", cloudErr);
+        }
+      }
+
+      if (!isMounted) return;
+
+      if (data) {
+        if (!data.dietaryPreference && onboardingData?.diet?.type) {
+          data.dietaryPreference = onboardingData.diet.type;
+        }
+        setUserData(data);
+        calculateNutrition(data, onboardingData);
+      } else if (onboardingData) {
+        // Fallback: derive initial nutrition profile from onboarding preferences
+        const fallbackGoal = onboardingData.inspiration?.tags?.some((t: string) => t.includes('shredded') || t.includes('cut')) 
+          ? 'cutting' 
+          : (onboardingData.inspiration?.tags?.some((t: string) => t.includes('bulk')) ? 'bulk' : 'recomp');
+
+        const derivedUserData: UserData = {
+          gender: 'male',
+          age: '25',
+          height: '175',
+          weight: '70',
+          goal: fallbackGoal,
+          dietaryPreference: onboardingData.diet?.type || 'omnivore',
+          activityLevel: 'moderate',
+        };
+        setUserData(derivedUserData);
+        calculateNutrition(derivedUserData, onboardingData);
+      }
+      setIsLoading(false);
+    };
+
+    loadData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user]);
 
   const calculateNutrition = (data: UserData, onboardingData?: UserPreferencePayload | null) => {
     const weight = parseFloat(data.weight);

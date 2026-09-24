@@ -597,7 +597,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_gymbuddy_candidates: {
+        Args: {
+          p_limit?: number
+        }
+        Returns: Database['public']['Tables']['gymbuddy_profiles']['Row'][]
+      }
     }
     Enums: {
       [_ in never]: never

@@ -176,21 +176,48 @@ const Onboarding = () => {
       const userId = user?.id ?? "guest";
 
       const uploadedImageUrls: string[] = [];
+      const uploadErrors: string[] = [];
+      const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
       for (const img of inspirationImages) {
         if (img.file && user && !user.isGuest) {
-          const fileName = `onboarding/${user.authUserId}/${Date.now()}-${img.file.name}`;
-          const { data, error } = await supabase.storage
-            .from('exercise-media')
-            .upload(fileName, img.file, { contentType: img.file.type, upsert: true });
+          // Validate file type before attempting upload
+          if (!ALLOWED_MIME_TYPES.includes(img.file.type)) {
+            uploadErrors.push(`"${img.file.name}" is not a supported image type. Use JPEG, PNG, or WebP.`);
+            continue;
+          }
+          if (img.file.size > MAX_UPLOAD_SIZE) {
+            uploadErrors.push(`"${img.file.name}" exceeds the 5MB limit.`);
+            continue;
+          }
+
+          // Use user-scoped path with sanitized filename
+          const safeName = img.file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+          const fileName = `onboarding/${user.authUserId}/${Date.now()}-${safeName}`;
           
-          if (!error && data) {
+          // Try user-media bucket first, fallback to exercise-media
+          let targetBucket = 'user-media';
+          let uploadResult = await supabase.storage
+            .from(targetBucket)
+            .upload(fileName, img.file, { contentType: img.file.type, upsert: true });
+
+          if (uploadResult.error) {
+            targetBucket = 'exercise-media';
+            uploadResult = await supabase.storage
+              .from(targetBucket)
+              .upload(fileName, img.file, { contentType: img.file.type, upsert: true });
+          }
+          
+          if (!uploadResult.error && uploadResult.data) {
             const { data: urlData } = supabase.storage
-              .from('exercise-media')
-              .getPublicUrl(data.path);
+              .from(targetBucket)
+              .getPublicUrl(uploadResult.data.path);
             uploadedImageUrls.push(urlData.publicUrl);
           } else {
-            // Fallback: don't include the image if upload fails
-            console.warn('Image upload failed:', error?.message);
+            // Provide actionable feedback instead of silently swallowing
+            const reason = uploadResult.error?.message || 'Unknown error';
+            uploadErrors.push(`Failed to upload "${img.file.name}": ${reason}`);
+            console.warn('Image upload failed:', reason);
           }
         } else {
           // Guest users or no file: keep base64 for localStorage only, don't persist to DB
@@ -198,10 +225,17 @@ const Onboarding = () => {
         }
       }
 
+      // Warn user about upload failures but allow them to continue
+      if (uploadErrors.length > 0 && uploadedImageUrls.length === 0 && !selectedPreset) {
+        // Only block if there are NO images at all and no preset fallback
+        throw new Error(`Image upload failed: ${uploadErrors[0]}. Choose a preset or try again.`);
+      }
+
       const presetItem = INSPIRATION_PRESETS.find((p) => p.name === selectedPreset);
+      const fallbackPresetImage = INSPIRATION_PRESETS[0].imageUrl;
       const finalImages = uploadedImageUrls.length > 0 
         ? uploadedImageUrls 
-        : (presetItem?.imageUrl ? [presetItem.imageUrl] : []);
+        : (presetItem?.imageUrl ? [presetItem.imageUrl] : [fallbackPresetImage]);
 
       const payload: UserPreferencePayload = {
         userId,

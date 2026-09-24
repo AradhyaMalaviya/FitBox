@@ -59,8 +59,17 @@ export interface GymBuddySessionLog {
   created_at?: string;
 }
 
+export interface CompatibilityBreakdown {
+  goals: number;      // 0-100%
+  split: number;      // 0-100%
+  timing: number;     // 0-100%
+  location: number;   // 0-100%
+  experience: number; // 0-100%
+}
+
 // Extends the profile to include match specifics when rendered in discovery or match list
 export interface GymBuddyCandidate extends GymBuddyProfile {
   compatibility_score?: number;
   compatibility_label?: string;
+  compatibility_breakdown?: CompatibilityBreakdown;
 }

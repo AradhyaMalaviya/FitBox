@@ -75,16 +75,24 @@ export const GymTrainerChat = () => {
         try {
             const { data: { session } } = await supabase.auth.getSession();
 
+            if (!session?.access_token) {
+                toast({
+                    title: "Sign in required",
+                    description: "The AI Gym Trainer requires an account. Please sign in or create an account to start chatting with your AI coach!",
+                });
+                setMessages(prev => [
+                    ...prev,
+                    { role: "assistant", content: "To get customized workout plans and advice from your AI Gym Trainer, please sign in or create a free account! 💪" }
+                ]);
+                setIsLoading(false);
+                return;
+            }
+
             const headers: Record<string, string> = {
                 "Content-Type": "application/json",
                 "apikey": supabasePublishableKey,
+                "Authorization": `Bearer ${session.access_token}`,
             };
-
-            if (session?.access_token) {
-                headers["Authorization"] = `Bearer ${session.access_token}`;
-            } else {
-                headers["Authorization"] = `Bearer ${supabasePublishableKey}`;
-            }
 
             const resp = await fetch(CHAT_URL, {
                 method: "POST",

@@ -9,13 +9,88 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const MAX_TURNS = 20;
+const MAX_REQUEST_SIZE = 50 * 1024; // 50KB
+
+// Rate limiting configuration: 15 requests per minute per IP
+const RATE_LIMIT_WINDOW_MS = 60000;
+const MAX_REQUESTS_PER_WINDOW = 15;
+const ipRequestCounts = new Map<string, { count: number; timestamp: number }>();
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const record = ipRequestCounts.get(ip);
+
+  if (!record) {
+    ipRequestCounts.set(ip, { count: 1, timestamp: now });
+    return true;
+  }
+
+  if (now - record.timestamp > RATE_LIMIT_WINDOW_MS) {
+    ipRequestCounts.set(ip, { count: 1, timestamp: now });
+    return true;
+  }
+
+  if (record.count >= MAX_REQUESTS_PER_WINDOW) {
+    return false;
+  }
+
+  record.count += 1;
+  return true;
+}
+
+// Cleanup expired rate limit records periodically
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, record] of ipRequestCounts.entries()) {
+    if (now - record.timestamp > RATE_LIMIT_WINDOW_MS) {
+      ipRequestCounts.delete(ip);
+    }
+  }
+}, 60000);
+
 serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, exerciseData } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const ip = req.headers.get("x-forwarded-for") || req.headers.get("cf-connecting-ip") || "unknown";
+    if (!checkRateLimit(ip)) {
+      return new Response(JSON.stringify({ error: "Too many requests. Please slow down and try again shortly." }), {
+        status: 429,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
+    const rawBody = await req.text();
+    if (rawBody.length > MAX_REQUEST_SIZE) {
+      return new Response(JSON.stringify({ error: "Request payload too large (max 50KB)." }), {
+        status: 413,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    let parsedBody;
+    try {
+      parsedBody = JSON.parse(rawBody);
+    } catch {
+      return new Response(JSON.stringify({ error: "Invalid JSON payload" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { messages, exerciseData } = parsedBody;
+
+    if (!Array.isArray(messages) || messages.length === 0) {
+      return new Response(JSON.stringify({ error: "Messages array is required." }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const boundedMessages = messages.slice(-MAX_TURNS);
+
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       console.error("LOVABLE_API_KEY is not configured");
       return new Response(
@@ -25,9 +100,9 @@ serve(async (req: Request) => {
     }
 
     // Truncate exercise data if too long to avoid token limits
-    const truncatedExerciseData = exerciseData && exerciseData.length > 3000
+    const truncatedExerciseData = exerciseData && typeof exerciseData === 'string' && exerciseData.length > 3000
       ? exerciseData.substring(0, 3000) + "..."
-      : exerciseData;
+      : (typeof exerciseData === 'string' ? exerciseData : "");
 
     // Build a comprehensive system prompt with the actual exercise data
     const systemPrompt = `You are an enthusiastic fitness coach for the FitBox app. Help users plan their workouts based on what they feel like doing. Be encouraging, specific, and suggest exercises from the app's library.
@@ -45,8 +120,6 @@ GUIDELINES:
 6. If asked about exercises not in the list, let them know what similar exercises ARE available in the app.
 7. Do NOT make up exercises or provide links to external resources - stick to recommending exercises from the FitBox library.`;
 
-    console.log("Calling AI gateway with", messages.length, "messages");
-
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -60,13 +133,11 @@ GUIDELINES:
             role: "system",
             content: systemPrompt
           },
-          ...messages,
+          ...boundedMessages,
         ],
         stream: true,
       }),
     });
-
-    console.log("AI gateway response status:", response.status);
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -102,10 +173,8 @@ GUIDELINES:
     });
   } catch (error) {
     const e = error as Error;
-    // Log detailed error server-side for debugging
     console.error("chat error:", e.message, e.stack);
 
-    // Return error message to client
     return new Response(
       JSON.stringify({
         error: "An error occurred processing your request. Please try again.",

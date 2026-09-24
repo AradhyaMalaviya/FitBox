@@ -212,3 +212,9 @@ All colors MUST be HSL.
   animation: grid-pulse 3s infinite ease-in-out;
 }
 
+@media (max-width: 768px) {
+  body {
+    padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+

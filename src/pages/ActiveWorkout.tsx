@@ -29,6 +29,7 @@ const ActiveWorkout = () => {
     elapsedSeconds,
     startWorkout,
     endWorkout,
+    discardWorkout,
     addExercise,
     removeExercise,
     addSet,
@@ -40,6 +41,15 @@ const ActiveWorkout = () => {
   const { mutate: saveWorkout, isPending: isSaving } = useWorkoutSave();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [showFinishDialog, setShowFinishDialog] = useState(false);
+
+  const handleDiscard = () => {
+    discardWorkout();
+    toast({
+      title: 'Workout discarded',
+      description: 'Your workout session has been cancelled.',
+    });
+    navigate('/dashboard');
+  };
 
   const handleFinishClick = () => {
     const completedSets = getCompletedSetsCount();
@@ -94,6 +104,7 @@ const ActiveWorkout = () => {
         workoutName={activeWorkout.name}
         elapsedSeconds={elapsedSeconds}
         onFinish={handleFinishClick}
+        onDiscard={handleDiscard}
         isFinishing={isSaving}
       />
 

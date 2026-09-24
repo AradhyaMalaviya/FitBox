@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 interface UserData {
   gender: string;
@@ -22,6 +24,7 @@ const NutritionQuestionnaire = () => {
   const [searchParams] = useSearchParams();
   const planType = searchParams.get("type") || "workout";
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [userData, setUserData] = useState<UserData>({
     gender: "",
@@ -33,10 +36,41 @@ const NutritionQuestionnaire = () => {
     activityLevel: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Store data in localStorage for the roadmap page
-    localStorage.setItem("nutritionUserData", JSON.stringify(userData));
+    // 1. Store data in localStorage cache for instant access
+    try {
+      localStorage.setItem("nutritionUserData", JSON.stringify(userData));
+    } catch (storageErr) {
+      console.warn("Failed to write to localStorage:", storageErr);
+    }
+
+    // 2. Persist to Supabase profiles.preferences for cross-device cloud sync
+    if (user && !user.isGuest) {
+      try {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("preferences")
+          .eq("auth_user_id", user.authUserId)
+          .maybeSingle();
+
+        const currentPrefs = (profile?.preferences as Record<string, unknown>) || {};
+        await supabase
+          .from("profiles")
+          .update({
+            preferences: {
+              ...currentPrefs,
+              nutrition: userData,
+              nutritionUpdatedAt: new Date().toISOString(),
+            }
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          } as any)
+          .eq("auth_user_id", user.authUserId);
+      } catch (cloudErr) {
+        console.warn("Failed to sync nutrition to cloud profile:", cloudErr);
+      }
+    }
+
     navigate(`/nutrition/roadmap?type=${planType}`);
   };
 

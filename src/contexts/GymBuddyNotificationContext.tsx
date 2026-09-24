@@ -20,6 +20,8 @@ export function GymBuddyNotificationProvider({ children }: { children: React.Rea
   
   const [matches, setMatches] = useState<GymBuddyMatch[]>([]);
   const [partnerProfiles, setPartnerProfiles] = useState<Record<string, GymBuddyProfile>>({});
+  const previousStreaksRef = React.useRef<Record<string, number>>({});
+  const notifiedMilestonesRef = React.useRef<Set<string>>(new Set());
 
   const fetchPartnerProfile = async (partnerId: string): Promise<GymBuddyProfile | null> => {
     const { data, error } = await supabase
@@ -55,6 +57,9 @@ export function GymBuddyNotificationProvider({ children }: { children: React.Rea
             matched_at: match.matched_at ?? undefined,
             last_session_logged: match.last_session_logged ?? undefined,
           }];
+        });
+        validMatches.forEach(m => {
+          previousStreaksRef.current[m.id] = m.shared_streak ?? 0;
         });
         setMatches(validMatches);
         
@@ -170,19 +175,31 @@ export function GymBuddyNotificationProvider({ children }: { children: React.Rea
         }
       })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'gymbuddy_matches' }, (payload) => {
-         const oldMatch = payload.old as GymBuddyMatch;
          const newMatch = payload.new as GymBuddyMatch;
-         if (!matchIds.includes(newMatch.id)) return;
+         if (!newMatch?.id || !matchIds.includes(newMatch.id)) return;
          
-         if (newMatch.shared_streak > (oldMatch.shared_streak || 0)) {
-           const s = newMatch.shared_streak;
-           if (s === 4 || s === 12 || s === 26) {
-             const partnerId = newMatch.user1_id === activeAuthUserId ? newMatch.user2_id : newMatch.user1_id;
-             const partnerName = partnerProfiles[partnerId]?.display_name || 'your partner';
-             toast({
-               title: "🔥 Streak Milestone!",
-               description: `You and ${partnerName} hit a ${s}-week streak! Keep it up!`,
-             });
+         const prevStreak = previousStreaksRef.current[newMatch.id] ?? 0;
+         const currentStreak = newMatch.shared_streak ?? 0;
+         previousStreaksRef.current[newMatch.id] = currentStreak;
+
+         // Update local matches state so UI reflects new streak
+         setMatches(prev => prev.map(m => m.id === newMatch.id ? { ...m, ...newMatch } : m));
+
+         // Milestone notifications fire ONLY when streak strictly increases across a milestone threshold
+         const MILESTONES = [4, 8, 12, 26, 52];
+         if (currentStreak > prevStreak) {
+           for (const milestone of MILESTONES) {
+             const milestoneKey = `${newMatch.id}-${milestone}`;
+             if (currentStreak >= milestone && prevStreak < milestone && !notifiedMilestonesRef.current.has(milestoneKey)) {
+               notifiedMilestonesRef.current.add(milestoneKey);
+               const partnerId = newMatch.user1_id === activeAuthUserId ? newMatch.user2_id : newMatch.user1_id;
+               const partnerName = partnerProfiles[partnerId]?.display_name || 'your partner';
+               toast({
+                 title: "🔥 Streak Milestone!",
+                 description: `You and ${partnerName} hit a ${milestone}-week streak! Keep it up!`,
+               });
+               break;
+             }
            }
          }
       })

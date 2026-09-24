@@ -44,7 +44,14 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-muted-foreground text-sm">Loading session...</p>
+        </div>
+      </div>
+    );
   }
 
   if (!user) {
@@ -58,7 +65,14 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-muted-foreground text-sm">Loading...</p>
+        </div>
+      </div>
+    );
   }
 
   const hashParams = new URLSearchParams(window.location.hash.substring(1));
@@ -111,6 +125,11 @@ const App = () => (
                   <Route path="/gymbuddy/matches" element={<ProtectedRoute><GymBuddyMatches /></ProtectedRoute>} />
                   <Route path="/gymbuddy/chat/:matchId" element={<ProtectedRoute><GymBuddyChat /></ProtectedRoute>} />
                   <Route path="/gymbuddy/settings" element={<ProtectedRoute><GymBuddySettings /></ProtectedRoute>} />
+
+                  <Route path="/generate" element={<ProtectedRoute><GenerateWorkout /></ProtectedRoute>} />
+                  <Route path="/active-workout" element={<ProtectedRoute><ActiveWorkout /></ProtectedRoute>} />
+                  <Route path="/gymbuddy" element={<ProtectedRoute><GymBuddyDiscover /></ProtectedRoute>} />
+                  <Route path="/gymbuddy/profile" element={<ProtectedRoute><GymBuddyProfileSetup /></ProtectedRoute>} />
 
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />

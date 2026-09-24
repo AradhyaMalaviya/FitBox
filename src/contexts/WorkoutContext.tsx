@@ -27,6 +27,7 @@ interface WorkoutContextType {
   elapsedSeconds: number;
   startWorkout: (name: string) => void;
   endWorkout: () => void;
+  discardWorkout: () => void;
   addExercise: (exerciseName: string, exerciseId?: string) => void;
   removeExercise: (exerciseLogId: string) => void;
   addSet: (exerciseLogId: string) => void;
@@ -43,6 +44,7 @@ export const WorkoutProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [activeWorkout, setActiveWorkout] = useState<ActiveWorkout | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const isHydrated = useRef(false);
 
   // Restore from localStorage on mount
   useEffect(() => {
@@ -50,20 +52,29 @@ export const WorkoutProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const saved = localStorage.getItem('fitbox:activeWorkout');
       if (saved) {
         const parsed = JSON.parse(saved);
-        // Restore startedAt as Date
-        if (parsed.startedAt) {
+        if (parsed && typeof parsed === 'object' && parsed.startedAt) {
           parsed.startedAt = new Date(parsed.startedAt);
+          // Validate the parsed data has required fields
+          if (parsed.name && Array.isArray(parsed.exercises)) {
+            setActiveWorkout(parsed);
+          } else {
+            localStorage.removeItem('fitbox:activeWorkout');
+          }
+        } else {
+          localStorage.removeItem('fitbox:activeWorkout');
         }
-        setActiveWorkout(parsed);
       }
     } catch (e) {
       console.warn('Failed to restore workout:', e);
       localStorage.removeItem('fitbox:activeWorkout');
+    } finally {
+      isHydrated.current = true;
     }
   }, []);
 
-  // Persist on change
+  // Persist on change — only after hydration is complete
   useEffect(() => {
+    if (!isHydrated.current) return;
     if (activeWorkout) {
       try {
         localStorage.setItem('fitbox:activeWorkout', JSON.stringify(activeWorkout));
@@ -111,6 +122,12 @@ export const WorkoutProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const endWorkout = useCallback(() => {
     setActiveWorkout(null);
     setElapsedSeconds(0);
+  }, []);
+
+  const discardWorkout = useCallback(() => {
+    setActiveWorkout(null);
+    setElapsedSeconds(0);
+    localStorage.removeItem('fitbox:activeWorkout');
   }, []);
 
   const addExercise = useCallback((exerciseName: string, exerciseId?: string) => {
@@ -220,6 +237,7 @@ export const WorkoutProvider: React.FC<{ children: React.ReactNode }> = ({ child
       elapsedSeconds,
       startWorkout,
       endWorkout,
+      discardWorkout,
       addExercise,
       removeExercise,
       addSet,

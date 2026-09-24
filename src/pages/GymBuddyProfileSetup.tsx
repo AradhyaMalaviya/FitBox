@@ -6,6 +6,7 @@ import * as z from "zod";
 import { Header } from "@/components/Header";
 import { useGymBuddy } from "@/hooks/useGymBuddy";
 import { GymBuddyProfile } from "@/lib/gymBuddyTypes";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -64,6 +65,7 @@ const profileSchema = z.object({
 }).refine(data => data.age_range_max >= data.age_range_min, { message: 'Max age must be ≥ min age', path: ['age_range_max'] });
 
 export default function GymBuddyProfileSetup() {
+  const { user } = useAuth();
   const { profile, loading, saveProfile } = useGymBuddy();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
@@ -133,6 +135,26 @@ export default function GymBuddyProfileSetup() {
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  // Guest gate: prevent guests from wasting time on the form
+  if (!loading && user?.isGuest) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="max-w-md mx-auto px-4 pt-16 text-center space-y-4">
+          <div className="text-5xl mb-4">🔒</div>
+          <h1 className="text-2xl font-bold">Account Required</h1>
+          <p className="text-muted-foreground">
+            GymBuddy requires a free account to save your profile and find workout partners.
+          </p>
+          <div className="flex gap-3 justify-center pt-4">
+            <Button variant="outline" onClick={() => navigate('/dashboard')}>Go Back</Button>
+            <Button onClick={() => navigate('/auth')}>Sign Up Free</Button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (loading) {

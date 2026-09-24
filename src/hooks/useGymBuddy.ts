@@ -6,7 +6,7 @@ import { calculateCompatibilityScore } from '@/lib/compatibilityScore';
 
 export function useGymBuddy() {
   const { user, authUserId } = useAuth();
-  const effectiveUserId = authUserId || user?.authUserId || user?.id;
+  const effectiveUserId = authUserId || user?.authUserId || (user?.isGuest ? 'guest' : undefined);
   const isGuest = user?.isGuest === true || effectiveUserId === 'guest';
 
   const [profile, setProfile] = useState<GymBuddyProfile | null>(null);
@@ -68,41 +68,47 @@ export function useGymBuddy() {
     if (!effectiveUserId || !profile) return [];
     
     try {
-      // 1. Get IDs of users we've already swiped on
-      const { data: swipes } = await supabase
-        .from('gymbuddy_swipes')
-        .select('target_id')
-        .eq('swiper_id', effectiveUserId);
+      let filteredCandidates: GymBuddyProfile[] = [];
+
+      // 1. Try scalable database RPC anti-join first
+      const { data: rpcData, error: rpcError } = await supabase
+        .rpc('get_gymbuddy_candidates', { p_limit: 50 });
+
+      if (!rpcError && Array.isArray(rpcData) && rpcData.length > 0) {
+        filteredCandidates = rpcData as GymBuddyProfile[];
+      } else {
+        // 2. Fallback: bounded query with client-side Set exclusion
+        const { data: swipes } = await supabase
+          .from('gymbuddy_swipes')
+          .select('target_id')
+          .eq('swiper_id', effectiveUserId);
+          
+        const swipedIds = new Set(swipes?.map(s => s.target_id) || []);
         
-      const swipedIds = swipes?.map(s => s.target_id) || [];
-      
-      // 2. Fetch profiles of discoverable users, excluding self and already swiped
-      let query = supabase
-        .from('gymbuddy_profiles')
-        .select('*')
-        .eq('is_discoverable', true)
-        .neq('id', effectiveUserId);
-        
-      if (swipedIds.length > 0) {
-        query = query.not('id', 'in', `(${swipedIds.join(',')})`);
+        const PAGE_SIZE = 50;
+        const { data: candidates, error } = await supabase
+          .from('gymbuddy_profiles')
+          .select('*')
+          .eq('is_discoverable', true)
+          .neq('id', effectiveUserId)
+          .limit(PAGE_SIZE + swipedIds.size)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        filteredCandidates = (candidates as GymBuddyProfile[] || []).filter(
+          c => !swipedIds.has(c.id)
+        ).slice(0, PAGE_SIZE);
       }
 
-      const { data: candidates, error } = await query;
-
-      if (error) throw error;
-
-      // Client-side fallback filter in case DB filter didn't work as expected
-      const filteredCandidates = (candidates as GymBuddyProfile[]).filter(
-        c => !swipedIds.includes(c.id)
-      );
-
-      // 3. Calculate compatibility scores
+      // 3. Calculate compatibility scores with full dimensional breakdown
       const scoredCandidates = filteredCandidates.map(candidate => {
-        const { score, compatibilityLabel } = calculateCompatibilityScore(profile, candidate);
+        const { score, compatibilityLabel, breakdown } = calculateCompatibilityScore(profile, candidate);
         return {
           ...candidate,
           compatibility_score: score,
-          compatibility_label: compatibilityLabel
+          compatibility_label: compatibilityLabel,
+          compatibility_breakdown: breakdown,
         };
       });
 

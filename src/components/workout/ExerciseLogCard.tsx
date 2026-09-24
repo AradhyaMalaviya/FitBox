@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Trash2, Plus, X } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -84,6 +85,52 @@ interface SetRowProps {
 }
 
 const SetRow = ({ set, onRemove, onUpdate, canRemove }: SetRowProps) => {
+  const [weightStr, setWeightStr] = useState(set.weight === 0 ? '' : String(set.weight));
+  const [repsStr, setRepsStr] = useState(set.reps === 0 ? '' : String(set.reps));
+
+  // Sync from parent when set values change externally
+  useEffect(() => {
+    setWeightStr(set.weight === 0 ? '' : String(set.weight));
+  }, [set.weight]);
+
+  useEffect(() => {
+    setRepsStr(set.reps === 0 ? '' : String(set.reps));
+  }, [set.reps]);
+
+  const handleWeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setWeightStr(val);
+    // Only update parent with valid numbers, allow empty during editing
+    const parsed = parseFloat(val);
+    if (!isNaN(parsed)) {
+      onUpdate({ weight: parsed });
+    }
+  };
+
+  const handleWeightBlur = () => {
+    // On blur, commit: empty becomes 0
+    if (weightStr === '' || isNaN(parseFloat(weightStr))) {
+      onUpdate({ weight: 0 });
+      setWeightStr('');
+    }
+  };
+
+  const handleRepsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setRepsStr(val);
+    const parsed = parseInt(val, 10);
+    if (!isNaN(parsed)) {
+      onUpdate({ reps: parsed });
+    }
+  };
+
+  const handleRepsBlur = () => {
+    if (repsStr === '' || isNaN(parseInt(repsStr, 10))) {
+      onUpdate({ reps: 0 });
+      setRepsStr('');
+    }
+  };
+
   return (
     <div
       className={cn(
@@ -91,7 +138,6 @@ const SetRow = ({ set, onRemove, onUpdate, canRemove }: SetRowProps) => {
         set.completed ? "bg-fitness-green/10" : "bg-muted/30"
       )}
     >
-      {/* Set Number */}
       <div className="flex items-center justify-center">
         <span className={cn(
           "text-sm font-semibold w-7 h-7 rounded-full flex items-center justify-center",
@@ -101,13 +147,14 @@ const SetRow = ({ set, onRemove, onUpdate, canRemove }: SetRowProps) => {
         </span>
       </div>
 
-      {/* Weight Input */}
       <Input
         type="number"
         min="0"
         step="0.5"
-        value={set.weight ?? ''}
-        onChange={(e) => onUpdate({ weight: parseFloat(e.target.value) || 0 })}
+        inputMode="decimal"
+        value={weightStr}
+        onChange={handleWeightChange}
+        onBlur={handleWeightBlur}
         placeholder="0"
         className={cn(
           "h-9 text-center bg-input/50 border-border/50",
@@ -115,12 +162,13 @@ const SetRow = ({ set, onRemove, onUpdate, canRemove }: SetRowProps) => {
         )}
       />
 
-      {/* Reps Input */}
       <Input
         type="number"
         min="0"
-        value={set.reps ?? ''}
-        onChange={(e) => onUpdate({ reps: parseInt(e.target.value) || 0 })}
+        inputMode="numeric"
+        value={repsStr}
+        onChange={handleRepsChange}
+        onBlur={handleRepsBlur}
         placeholder="0"
         className={cn(
           "h-9 text-center bg-input/50 border-border/50",
@@ -128,7 +176,6 @@ const SetRow = ({ set, onRemove, onUpdate, canRemove }: SetRowProps) => {
         )}
       />
 
-      {/* Completed Checkbox */}
       <div className="flex items-center justify-center">
         <Checkbox
           checked={set.completed}
@@ -140,7 +187,6 @@ const SetRow = ({ set, onRemove, onUpdate, canRemove }: SetRowProps) => {
         />
       </div>
 
-      {/* Remove Button */}
       <div className="flex items-center justify-center">
         {canRemove ? (
           <Button

@@ -22,10 +22,11 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export default function GymBuddyChat() {
   const { matchId } = useParams<{ matchId: string }>();
-  const { user } = useAuth();
+  const { user, authUserId } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { messages, loading, partner, sendMessage } = useGymBuddyChat(matchId || '');
+  const activeAuthUserId = authUserId || user?.authUserId || user?.id;
   
   const [inputValue, setInputValue] = useState("");
   const [sending, setSending] = useState(false);
@@ -192,7 +193,7 @@ export default function GymBuddyChat() {
           </div>
         ) : (
           messages.map((msg, index) => {
-            const isMe = msg.sender_id === user?.id;
+            const isMe = msg.sender_id === activeAuthUserId;
             const showTime = index === 0 || 
               new Date(msg.sent_at!).getTime() - new Date(messages[index - 1].sent_at!).getTime() > 5 * 60 * 1000;
               

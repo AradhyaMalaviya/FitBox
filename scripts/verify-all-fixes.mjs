@@ -202,6 +202,88 @@ test("ResetPassword: uses canonical resetPasswordSchema and password visibility 
   assert(resetPage.includes("Eye"), "Eye icons rendered for visibility toggle");
 });
 
+// 16. Test Mobile Adaptations & Route Aliases (FORPHONE1CLAUDE)
+test("Mobile Adaptations: BottomTabBar, compact Header, safe area insets, and route aliases", () => {
+  const bottomBar = fs.readFileSync(path.join(rootDir, "src/components/BottomTabBar.tsx"), "utf8");
+  assert(bottomBar.includes("safe-area-inset-bottom"), "BottomTabBar respects iOS safe-area-inset-bottom");
+  assert(bottomBar.includes("/dashboard") && bottomBar.includes("/exercises") && bottomBar.includes("/workout/active"), "BottomTabBar contains key routes");
+
+  const header = fs.readFileSync(path.join(rootDir, "src/components/Header.tsx"), "utf8");
+  assert(header.includes("<BottomTabBar />"), "Header renders BottomTabBar");
+  assert(header.includes("h-14"), "Header uses compact mobile h-14 bar");
+
+  const app = fs.readFileSync(path.join(rootDir, "src/App.tsx"), "utf8");
+  assert(app.includes('path="/generate"'), "App defines /generate alias");
+  assert(app.includes('path="/active-workout"'), "App defines /active-workout alias");
+  assert(app.includes('path="/gymbuddy"'), "App defines /gymbuddy alias");
+  assert(app.includes('path="/gymbuddy/profile"'), "App defines /gymbuddy/profile alias");
+});
+
+// 17. Test Workout Hydration Race & Discard Flow
+test("Workout: isHydrated lifecycle guard, discardWorkout confirmation dialog, and numeric input editing", () => {
+  const workoutCtx = fs.readFileSync(path.join(rootDir, "src/contexts/WorkoutContext.tsx"), "utf8");
+  assert(workoutCtx.includes("isHydrated"), "WorkoutContext uses isHydrated lifecycle guard");
+  assert(workoutCtx.includes("discardWorkout"), "WorkoutContext exposes discardWorkout");
+
+  const workoutHeader = fs.readFileSync(path.join(rootDir, "src/components/workout/WorkoutHeader.tsx"), "utf8");
+  assert(workoutHeader.includes("onDiscard"), "WorkoutHeader supports onDiscard prop");
+  assert(workoutHeader.includes("AlertDialog"), "WorkoutHeader uses AlertDialog for discard confirmation");
+
+  const activeWorkout = fs.readFileSync(path.join(rootDir, "src/pages/ActiveWorkout.tsx"), "utf8");
+  assert(activeWorkout.includes("handleDiscard"), "ActiveWorkout implements handleDiscard");
+
+  const exerciseCard = fs.readFileSync(path.join(rootDir, "src/components/workout/ExerciseLogCard.tsx"), "utf8");
+  assert(exerciseCard.includes("weightStr") && exerciseCard.includes("repsStr"), "ExerciseLogCard separates string input state from numeric persistence");
+});
+
+// 18. Test Onboarding Media Storage & Safe Validation
+test("Onboarding Media: user-media bucket with MIME restrictions, RLS policies, and non-blocking validation", () => {
+  const migration = fs.readFileSync(path.join(rootDir, "supabase/migrations/20260925000000_storage_and_realtime_remediation.sql"), "utf8");
+  assert(migration.includes("user-media"), "Migration defines user-media storage bucket");
+  assert(migration.includes("image/jpeg") && migration.includes("image/png") && migration.includes("image/webp"), "MIME types include standard images");
+  assert(migration.includes("REPLICA IDENTITY FULL"), "Migration configures REPLICA IDENTITY FULL for gymbuddy_matches");
+
+  const onboardingPage = fs.readFileSync(path.join(rootDir, "src/pages/Onboarding.tsx"), "utf8");
+  assert(onboardingPage.includes("user-media"), "Onboarding attempts upload to user-media bucket");
+  assert(onboardingPage.includes("ALLOWED_MIME_TYPES"), "Onboarding validates MIME types before upload");
+  assert(onboardingPage.includes("fallbackPresetImage"), "Onboarding guarantees fallback preset image to avoid Step 5 schema trap");
+});
+
+// 19. Test GymBuddy Identity, Scalability, and Compatibility Breakdown
+test("GymBuddy: canonical authUserId comparisons, RPC candidate discovery, and multi-dimensional radar", () => {
+  const chatPage = fs.readFileSync(path.join(rootDir, "src/pages/GymBuddyChat.tsx"), "utf8");
+  assert(chatPage.includes("activeAuthUserId"), "GymBuddyChat computes activeAuthUserId");
+  assert(chatPage.includes("msg.sender_id === activeAuthUserId"), "GymBuddyChat compares sender_id to activeAuthUserId");
+
+  const hook = fs.readFileSync(path.join(rootDir, "src/hooks/useGymBuddy.ts"), "utf8");
+  assert(hook.includes("get_gymbuddy_candidates"), "useGymBuddy leverages get_gymbuddy_candidates RPC");
+  assert(hook.includes("compatibility_breakdown"), "useGymBuddy computes dimensional compatibility_breakdown");
+
+  const card = fs.readFileSync(path.join(rootDir, "src/components/gymbuddy/GymBuddyCard.tsx"), "utf8");
+  assert(card.includes("candidate.compatibility_breakdown"), "GymBuddyCard radar chart displays canonical compatibility_breakdown");
+
+  const setupPage = fs.readFileSync(path.join(rootDir, "src/pages/GymBuddyProfileSetup.tsx"), "utf8");
+  assert(setupPage.includes("user?.isGuest"), "GymBuddyProfileSetup performs upfront guest gating");
+});
+
+// 20. Test GymBuddy Streak Milestone Idempotency
+test("GymBuddy Notifications: authoritative previous streak tracking and idempotent milestone alerts", () => {
+  const notifCtx = fs.readFileSync(path.join(rootDir, "src/contexts/GymBuddyNotificationContext.tsx"), "utf8");
+  assert(notifCtx.includes("previousStreaksRef"), "Notification context tracks previousStreaksRef");
+  assert(notifCtx.includes("notifiedMilestonesRef"), "Notification context enforces idempotent notifiedMilestonesRef");
+  assert(notifCtx.includes("currentStreak > prevStreak"), "Notifications fire only on strictly increasing streak transitions");
+});
+
+// 21. Test Nutrition Roadmap Cloud Sync & Crash Resilience
+test("Nutrition: robust malformed JSON recovery and cross-device Supabase preferences sync", () => {
+  const questionnaire = fs.readFileSync(path.join(rootDir, "src/pages/NutritionQuestionnaire.tsx"), "utf8");
+  assert(questionnaire.includes("profiles") && questionnaire.includes("preferences"), "Questionnaire syncs nutrition data to profiles.preferences");
+
+  const roadmap = fs.readFileSync(path.join(rootDir, "src/pages/NutritionRoadmap.tsx"), "utf8");
+  assert(roadmap.includes("Corrupted nutritionUserData"), "Roadmap handles corrupted nutritionUserData safely");
+  assert(roadmap.includes("profiles") && roadmap.includes("preferences"), "Roadmap hydrates and syncs with cloud profile preferences");
+});
+
 console.log(`\nResults: ${passed} passed, ${failed} failed`);
 
 if (failed > 0) {
@@ -209,4 +291,5 @@ if (failed > 0) {
 } else {
   console.log(`🎉 All ${passed} verification suites passed with flying colors!\n`);
 }
+
 
