@@ -66,7 +66,9 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   const isRecovery = hashParams.get('type') === 'recovery' || searchParams.get('type') === 'recovery';
 
   if (isRecovery) {
-    return <Navigate to="/reset-password" replace />;
+    const search = window.location.search || '';
+    const hash = window.location.hash || '';
+    return <Navigate to={`/reset-password${search}${hash}`} replace />;
   }
 
   if (user) {

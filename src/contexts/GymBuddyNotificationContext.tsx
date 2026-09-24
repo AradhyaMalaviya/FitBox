@@ -15,6 +15,8 @@ export function GymBuddyNotificationProvider({ children }: { children: React.Rea
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
+  const pathnameRef = React.useRef(location.pathname);
+  pathnameRef.current = location.pathname;
   
   const [matches, setMatches] = useState<GymBuddyMatch[]>([]);
   const [partnerProfiles, setPartnerProfiles] = useState<Record<string, GymBuddyProfile>>({});
@@ -127,7 +129,7 @@ export function GymBuddyNotificationProvider({ children }: { children: React.Rea
         const msg = payload.new;
         if (!matchIds.includes(msg.match_id)) return;
         if (msg.sender_id !== activeAuthUserId) {
-          if (location.pathname === `/gymbuddy/chat/${msg.match_id}`) return;
+          if (pathnameRef.current === `/gymbuddy/chat/${msg.match_id}`) return;
           
           const match = matches.find(m => m.id === msg.match_id);
           if (match) {
@@ -189,7 +191,7 @@ export function GymBuddyNotificationProvider({ children }: { children: React.Rea
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [activeAuthUserId, matches, partnerProfiles, location.pathname, navigate, toast]);
+  }, [activeAuthUserId, matches, partnerProfiles, navigate, toast]);
 
   return (
     <GymBuddyNotificationContext.Provider value={{}}>

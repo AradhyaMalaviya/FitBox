@@ -6,11 +6,13 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Dumbbell } from 'lucide-react';
+import { Dumbbell, Eye, EyeOff } from 'lucide-react';
+import { resetPasswordSchema } from '@/lib/authSchemas';
 
 const ResetPassword = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isValidToken, setIsValidToken] = useState<boolean | null>(null);
@@ -42,7 +44,7 @@ const ResetPassword = () => {
     
     checkToken();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
         setIsValidToken(true);
       }
@@ -57,13 +59,9 @@ const ResetPassword = () => {
     e.preventDefault();
     setError(null);
 
-    if (password !== confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters long");
+    const validation = resetPasswordSchema.safeParse({ password, confirmPassword });
+    if (!validation.success) {
+      setError(validation.error.errors[0]?.message || 'Please check your passwords.');
       return;
     }
 
@@ -77,7 +75,7 @@ const ResetPassword = () => {
       }
       
       toast({
-        title: 'Password updated',
+        title: 'Password updated 🎉',
         description: 'Your password has been successfully updated.',
       });
       
@@ -127,12 +125,23 @@ const ResetPassword = () => {
                 )}
                 
                 <div className="space-y-2">
-                  <Label htmlFor="password">New Password</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="password">New Password</Label>
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 focus:outline-none"
+                    >
+                      {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      {showPassword ? 'Hide' : 'Show'}
+                    </button>
+                  </div>
                   <Input 
                     id="password" 
-                    type="password" 
+                    type={showPassword ? 'text' : 'password'} 
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Min 8 characters"
                     required
                     disabled={loading}
                     className="bg-black/50"
@@ -143,9 +152,10 @@ const ResetPassword = () => {
                   <Label htmlFor="confirmPassword">Confirm New Password</Label>
                   <Input 
                     id="confirmPassword" 
-                    type="password" 
+                    type={showPassword ? 'text' : 'password'} 
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Re-enter your new password"
                     required
                     disabled={loading}
                     className="bg-black/50"

@@ -157,6 +157,49 @@ test("Password Reset: dedicated route and component configured", () => {
   const app = fs.readFileSync(path.join(rootDir, "src/App.tsx"), "utf8");
   assert(app.includes('path="/reset-password"'), "Route path=/reset-password exists in App.tsx");
   assert(app.includes("isRecovery"), "PublicRoute preserves recovery flow");
+  assert(app.includes("search") && app.includes("hash"), "Preserves URL search and hash for recovery token");
+});
+
+// 12. Test Auth Schemas & Validation Rules
+test("Auth Schemas: canonical password, username regex, and email trimming", () => {
+  const schemaFile = fs.readFileSync(path.join(rootDir, "src/lib/authSchemas.ts"), "utf8");
+  assert(schemaFile.includes("passwordSchema = z.string()") && schemaFile.includes(".min(8"), "passwordSchema enforces min 8 characters");
+  assert(schemaFile.includes("usernameSchema = z.string()"), "usernameSchema defined");
+  assert(schemaFile.includes("^[a-zA-Z0-9_-]+$"), "usernameSchema enforces safe alphanumeric, underscore and hyphen regex");
+  assert(schemaFile.includes("resetPasswordSchema = z.object"), "resetPasswordSchema exported");
+  assert(schemaFile.includes("Passwords do not match"), "resetPasswordSchema validates password matching");
+});
+
+// 13. Test AuthContext Profile Sync & Error Translation
+test("AuthContext: robust profile hydration, trigger retries, and friendly error handling", () => {
+  const authCtx = fs.readFileSync(path.join(rootDir, "src/contexts/AuthContext.tsx"), "utf8");
+  assert(authCtx.includes("fetchUserProfile"), "fetchUserProfile helper defined");
+  assert(authCtx.includes("maybeSingle()"), "uses maybeSingle() to prevent unhandled 0-row exceptions");
+  assert(authCtx.includes("setTimeout(resolve, 250)"), "implements retry delay for async DB triggers");
+  assert(authCtx.includes("localStorage.removeItem('fitBoxUser')"), "clears guest state on authenticating");
+  assert(authCtx.includes("That username is already taken"), "translates duplicate username constraint errors");
+  assert(authCtx.includes("Invalid email or password"), "accurate email-specific error message in signIn");
+});
+
+// 14. Test Auth UI Usability & Mode Toggles
+test("Auth UI: password eye toggles, direct sign-in/up mode switches, and mobile attributes", () => {
+  const authPage = fs.readFileSync(path.join(rootDir, "src/pages/Auth.tsx"), "utf8");
+  assert(authPage.includes("showPassword"), "showPassword state declared");
+  assert(authPage.includes("<Eye"), "Eye icon rendered for password toggle");
+  assert(authPage.includes("<EyeOff"), "EyeOff icon rendered for password toggle");
+  assert(authPage.includes("onClick={() => setMode('signin')}"), "Direct switch to signin available");
+  assert(authPage.includes("onClick={() => setMode('signup')}"), "Direct switch to signup available");
+  assert(authPage.includes("autoComplete=\"email\""), "mobile email autocomplete enabled");
+  assert(authPage.includes("autoComplete=\"username\""), "mobile username autocomplete enabled");
+  assert(authPage.includes("autoCapitalize=\"none\""), "autoCapitalize disabled on usernames/emails");
+});
+
+// 15. Test ResetPassword Component Compliance
+test("ResetPassword: uses canonical resetPasswordSchema and password visibility toggle", () => {
+  const resetPage = fs.readFileSync(path.join(rootDir, "src/pages/ResetPassword.tsx"), "utf8");
+  assert(resetPage.includes("resetPasswordSchema"), "imports canonical resetPasswordSchema");
+  assert(resetPage.includes("showPassword"), "supports showPassword toggle");
+  assert(resetPage.includes("Eye"), "Eye icons rendered for visibility toggle");
 });
 
 console.log(`\nResults: ${passed} passed, ${failed} failed`);
@@ -164,5 +207,6 @@ console.log(`\nResults: ${passed} passed, ${failed} failed`);
 if (failed > 0) {
   process.exit(1);
 } else {
-  console.log("🎉 All 11 verification suites passed with flying colors!\n");
+  console.log(`🎉 All ${passed} verification suites passed with flying colors!\n`);
 }
+

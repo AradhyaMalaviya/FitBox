@@ -314,15 +314,15 @@ export type Database = {
           auth_user_id: string | null
           created_at: string
           id: string
-          phone_number: string
+          phone_number: string | null
           preferences: Json | null
           username: string
         }
         Insert: {
           auth_user_id?: string | null
           created_at?: string
-          id: string
-          phone_number: string
+          id?: string
+          phone_number?: string | null
           preferences?: Json | null
           username: string
         }
@@ -330,7 +330,7 @@ export type Database = {
           auth_user_id?: string | null
           created_at?: string
           id?: string
-          phone_number?: string
+          phone_number?: string | null
           preferences?: Json | null
           username?: string
         }

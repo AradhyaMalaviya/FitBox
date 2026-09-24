@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Dumbbell } from 'lucide-react';
+import { Dumbbell, Eye, EyeOff, Loader2 } from 'lucide-react';
 
 type AuthMode = 'welcome' | 'signup' | 'signin' | 'guest' | 'forgot';
 
@@ -16,6 +16,7 @@ const Auth = () => {
   const [fullName, setFullName] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [guestName, setGuestName] = useState('');
   const [loading, setLoading] = useState(false);
   
@@ -25,7 +26,7 @@ const Auth = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim() || !fullName.trim() || !username.trim() || !password.trim()) {
+    if (!email.trim() || !fullName.trim() || !username.trim() || !password) {
       toast({
         title: 'Error',
         description: 'Please fill in all fields',
@@ -46,7 +47,7 @@ const Auth = () => {
       navigate('/dashboard');
     } else {
       toast({
-        title: 'Error',
+        title: 'Signup failed',
         description: result.error,
         variant: 'destructive',
       });
@@ -55,10 +56,10 @@ const Auth = () => {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim() || !password.trim()) {
+    if (!email.trim() || !password) {
       toast({
         title: 'Error',
-        description: 'Please fill in all fields',
+        description: 'Please enter your email and password',
         variant: 'destructive',
       });
       return;
@@ -76,7 +77,7 @@ const Auth = () => {
       navigate('/dashboard');
     } else {
       toast({
-        title: 'Error',
+        title: 'Sign in failed',
         description: result.error,
         variant: 'destructive',
       });
@@ -97,7 +98,7 @@ const Auth = () => {
     continueAsGuest(guestName.trim());
     toast({
       title: 'Welcome! 🎉',
-      description: `Continuing as ${guestName}`,
+      description: `Continuing as ${guestName.trim()}`,
     });
     navigate('/dashboard');
   };
@@ -158,9 +159,13 @@ const Auth = () => {
                 <Input
                   id="signup-email"
                   type="email"
-                  placeholder="Enter your email"
+                  placeholder="name@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck="false"
                   disabled={loading}
                 />
               </div>
@@ -169,9 +174,10 @@ const Auth = () => {
                 <Input
                   id="signup-fullname"
                   type="text"
-                  placeholder="Enter your full name"
+                  placeholder="e.g. Rahul Sharma"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
+                  autoComplete="name"
                   disabled={loading}
                 />
               </div>
@@ -180,27 +186,59 @@ const Auth = () => {
                 <Input
                   id="signup-username"
                   type="text"
-                  placeholder="Choose a username (3-30 characters)"
+                  placeholder="e.g. rahul_fit"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
+                  autoComplete="username"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck="false"
                   disabled={loading}
                 />
+                <p className="text-[11px] text-muted-foreground">
+                  3–30 characters (letters, numbers, hyphens, and underscores).
+                </p>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="signup-password">Password</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="signup-password">Password</Label>
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 focus:outline-none"
+                  >
+                    {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    {showPassword ? 'Hide' : 'Show'}
+                  </button>
+                </div>
                 <Input
                   id="signup-password"
-                  type="password"
-                  placeholder="Create a password (min 8 characters)"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Min 8 characters"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="new-password"
                   disabled={loading}
                 />
               </div>
               <div className="space-y-2 pt-2">
-                <Button type="submit" className="w-full" disabled={loading}>
+                <Button type="submit" className="w-full flex items-center justify-center gap-2" disabled={loading}>
+                  {loading && <Loader2 className="w-4 h-4 animate-spin" />}
                   {loading ? 'Creating Account...' : 'Create Account'}
                 </Button>
+                
+                <div className="text-center text-sm text-muted-foreground pt-1">
+                  Already have an account?{' '}
+                  <button
+                    type="button"
+                    onClick={() => setMode('signin')}
+                    className="text-primary font-medium hover:underline focus:outline-none"
+                    disabled={loading}
+                  >
+                    Sign In
+                  </button>
+                </div>
+
                 <Button 
                   type="button" 
                   variant="ghost" 
@@ -208,7 +246,7 @@ const Auth = () => {
                   onClick={() => setMode('welcome')}
                   disabled={loading}
                 >
-                  Back
+                  Back to Welcome
                 </Button>
               </div>
             </form>
@@ -221,34 +259,66 @@ const Auth = () => {
                 <Input
                   id="signin-email"
                   type="email"
-                  placeholder="Enter your email"
+                  placeholder="name@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck="false"
                   disabled={loading}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="signin-password">Password</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="signin-password">Password</Label>
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 focus:outline-none"
+                  >
+                    {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    {showPassword ? 'Hide' : 'Show'}
+                  </button>
+                </div>
                 <Input
                   id="signin-password"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
                   disabled={loading}
                 />
               </div>
-              <button
-                type="button"
-                className="text-sm text-primary hover:underline"
-                onClick={() => setMode('forgot')}
-              >
-                Forgot password?
-              </button>
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  className="text-sm text-primary hover:underline focus:outline-none"
+                  onClick={() => setMode('forgot')}
+                  disabled={loading}
+                >
+                  Forgot password?
+                </button>
+              </div>
               <div className="space-y-2 pt-2">
-                <Button type="submit" className="w-full" disabled={loading}>
+                <Button type="submit" className="w-full flex items-center justify-center gap-2" disabled={loading}>
+                  {loading && <Loader2 className="w-4 h-4 animate-spin" />}
                   {loading ? 'Signing In...' : 'Sign In'}
                 </Button>
+
+                <div className="text-center text-sm text-muted-foreground pt-1">
+                  Don&apos;t have an account?{' '}
+                  <button
+                    type="button"
+                    onClick={() => setMode('signup')}
+                    className="text-primary font-medium hover:underline focus:outline-none"
+                    disabled={loading}
+                  >
+                    Sign Up
+                  </button>
+                </div>
+
                 <Button 
                   type="button" 
                   variant="ghost" 
@@ -256,7 +326,7 @@ const Auth = () => {
                   onClick={() => setMode('welcome')}
                   disabled={loading}
                 >
-                  Back
+                  Back to Welcome
                 </Button>
               </div>
             </form>
