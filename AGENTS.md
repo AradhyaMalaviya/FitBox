@@ -111,20 +111,24 @@ scripts/        upload-exercise-media.mjs (Node, uses node:fs/promises)
 
 ### Supabase migrations (apply order)
 
-1. `20251007065544_5c736262-…sql`
-2. `20251101134400_5da3b141-…sql`
-3. `20251101134431_3364976a-…sql`
-4. `20251102102612_ac2dee1f-…sql`
-5. `20251103054711_7d8f9601-…sql`
-6. `20251104092224_cc02532f-…sql`
-7. `20251104092451_46219c0c-…sql`
-8. `20251107094626_51a3f036-…sql`
-9. `20251225085149_ae0eeca2-…sql`
-10. `20251225093343_a0379854-…sql`
-11. `20260320000100_create_exercise_media_bucket.sql`
-12. `20260427000000_gymbuddy_schema.sql`
-13. `20260427000001_gymbuddy_realtime.sql`
-14. `20260902024538_add_profiles_preferences.sql`
+1. `20251007065542_5c736262-…sql`
+2. `20251101134359_5da3b141-…sql`
+3. `20251101134429_3364976a-…sql`
+4. `20251102102609_ac2dee1f-…sql`
+5. `20251103054708_7d8f9601-…sql`
+6. `20251104092222_cc02532f-…sql`
+7. `20251104092449_46219c0c-…sql`
+8. `20251107094622_51a3f036-…sql`
+9. `20251225085147_ae0eeca2-…sql`
+10. `20251225093341_a0379854-…sql`
+11. `20260326104045_create_bookings_table.sql`
+12. `20260327000000_create_exercise_media_bucket.sql`
+13. `20260427000000_gymbuddy_schema.sql`
+14. `20260427000001_gymbuddy_realtime.sql`
+15. `20260902024538_add_profiles_preferences.sql`
+16. `20260921000000_fitbox_remediation.sql`
+17. `20260925000000_storage_and_realtime_remediation.sql`
+18. `20260925120000_fix_gymbuddy_profiles_recursion.sql`
 
 Path alias: `@/*` → `src/*` (set in `tsconfig.json`, `tsconfig.app.json`, `vite.config.ts`). shadcn aliases live in `components.json` (`ui` → `src/components/ui`, `lib` → `src/lib`, `hooks` → `src/hooks`).
 

@@ -271,6 +271,12 @@ await runTest("Database", "Dead Code Removal: verified orphaned FitnessChat.tsx 
   assert(!fs.existsSync(legacyChatPath), "Orphaned FitnessChat.tsx successfully removed");
 });
 
+await runTest("Database", "Migrations: non-recursive RLS policy via SECURITY DEFINER function", () => {
+  const mig = fs.readFileSync(path.join(rootDir, "supabase/migrations/20260925120000_fix_gymbuddy_profiles_recursion.sql"), "utf8");
+  assert(mig.includes("is_user_discoverable"), "Defines is_user_discoverable helper");
+  assert(mig.includes("SECURITY DEFINER"), "Sets SECURITY DEFINER on helper function to bypass RLS recursion");
+});
+
 // ======================================================================
 // 10. PRODUCTION BUILD ARTIFACTS
 // ======================================================================
@@ -285,6 +291,14 @@ await runTest("Build", "Bundle Artifacts: dist contains index.html, assets, CSS,
   assert(files.some(f => f.startsWith("ActiveWorkout-") && f.endsWith(".js")), "ActiveWorkout chunk generated");
   assert(files.some(f => f.startsWith("GymBuddyDiscover-") && f.endsWith(".js")), "GymBuddyDiscover chunk generated");
   assert(files.some(f => f.startsWith("NutritionRoadmap-") && f.endsWith(".js")), "NutritionRoadmap chunk generated");
+});
+
+await runTest("Build", "Cloudflare Workers Builds: wrangler.toml SPA routing configured", () => {
+  const wranglerPath = path.join(rootDir, "wrangler.toml");
+  assert(fs.existsSync(wranglerPath), "wrangler.toml exists");
+  const config = fs.readFileSync(wranglerPath, "utf8");
+  assert(config.includes('name = "fitbox"'), "Worker name configured as fitbox");
+  assert(config.includes('not_found_handling = "single-page-application"'), "SPA routing enabled");
 });
 
 console.log("\n======================================================================");

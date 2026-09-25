@@ -284,6 +284,20 @@ test("Nutrition: robust malformed JSON recovery and cross-device Supabase prefer
   assert(roadmap.includes("profiles") && roadmap.includes("preferences"), "Roadmap hydrates and syncs with cloud profile preferences");
 });
 
+// 22. Test Cloudflare Workers Configuration & Supabase Migration Alignment
+test("Deployment & Migrations: wrangler.toml SPA routing and non-recursive RLS policies", () => {
+  const wranglerPath = path.join(rootDir, "wrangler.toml");
+  assert(fs.existsSync(wranglerPath), "wrangler.toml exists for Cloudflare Workers Builds");
+  const wranglerContent = fs.readFileSync(wranglerPath, "utf8");
+  assert(wranglerContent.includes('name = "fitbox"'), "wrangler.toml specifies name = fitbox");
+  assert(wranglerContent.includes('not_found_handling = "single-page-application"'), "wrangler.toml enables SPA fallback routing");
+
+  const recursionFixPath = path.join(rootDir, "supabase/migrations/20260925120000_fix_gymbuddy_profiles_recursion.sql");
+  assert(fs.existsSync(recursionFixPath), "Recursion fix migration file exists");
+  const recursionSql = fs.readFileSync(recursionFixPath, "utf8");
+  assert(recursionSql.includes("is_user_discoverable") && recursionSql.includes("SECURITY DEFINER"), "Recursion fix defines SECURITY DEFINER function");
+});
+
 console.log(`\nResults: ${passed} passed, ${failed} failed`);
 
 if (failed > 0) {
