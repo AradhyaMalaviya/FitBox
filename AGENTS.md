@@ -35,7 +35,7 @@ Files touched by the latest work include `src/components/ProjectAssistantChat.ts
 
 ## Dev environment
 
-Node 18+ (Node 20 recommended); npm is the documented toolchain — dependencies are managed with `package-lock.json`.
+Node 22 LTS (Node 22+ required by Wrangler & modern toolchain); npm is the documented toolchain — dependencies are managed with `package-lock.json`.
 
 ```sh
 npm install
