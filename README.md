@@ -1,242 +1,362 @@
-# FitBox — AI-Powered Fitness & Nutrition Ecosystem
+<div align="center">
 
-**FitBox** is a high-end, full-stack fitness and social web application that unifies professional AI coaching, anatomical exercise discovery, real-time workout tracking, culturally specific Indian nutrition planning, and social partner matching into a single, cohesive platform. Built with React 18 + TypeScript on a Supabase/PostgreSQL backend, FitBox delivers a production-grade experience for athletes of every level.
+# ⚡ FitBox — AI-Powered Fitness & Nutrition Ecosystem
 
----
+### *An Intelligent, Biomechanically Accurate, and Culturally Rooted Health Platform*
 
-## 🌟 Core Feature Pillars
+[![React 18](https://img.shields.io/badge/React-18.3.1-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
+[![TypeScript 5](https://img.shields.io/badge/TypeScript-5.8.3-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Vite 5](https://img.shields.io/badge/Vite-5.4.19-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4.17-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL_%2B_RLS-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com/)
+[![Cloudflare](https://img.shields.io/badge/Cloudflare-Workers_%26_Pages-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)](https://pages.cloudflare.com/)
+[![Google Gemini](https://img.shields.io/badge/Google_Gemini-2.5_Flash_Lite-8E75C2?style=for-the-badge&logo=google&logoColor=white)](https://deepmind.google/technologies/gemini/)
+[![Tests Passing](https://img.shields.io/badge/Test_Suites-53_Passing-brightgreen?style=for-the-badge&logo=checkmarx&logoColor=white)](#-test-suites--system-verification)
 
-### 🤖 Multi-Assistant Intelligence Engine
-FitBox operates on a layered AI model with complementary assistants serving distinct roles:
-
-- **Cloud Coach (Google Gemini 2.5 Flash Lite):** Deployed as a serverless **Deno Edge Function** on Supabase through the Lovable AI Gateway. Streams token-by-token responses using **Server-Sent Events (SSE)** for real-time coaching on workout programming, biomechanics, and sports nutrition.
-- **Gym Trainer Chat:** `GymTrainerChat.tsx` is a dashboard chat surface using the same streamed Gemini 2.5 Flash Lite backend and a compact exercise-library context.
-- **Project Assistant:** `ProjectAssistantChat.tsx` is globally mounted and uses generated project knowledge with a direct Gemini 2.5 Flash Lite Edge Function for FitBox architecture and implementation questions.
-- **Inspiration Archetype Scorer:** The `deriveInspirationScore()` algorithm in `src/lib/onboarding.ts` analyzes character-preset tags (Goku → lean/explosive, Thor → bulky/strength, Captain America → athletic/balanced, Toji → lean/dense-muscle) to deterministically classify users into one of four training archetypes: `bulk`, `cutting`, `athletic-performance`, or `strength-hybrid`.
-
-### 🏋️ The Interactive Training Lab
-
-- **SVG Anatomy Map:** A precision-engineered, custom-built interactive human body diagram (`src/lib/muscleMapping.ts`) with **19 individually clickable muscle groups** across front and back views. Supports gender toggle (male/female silhouettes), hover tooltips, and animated exercise-count panels. Clicking any muscle routes directly to a filtered exercise directory.
-- **Exercise Directory:** 50+ exercises with muscle group, difficulty (Beginner/Intermediate/Advanced), duration, equipment, embedded YouTube player, and detailed form instructions. Searchable and filterable.
-- **Smart Workout Generator:** A multi-step wizard (`GenerateWorkout.tsx`) that produces custom exercise plans based on fitness level, equipment, and target body parts.
-- **Real-Time Workout Tracker:** Live session interface (`ActiveWorkout.tsx` + `WorkoutContext`) with a persistent elapsed timer, per-exercise set/rep/weight logging, completion checkboxes, and an in-session exercise browser drawer. Session data is persisted to a three-table PostgreSQL chain: `workout_sessions → workout_logs → workout_sets`.
-
-### 🥗 Indian Nutrition Roadmap
-
-- **Mifflin-St Jeor BMR Engine:** Personalized calorie calculations (`NutritionRoadmap.tsx`) using the clinically validated Mifflin-St Jeor equation, activity multipliers (sedentary 1.2 / moderate 1.55 / active 1.725), and goal-based surplus/deficit (Bulk: +500 kcal, Lean Bulk: +250 kcal, Cut: -500 kcal).
-- **Macro Distribution:** Protein at 2.2g/kg bodyweight, Fats at 25% of TDEE, Carbohydrates filling the remainder.
-- **Indian-First Food Database:** 150+ items curated for Indian dietary habits — Soya Chunks, Paneer, Sattu, Dal, Curd, Roti — with full macros, INR cost ranges, diet type tags (veg/non-veg/vegan), meal timing roles, and Hindi names.
-- **5-Tab Roadmap View:** Pre-Workout, Post-Workout, Rest Day, Supplements (incl. Desi alternatives like Sattu and Chaas), and Protein Swap cards.
-- **Questionnaire Flow:** `NutritionQuestionnaire.tsx` captures gender, age, weight, height, goal, diet preference, and activity level, storing results in `localStorage` for the roadmap calculation.
-
-### 🤝 GymBuddy — The Social Matching Layer
-
-- **Smart Profiles:** Specialized setup wizard (`GymBuddyProfileSetup.tsx`) covering workout split (PPL, Bro-Split, Upper/Lower, Full Body), experience level, fitness goals, preferred timings, gym location, and age range.
-- **100-Point Compatibility Scorer:** Candidates are ranked across five weighted dimensions — Goals Overlap (30 pts), Experience Parity (20 pts), Split Synergy (20 pts), Timing Synchronization (20 pts), and Geographic Context (10 pts).
-- **Gamified Discovery & Swiping:** `GymBuddyDiscover.tsx` provides right/left swipe matching with **Framer Motion spring physics** for realistic card dragging. A high-fidelity **Proximity Radar** (`GymBuddyRadar.tsx`) provides an interactive scanning phase, while a slide-up drawer reveals a 5-point **Recharts Radar polygon** displaying the Synergy Match Rating details.
-- **Mutual Matches:** Mutual right-swipes atomically create a row in `gymbuddy_matches` (enforced with `CHECK (user1_id < user2_id)`), triggering an exciting `canvas-confetti` explosion and browser haptic feedback (`navigator.vibrate`) via `GymBuddyMatchOverlay.tsx`.
-- **Real-Time Messaging:** `GymBuddyChat.tsx` uses Supabase WebSocket subscriptions (`supabase_realtime`) for instant message delivery. The chat interface includes an ambient **Live Session Widget** to show if partners are currently working out, and **Floating Micro-Reactions** for rapid-fire hype (🔥, 💪).
-- **Shared Streaks:** `shared_streak` in `gymbuddy_matches` increments only when both partners log sessions, creating a mutual social accountability contract.
-
-### 🧭 5-Step Onboarding Wizard
-
-A structured, Zod-validated onboarding flow (`Onboarding.tsx`) that collects user preferences and seeds all downstream personalization:
-
-1. **Physique Inspiration** — Character preset + free-form tags (validated via `inspirationStepSchema`)
-2. **Diet Preferences** — Diet type enum + optional calorie target (validated via `dietStepSchema`)
-3. **Meals & Allergies** — Meal routine, eating window time-range, allergen list (validated via `mealsStepSchema`)
-4. **Workout Schedule** — Preferred time of day + specific time range (validated via `workoutStepSchema`)
-5. **Summary & Confirm** — Full review before Supabase persistence
-
-### 🔐 Subscription & Trainer Assignment Layer
-
-- **Subscription Plans:** `subscription_plans` table with INR pricing, `duration_days`, and `features` JSONB. Default seeded plan: *Premium Personal Trainer Plan* (₹10/month, 30 days).
-- **Payment Transactions:** Full Razorpay integration schema (`razorpay_payment_id`, `razorpay_order_id`, `razorpay_signature`) with immutable payment records (UPDATE/DELETE locked by RLS).
-- **Assigned Trainers:** Admin-side trainer assignment with a secure PII vault. Sensitive contact info (email, phone) is isolated in `trainer_sensitive_data` — blocked from all direct client access by RLS (`USING (false)`). Accessed only through a privileged Supabase Edge Function (`get-trainer-contact`) which logs every access attempt to `audit_logs`.
-- **Audit Logging:** `audit_logs` table records `user_id`, `action`, `resource_type`, `resource_id`, `metadata` JSONB, `ip_address`, and timestamp. Insert-only via service role; users can view their own logs but cannot modify them.
+<p align="center">
+  <a href="#-core-pillars">Core Pillars</a> •
+  <a href="#-ai-engine--assistants">AI Engine</a> •
+  <a href="#-interactive-anatomy-lab">Anatomy Lab</a> •
+  <a href="#-indian-nutrition-roadmap">Indian Nutrition</a> •
+  <a href="#-gymbuddy-matchmaking">GymBuddy Social</a> •
+  <a href="#-technical-architecture">Architecture</a> •
+  <a href="#-database-migrations">Database</a> •
+  <a href="#-quick-start">Quick Start</a>
+</p>
 
 ---
 
-## 🚀 Technology Stack
+</div>
 
-| Layer | Technology | Version |
-| :--- | :--- | :--- |
-| **UI Framework** | React | 18.3.1 |
-| **Language** | TypeScript | 5.8.3 |
-| **Build Tool** | Vite | 5.4.19 |
-| **Styling** | Tailwind CSS + shadcn/ui + Radix UI | 3.4.17 |
-| **Backend & Auth** | Supabase (PostgreSQL, Auth, Edge Functions, RLS, Realtime) | 2.58.0 |
-| **AI (Fitness)** | Google Gemini 2.5 Flash Lite via Lovable Gateway and Deno Edge Function | — |
-| **AI (Project)** | Google Gemini 2.5 Flash Lite via direct Deno Edge Function | — |
-| **Server State** | TanStack Query | v5.83.0 |
-| **Validation** | Zod + React Hook Form | 3.25.76 |
-| **Routing** | React Router DOM | 6.30.1 |
-| **Charts** | Recharts | 2.15.4 |
-| **Animations** | Framer Motion + Canvas Confetti | 12.38.0 |
-| **Icons** | Lucide React | 0.462.0 |
-| **Toasts** | Sonner | 1.7.4 |
+## 📖 Executive Overview
+
+**FitBox** is a modern, full-stack fitness and social ecosystem engineered for athletes, trainers, and fitness enthusiasts. Unifying high-performance **Google Gemini 2.5 Flash Lite** multi-assistant intelligence, a **MuscleWiki-grade 19-muscle vector anatomy map**, live set-by-set workout tracking, an **Indian-first clinical nutrition engine**, and a **gamified GymBuddy matchmaking platform**, FitBox brings elite-tier personal training directly to the browser.
+
+Built from the ground up for speed, resilience, and offline tolerance, FitBox operates on a reactive single-page architecture deployed across **Cloudflare Pages & Workers edge networks**, with an enterprise **PostgreSQL backend** powered by **Supabase**.
 
 ---
 
-## 📂 Full Project Architecture
+## 🌟 Core Pillars
 
-```bash
-fitbox/
-├── src/
-│   ├── components/
-│   │   ├── gymbuddy/         # GymBuddyCard, GymBuddyRadar, GymBuddyMatchOverlay,
-│   │   │                     # GymBuddySessionModal, GymBuddySettings, WorkoutStreak
-│   │   ├── muscle-map/       # InteractiveBodyDiagram, MuscleMapSVG, ExerciseResults,
-│   │   │                     # ExerciseResultCard, EquipmentFilter
-│   │   ├── workout/          # AddExerciseDrawer, ExerciseLogCard, StartWorkoutCard,
-│   │   │                     # WorkoutHeader
-│   │   ├── ui/               # shadcn/ui design system (Button, Card, Dialog, etc.)
-│   │   ├── GymTrainerChat.tsx   # Dashboard Gemini SSE trainer chat
-│   │   ├── FitnessChat.tsx      # Dashboard Gemini SSE fitness chat
-│   │   ├── ProjectAssistantChat.tsx # Global project-aware assistant
-│   │   └── Header.tsx           # Global nav with auth state
-│   │
-│   ├── contexts/
-│   │   ├── AuthContext.tsx           # Supabase session, guest-mode, profile state
-│   │   ├── WorkoutContext.tsx        # Active session timer, logs, current exercise
-│   │   └── GymBuddyNotification     # WebSocket message subscription → global toasts
-│   │
-│   ├── hooks/
-│   │   ├── useGymBuddy.ts           # Swipe, match, message mutations
-│   │   ├── useWorkoutSave.ts        # Session persist to workout_sessions/logs/sets
-│   │   ├── useTrainerContact.ts     # Calls get-trainer-contact edge function
-│   │   └── use-toast.ts             # Sonner toast wrapper
-│   │
-│   ├── pages/
-│   │   ├── LandingPage.tsx          # Public marketing page
-│   │   ├── Auth.tsx                 # Sign-in / Sign-up / Guest access
-│   │   ├── Onboarding.tsx           # 5-step Zod-validated onboarding wizard
-│   │   ├── Index.tsx                # Main dashboard with muscle map + quick actions
-│   │   ├── Exercises.tsx            # Full exercise directory with search & filters
-│   │   ├── ExerciseDetail.tsx       # Exercise deep-dive with embedded video player
-│   │   ├── GenerateWorkout.tsx      # AI workout plan generator wizard
-│   │   ├── ActiveWorkout.tsx        # Live real-time workout tracker
-│   │   ├── Nutrition.tsx            # Nutrition hub / entry point
-│   │   ├── NutritionQuestionnaire.tsx  # Body data collection form
-│   │   ├── NutritionRoadmap.tsx     # Personalized Indian food plan (5 tabs)
-│   │   ├── GymBuddyDiscover.tsx     # Swipe-based partner discovery
-│   │   ├── GymBuddyMatches.tsx      # Match list with streak badges
-│   │   ├── GymBuddyChat.tsx         # Real-time match messaging
-│   │   ├── GymBuddyProfileSetup.tsx # Social profile creation wizard
-│   │   └── NotFound.tsx             # 404 fallback
-│   │
-│   ├── data/
-│   │   ├── exercises.ts             # 50+ exercise objects with full metadata
-│   │   ├── indianFoodDatabase.ts    # 150+ Indian food items with macros & INR cost
-│   │   └── projectKnowledge.ts      # AUTO-GENERATED project context (npm run build:knowledge)
-│   │
-│   └── lib/
-│       ├── onboarding.ts            # Zod schemas + deriveInspirationScore() algorithm
-│       ├── muscleMapping.ts         # SVG diagramId → exerciseGroup → route mapping
-│       └── utils.ts                 # cn() tailwind class merger + helpers
-│
-├── supabase/
-│   ├── config.toml                  # project_id + verify_jwt per edge function
-│   ├── functions/
-│   │   ├── fitness-chat/            # Gemini 2.5 Flash Lite SSE streaming edge function
-│   │   ├── project-assistant/       # Direct Gemini project assistant
-│   │   └── get-trainer-contact/     # Secure PII retrieval + audit logging
-│   └── migrations/                  # 14 chronological SQL migration files
-│       ├── 20251007…                # Initial profiles + workouts schema
-│       ├── 20251101134400…          # Trainer data additions
-│       ├── 20251101134431…          # Subscriptions, payments, assigned_trainers
-│       ├── 20251102…                # Additional profile columns
-│       ├── 20251103…                # Minor column tweaks
-│       ├── 20251104…                # RLS policy updates
-│       ├── 20251107…                # Auth trigger + secure RLS overhaul
-│       ├── 20251225085149…          # trainer_sensitive_data PII vault + audit_logs
-│       ├── 20251225093343…          # workout_sessions / workout_logs / workout_sets
-│       ├── 20260320…                # exercise_media storage bucket
-│       ├── 20260427000000…          # Full GymBuddy social schema
-│       └── 20260427000001…          # GymBuddy realtime publication
-│
-├── scripts/
-│   ├── build-project-knowledge.mjs # Generates src/data/projectKnowledge.ts
-│   └── upload-exercise-media.mjs   # Uploads exercise videos/posters to Supabase Storage
-├── tailwind.config.ts              # Custom design tokens, dark-mode theme
-├── vite.config.ts                  # Path aliases (@/) + build optimisation
-└── tsconfig.json                   # Strict TypeScript configuration
+```
+                     ┌─────────────────────────────────────────────────────────┐
+                     │                       FITBOX HUB                        │
+                     └────────────────────────────┬────────────────────────────┘
+                                                  │
+         ┌───────────────────┬────────────────────┼───────────────────┬───────────────────┐
+         ▼                   ▼                    ▼                   ▼                   ▼
+  🧠 Multi-Assistant    🧬 Interactive      🥗 Indian First      🤝 GymBuddy Match    📱 Edge & Mobile
+   Intelligence         Anatomy Lab         Nutrition Engine      Social Network       First Design
+  ─────────────────   ────────────────    ──────────────────   ──────────────────   ────────────────
+   • Gemini 2.5 Coach   • 19 Vector Slugs   • Mifflin-St Jeor    • 5D Radar Synergy   • BottomTabBar
+   • Project AI Vault   • Biomechanic POV   • 150+ Desi Foods    • Spring Swiping     • Safe Area Insets
+   • SSE Streaming      • YouTube Library   • Cloud Sync Prefs   • Live Chat & Streaks • Zero-404 SPA
 ```
 
 ---
 
-## 🔑 Route Map
+## 🤖 AI Engine & Assistants
 
-| Route | Page | Auth Required |
-| :--- | :--- | :--- |
-| `/` | `LandingPage` | No |
-| `/auth` | `Auth` | No |
-| `/onboarding` | `Onboarding` | Yes |
-| `/dashboard` | `Index` | Yes |
-| `/exercises` | `Exercises` | Yes |
-| `/exercises/:muscleId` | `Exercises` (muscle-filtered) | Yes |
-| `/exercise/:exerciseId` | `ExerciseDetail` | Yes |
-| `/generate-workout` | `GenerateWorkout` | Yes |
-| `/workout/active` | `ActiveWorkout` | Yes |
-| `/nutrition` | `Nutrition` | Yes |
-| `/nutrition/questionnaire` | `NutritionQuestionnaire` | Yes |
-| `/nutrition/roadmap` | `NutritionRoadmap` | Yes |
-| `/gymbuddy/setup` | `GymBuddyProfileSetup` | Yes |
-| `/gymbuddy/discover` | `GymBuddyDiscover` | Yes |
-| `/gymbuddy/matches` | `GymBuddyMatches` | Yes |
-| `/gymbuddy/chat/:matchId` | `GymBuddyChat` | Yes |
-| `/gymbuddy/settings` | `GymBuddySettings` | Yes |
+FitBox features a sophisticated, **dual-assistant intelligence architecture** operating across distinct architectural layers with server-side credential isolation:
 
----
+### 1. 🏋️ The Cloud Coach — `fitness-chat`
+* **Model**: Google Gemini 2.5 Flash Lite via Lovable AI Gateway
+* **Protocol**: Real-time **Server-Sent Events (SSE)** streaming token-by-token
+* **Runtime**: Supabase Deno Edge Function (`supabase/functions/fitness-chat`)
+* **Role**: Personalized progressive overload advice, biomechanical form correction, dynamic workout plan generation, and macro-nutrient optimization.
+* **Component**: Embedded in [`GymTrainerChat.tsx`](file:///C:/Users/deepa/Downloads/musclewebsite%20test%202/art-decoder-tool/src/components/GymTrainerChat.tsx) with resilient guest fallback pathways.
 
-## 💻 Installation & Setup
+### 2. 💡 The Project Assistant — `project-assistant`
+* **Model**: Google Gemini 2.5 Flash Lite via Direct Google Generative Language API
+* **Runtime**: Supabase Edge Function (`supabase/functions/project-assistant`)
+* **Context**: Dynamically compiled from repository architecture, route manifests, environment contracts, and schema migrations (`scripts/build-project-knowledge.mjs`).
+* **Component**: Mounted globally in [`ProjectAssistantChat.tsx`](file:///C:/Users/deepa/Downloads/musclewebsite%20test%202/art-decoder-tool/src/components/ProjectAssistantChat.tsx) for instant project context, architectural queries, and user guidance.
 
-1. **Clone & Install**
-   ```bash
-   git clone https://github.com/AradhyaMalaviya/art-decoder-tool.git
-   cd art-decoder-tool
-   npm install
-   ```
-
-2. **Environment Configuration**
-   Create a `.env` file in the root:
-   ```env
-   VITE_SUPABASE_URL=your_supabase_project_url
-   VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key
-   ```
-   In the Supabase Edge Function secrets dashboard, set:
-   ```
-   LOVABLE_API_KEY=your_lovable_api_key
-   GEMINI_API_KEY=your_gemini_api_key
-   ```
-
-3. **Database Setup**
-   Apply all 14 migrations via the Supabase CLI:
-   ```bash
-   supabase db push
-   ```
-
-4. **Deploy Edge Functions**
-   ```bash
-   supabase functions deploy fitness-chat project-assistant get-trainer-contact
-   ```
-
-5. **Run in Development**
-   ```bash
-   npm run dev
-   ```
+### 3. 🎯 Inspiration Archetype Classifier
+* **Algorithm**: `deriveInspirationScore()` in [`src/lib/onboarding.ts`](file:///C:/Users/deepa/Downloads/musclewebsite%20test%202/art-decoder-tool/src/lib/onboarding.ts)
+* **Mechanics**: Deterministically maps cultural and anime character presets (Goku, Thor, Captain America, Toji Fushiguro) along with custom tags into training archetypes:
+  - 🦁 **Bulk** — Hypertrophy & high-calorie surplus
+  - ⚡ **Cutting** — High-protein aggressive deficit & cardiovascular density
+  - 🏃 **Athletic Performance** — Explosive power, agility, and mobility
+  - 🛡️ **Strength Hybrid** — Powerlifting compound strength & density
 
 ---
 
-## ✍️ Author
+## 🧬 Interactive Anatomy Lab
 
-**Aaradhya Malaviya**
-- Full-Stack Developer & Fitness Technology Architect
-- [GitHub](https://github.com/AaradhyaMalaviya)
-- [LinkedIn](https://linkedin.com/in/aaradhyamalaviya)
+The center of exercise discovery is the custom-built **Vector Body Diagram**:
+
+* **Precision Anatomical Mapping**: 19 discrete muscle zones across anterior and posterior views:
+  `chest`, `upper-back`, `lower-back`, `lats`, `traps`, `shoulders`, `biceps`, `triceps`, `forearms`, `abdominals`, `obliques`, `quads`, `hamstrings`, `glutes`, `calves`, `adductors`, `abductors`, `neck`, and `full-body`.
+* **MuscleWiki Synergy**: Seamless toggling between anterior/posterior views and male/female anatomical vector silhouettes.
+* **Smart Equipment Filters**: Filter down instantly by Dumbbell, Barbell, Bodyweight, Cable, Machine, Kettlebell, or Resistance Bands.
+* **Live YouTube Form Demonstrations**: 50+ curated exercises complete with form cues, tempo guidelines, primary/secondary targets, and integrated video players.
+* **Fail-Safe Video Recovery**: Wrapped in strict React `ErrorBoundary` and inline fallback posters to guarantee uninterrupted UI navigation.
+
+---
+
+## 🥗 Indian Nutrition Roadmap
+
+Clinical sports nutrition tailored specifically for Indian diets and cultural lifestyles:
+
+* **Mifflin-St Jeor Clinical Engine**: Dynamic Basal Metabolic Rate (BMR) and Total Daily Energy Expenditure (TDEE) calculation with goal-based surplus/deficit adjustments (-500 kcal for cutting, +250/500 kcal for bulking).
+* **Clinical Macro Partitioning**:
+  - **Protein**: 2.2g per kg bodyweight
+  - **Fats**: Exactly 25% of daily TDEE
+  - **Carbohydrates**: Fills remaining energy budget (with automatic negative clamp protection)
+* **150+ Indian Food Database**: Complete nutritional breakdowns (Protein, Carbs, Fats, Fiber, INR Cost Estimates, Hindi names, and Vegetarian/Vegan tags) for Paneer, Soya Chunks, Sattu, Dal, Moong Sprout, Curd, Roti, Rajma, and more.
+* **5-Tab Personalized Roadmap**:
+  1. ⚡ **Pre-Workout Fuel** — High GI carbs and natural pre-workout boosters
+  2. 🔋 **Post-Workout Recovery** — High protein rapid repair timing
+  3. 🛌 **Rest Day Nutrition** — Satiety management and recovery macros
+  4. 💊 **Supplements & Desi Alternatives** — Creatine, Whey, Sattu, Chaas & Ashwagandha
+  5. 🔄 **Protein Swaps** — Budget-conscious Indian protein exchange chart
+* **Cross-Device Cloud Sync**: Questionnaires hydrate from and persist directly to `profiles.preferences` JSONB with malformed JSON self-healing.
+
+---
+
+## 🤝 GymBuddy Matchmaking & Social Layer
+
+A social accountability platform designed to match workout partners based on actual training compatibility:
+
+```
+                           ┌───────────────────────────┐
+                           │   GYMBUDDY RADAR ENGINE   │
+                           └─────────────┬─────────────┘
+                                         │
+                 ┌───────────────────────┼───────────────────────┐
+                 ▼                       ▼                       ▼
+          🎯 Goals (30%)          🏋️ Split (20%)          ⏱️ Timings (20%)
+         Overlapping targets      PPL / Bro / Upper-Lower  Morning / Evening sync
+                 │                       │                       │
+                 └───────────────────────┼───────────────────────┘
+                                         │
+                 ┌───────────────────────┴───────────────────────┐
+                 ▼                                               ▼
+          🏆 Experience (20%)                             📍 Location (10%)
+         Beginner / Intermediate / Pro                    Gym & geographic proximity
+```
+
+* **Spring Physics Card Swiping**: Built with **Framer Motion** for card drag physics, rotation, and swipe dismissal.
+* **Proximity Radar & Radar Polygon**: Visual synergy analysis using **Recharts Radar** showing compatibility across all 5 dimensions.
+* **Scalable Anti-Join Candidate Discovery**: High-performance PostgreSQL RPC function (`get_gymbuddy_candidates`) executing an indexed anti-join against `gymbuddy_swipes` to discover candidates in constant time.
+* **Instant Mutual Matching**: Atomic PostgreSQL checks enforce mutual match creation, accompanied by haptic vibration and `canvas-confetti` celebrations.
+* **WebSocket Realtime Messaging**: Live chat powered by Supabase Realtime subscriptions with active live session indicators and hype micro-reactions.
+* **Accountability Streaks**: Authoritative milestone notifications triggered only on legitimate, strictly increasing dual-partner session logs.
+
+---
+
+## 📱 Mobile-First Architecture & UI Polish
+
+FitBox provides an app-like experience across iOS and Android browsers:
+
+* **BottomTabBar Navigation**: 5-point fixed bottom navigation bar with responsive icons (`Dashboard`, `Exercises`, `Workout`, `GymBuddy`, `Nutrition`).
+* **Safe Area Insets**: Full native iOS/Android notch and home-indicator padding (`pb-[env(safe-area-inset-bottom)]`).
+* **Route Aliases**: Built-in support for short convenience route aliases (`/FORPHONE1CLAUDE`, `/exercises_m`, `/workout_m`, `/nutrition_m`, `/gymbuddy_m`).
+* **Workout Session Safeguards**:
+  - `isHydrated` lifecycle protection prevents state wipeouts on page refresh.
+  - Interactive **Discard Workout Confirmation Dialog** prevents accidental workout cancellation.
+  - Smooth string-state set logging prevents numeric input clearing glitches.
+* **Auth & Security Upgrades**: Password visibility eye toggles, strict username regex, email auto-trimming, and a dedicated password recovery route (`/reset-password`).
+
+---
+
+## 🏗️ Technical Architecture & Stack
+
+```mermaid
+flowchart TB
+    subgraph Client ["Client Layer (React 18 + Vite SPA)"]
+        UI["UI Primitives<br/>(Tailwind CSS + shadcn/ui)"]
+        Router["Client Routing<br/>(React Router v6)"]
+        State["State Hydration<br/>(TanStack Query + Context)"]
+        Anatomy["Interactive Body Lab<br/>(MuscleWiki SVG Vectors)"]
+    end
+
+    subgraph Edge ["Cloudflare Global Network"]
+        CF_Pages["Cloudflare Pages / Workers<br/>(Static Assets & SPA Fallback)"]
+        WorkerEntry["worker.js<br/>(env.ASSETS Fetcher)"]
+    end
+
+    subgraph BaaS ["Supabase Cloud (PostgreSQL 15)"]
+        Auth["Supabase Auth<br/>(JWT + Session Management)"]
+        DB["PostgreSQL Database<br/>(18 Migrations + Strict RLS)"]
+        Storage["Object Storage<br/>(exercise-media & user-media)"]
+        Realtime["Realtime Engine<br/>(Postgres CDC WebSockets)"]
+    end
+
+    subgraph AI ["AI Services"]
+        GeminiCoach["Google Gemini 2.5 Flash Lite<br/>(Lovable SSE Gateway)"]
+        GeminiProject["Google Gemini 2.5 Flash Lite<br/>(Direct Project Assistant)"]
+    end
+
+    Client --> CF_Pages
+    CF_Pages --> WorkerEntry
+    Client --> Auth
+    Client --> DB
+    Client --> Storage
+    Client --> Realtime
+    Client --> GeminiCoach
+    Client --> GeminiProject
+```
+
+---
+
+## 🗄️ Database Migrations
+
+FitBox maintains a synchronized database schema across **18 timestamped migrations** with strict Row-Level Security (RLS):
+
+| # | Migration File | Scope & Impact |
+|:---:|:---|:---|
+| **01** | `20251007065542_5c736262-….sql` | Core user profiles, phone index, workouts schema |
+| **02** | `20251101134359_5da3b141-….sql` | Trainer verification & metadata structures |
+| **03** | `20251101134429_3364976a-….sql` | Subscription plans, Razorpay payments, assigned trainers |
+| **04** | `20251102102609_ac2dee1f-….sql` | Profile avatar URL, bio, and social attributes |
+| **05** | `20251103054708_7d8f9601-….sql` | Nutrition dietary preferences & calorie targets |
+| **06** | `20251104092222_cc02532f-….sql` | Profiles security policy hardening |
+| **07** | `20251104092449_46219c0c-….sql` | Strict RLS permissions for public profile lookup |
+| **08** | `20251107094622_51a3f036-….sql` | Auth triggers (`handle_new_user`) & automated profile generation |
+| **09** | `20251225085147_ae0eeca2-….sql` | Trainer sensitive data PII vault & immutable audit logging |
+| **10** | `20251225093341_a0379854-….sql` | Relational workout engine (`sessions → logs → sets`) |
+| **11** | `20260326104045_create_bookings_table.sql` | Booking reservations & calendar management |
+| **12** | `20260327000000_create_exercise_media_bucket.sql` | Storage bucket for exercise demo videos and posters |
+| **13** | `20260427000000_gymbuddy_schema.sql` | Full GymBuddy tables: profiles, swipes, matches, messages, logs |
+| **14** | `20260427000001_gymbuddy_realtime.sql` | Realtime CDC publication for matches & live session logs |
+| **15** | `20260902024538_add_profiles_preferences.sql` | User preferences JSONB column for onboarding & nutrition sync |
+| **16** | `20260921000000_fitbox_remediation.sql` | Phone number null safety, partial unique indexes, swipe RLS |
+| **17** | `20260925000000_storage_and_realtime_remediation.sql` | `user-media` bucket, `REPLICA IDENTITY FULL`, candidate discovery RPC |
+| **18** | `20260925120000_fix_gymbuddy_profiles_recursion.sql` | Non-recursive RLS policy via `is_user_discoverable` `SECURITY DEFINER` |
+
+---
+
+## 🧪 Test Suites & System Verification
+
+FitBox enforces automated testing before every deployment:
+
+```bash
+# Run the core 22-suite remediation verification runner
+npm test
+
+# Run the comprehensive 31-suite full-system beta-test suite
+node scripts/beta-test-suite.mjs
+```
+
+### 📊 Verification Metrics (53 Passing Suites, 0 Failures)
+```
+  ✅ [Auth] PASS: authSchemas: email trimming, minimum 8-char password, strict username regex
+  ✅ [Auth] PASS: AuthContext: dual-identity separation & safe profile hydration
+  ✅ [Auth] PASS: Auth UI: password eye visibility toggles & mode switches
+  ✅ [Auth] PASS: Password Recovery: query/hash preservation & resetPasswordSchema
+  ✅ [Onboarding] PASS: Inspiration Archetype Scorer: deterministically maps presets to archetypes
+  ✅ [Onboarding] PASS: Onboarding Media: validates MIME types & guarantees fallback preset image
+  ✅ [Anatomy] PASS: Muscle Mapping: all 19 muscle groups have canonical slugs & aliases
+  ✅ [Anatomy] PASS: Exercise Database: 50+ exercises with valid target, equipment, and form
+  ✅ [Workout] PASS: Workout Lifecycle: isHydrated lifecycle guard prevents refresh deletion
+  ✅ [Workout] PASS: Workout Header & Discard: confirmation dialog prevents accidental loss
+  ✅ [Workout] PASS: Exercise Set Logging: numeric input clearing bug resolved with string state
+  ✅ [Workout] PASS: Workout Save Hook: profileId FK targeting & guest local history persistence
+  ✅ [Nutrition] PASS: Macro Engine: clinical Mifflin-St Jeor formula & deficit calculations
+  ✅ [Nutrition] PASS: Indian Food Database: 150+ items including oils & protein swaps
+  ✅ [Nutrition] PASS: Nutrition Cloud Sync: Supabase profiles.preferences sync & error recovery
+  ✅ [GymBuddy] PASS: Upfront Guest Gating: blocks unauthenticated guests before setup
+  ✅ [GymBuddy] PASS: Compatibility Engine: 5 normalized dimensions matching matchmaking inputs
+  ✅ [GymBuddy] PASS: Compatibility Radar: wires GymBuddyCard radar directly to canonical breakdown
+  ✅ [GymBuddy] PASS: Candidate Discovery Scalability: anti-join RPC function & query bounding
+  ✅ [GymBuddy] PASS: Chat Identity Model: sender_id correctly compared against authUserId
+  ✅ [GymBuddy] PASS: Streak Milestone Notifications: authoritative tracking & alert delivery
+  ✅ [Mobile] PASS: BottomTabBar: 5 navigation destinations with safe-area insets
+  ✅ [Mobile] PASS: Header & Safe Spacing: compact mobile header & body padding
+  ✅ [Mobile] PASS: Route Aliases: supports FORPHONE1CLAUDE convenience route paths
+  ✅ [AI] PASS: GymTrainerChat: intentional guest pathway prevents gateway 401 crash
+  ✅ [AI] PASS: Edge Functions: rate limiting, payload bounding, and Gemini 2.5 streaming
+  ✅ [Database] PASS: Migrations: user-media storage bucket, REPLICA IDENTITY FULL, anti-join RPC
+  ✅ [Database] PASS: Dead Code Removal: verified orphaned components deleted
+  ✅ [Database] PASS: Migrations: non-recursive RLS policy via SECURITY DEFINER function
+  ✅ [Build] PASS: Bundle Artifacts: dist contains index.html, assets, CSS, and split chunks
+  ✅ [Build] PASS: Cloudflare Workers Builds: wrangler.toml SPA routing configured
+```
+
+---
+
+## ⚡ Quick Start
+
+### Prerequisites
+* **Node.js**: `20.x` recommended (`.node-version` & `.nvmrc` provided)
+* **Package Manager**: `npm` (strictly maintained via `package-lock.json`)
+* **Supabase CLI**: `2.x+`
+
+### 1. Clone & Install
+```bash
+git clone https://github.com/AradhyaMalaviya/FitBox.git
+cd FitBox
+npm install
+```
+
+### 2. Configure Environment
+Create a `.env` file in the root directory:
+```env
+VITE_SUPABASE_URL=https://your-project-id.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=your-supabase-publishable-key
+```
+
+For Supabase Edge Functions, set the following secrets in your Supabase dashboard or via CLI:
+```bash
+supabase secrets set LOVABLE_API_KEY=your_lovable_key
+supabase secrets set GEMINI_API_KEY=your_gemini_key
+```
+
+### 3. Synchronize Database Migrations
+```bash
+# Push all 18 database migrations to your Supabase instance
+supabase db push
+```
+
+### 4. Upload Exercise Media Assets
+```bash
+# Requires SUPABASE_SERVICE_ROLE_KEY in env
+npm run upload:exercise-media
+```
+
+### 5. Start Development Server
+```bash
+npm run dev
+```
+Visit `http://localhost:5173` to explore FitBox.
+
+---
+
+## 🌐 Production Deployment
+
+### Option A: Cloudflare Pages & Workers (Recommended)
+FitBox includes pre-configured [`public/_redirects`](file:///C:/Users/deepa/Downloads/musclewebsite%20test%202/art-decoder-tool/public/_redirects), [`public/_headers`](file:///C:/Users/deepa/Downloads/musclewebsite%20test%202/art-decoder-tool/public/_headers), [`wrangler.toml`](file:///C:/Users/deepa/Downloads/musclewebsite%20test%202/art-decoder-tool/wrangler.toml), and [`worker.js`](file:///C:/Users/deepa/Downloads/musclewebsite%20test%202/art-decoder-tool/worker.js) for zero-configuration Cloudflare deployment:
+
+1. Connect your repository (`AradhyaMalaviya/FitBox`) to **Cloudflare Pages** or **Cloudflare Workers**.
+2. **Build Settings**:
+   - **Framework Preset**: `Vite`
+   - **Build Command**: `npm run build`
+   - **Deploy Command**: `npx wrangler deploy`
+   - **Output Directory**: `dist`
+   - **Root Directory**: *Leave empty / blank* (`/`)
+3. **Environment Variables**: Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`.
+4. Deploy! All client-side React routes (`/exercises`, `/gymbuddy`, `/nutrition`) will resolve with zero 404 errors.
+
+### Option B: Local Production Build
+```bash
+npm run build
+npm run preview
+```
+
+---
+
+## 👨‍💻 Author & Architecture
+
+**Aaradhya Malaviya**  
+*Full-Stack Engineer & AI Systems Architect*  
+* [GitHub Profile](https://github.com/AradhyaMalaviya)
+* [LinkedIn](https://linkedin.com/in/aaradhyamalaviya)
+* [Repository](https://github.com/AradhyaMalaviya/FitBox)
 
 ---
 
 ## 📄 License
 
-Proprietary. © 2026 Aaradhya Malaviya. All rights reserved.
+Proprietary © 2026 Aaradhya Malaviya. All rights reserved.
