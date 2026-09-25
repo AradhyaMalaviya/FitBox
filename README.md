@@ -280,7 +280,7 @@ node scripts/beta-test-suite.mjs
 ## ⚡ Quick Start
 
 ### Prerequisites
-* **Node.js**: `20.x` recommended (`.node-version` & `.nvmrc` provided)
+* **Node.js**: `22.x LTS` recommended (`.node-version` & `.nvmrc` provided)
 * **Package Manager**: `npm` (strictly maintained via `package-lock.json`)
 * **Supabase CLI**: `2.x+`
 
@@ -327,7 +327,7 @@ Visit `http://localhost:5173` to explore FitBox.
 ## 🌐 Production Deployment
 
 ### Option A: Cloudflare Pages & Workers (Recommended)
-FitBox includes pre-configured [`public/_redirects`](file:///C:/Users/deepa/Downloads/musclewebsite%20test%202/art-decoder-tool/public/_redirects), [`public/_headers`](file:///C:/Users/deepa/Downloads/musclewebsite%20test%202/art-decoder-tool/public/_headers), [`wrangler.toml`](file:///C:/Users/deepa/Downloads/musclewebsite%20test%202/art-decoder-tool/wrangler.toml), and [`worker.js`](file:///C:/Users/deepa/Downloads/musclewebsite%20test%202/art-decoder-tool/worker.js) for zero-configuration Cloudflare deployment:
+FitBox includes pre-configured [`public/_headers`](file:///C:/Users/deepa/Downloads/musclewebsite%20test%202/art-decoder-tool/public/_headers), [`wrangler.toml`](file:///C:/Users/deepa/Downloads/musclewebsite%20test%202/art-decoder-tool/wrangler.toml) (with `not_found_handling = "single-page-application"`), and [`worker.js`](file:///C:/Users/deepa/Downloads/musclewebsite%20test%202/art-decoder-tool/worker.js) for zero-configuration Cloudflare deployment:
 
 1. Connect your repository (`AradhyaMalaviya/FitBox`) to **Cloudflare Pages** or **Cloudflare Workers**.
 2. **Build Settings**:

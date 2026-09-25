@@ -6,7 +6,7 @@ Cloudflare Pages provides:
 - **Free unlimited bandwidth** & global Anycast CDN.
 - **Instant cache invalidation** and zero cold starts.
 - Automatic custom domain management with free SSL.
-- Full SPA client-side routing via `_redirects`.
+- Full SPA client-side routing via `wrangler.toml` (`not_found_handling = "single-page-application"`).
 
 ---
 
@@ -39,25 +39,21 @@ Choose either **Method A** (Git-connected, recommended for automated continuous 
 ### Method A: Git Integration via Cloudflare Dashboard (Recommended)
 
 1. Log into your [Cloudflare Dashboard](https://dash.cloudflare.com/).
-2. In the left navigation, select **Compute (Workers & Pages)** > **Pages**.
-3. Click **Connect to Git** and authorize your GitHub / GitLab account.
-4. Select your FitBox repository (`art-decoder-tool` or root repo).
-5. Configure the build settings:
-   - **Project name**: `fitbox` (or your preferred name)
-   - **Production branch**: `main`
-   - **Framework preset**: `Vite`
+2. In the left navigation, select **Compute (Workers & Pages)** > **fitbox**.
+3. Configure the build settings (under **Settings > Builds**):
    - **Build command**: `npm run build`
-   - **Build output directory**: `dist`
-   - **Root directory**: **Leave blank / empty** (do NOT enter `art-decoder-tool` — the repository root contains `package.json` directly)
-6. Expand **Environment variables (advanced)** and add:
+   - **Deploy command**: `npx wrangler deploy`
+   - **Output directory**: `dist`
+   - **Root directory**: **Leave blank / empty** (`/`)
+4. Under **Build variables**:
+   - `NODE_VERSION` = `22.16.0` (or `22`)
    - `VITE_SUPABASE_URL` = `<your-supabase-project-url>`
    - `VITE_SUPABASE_PUBLISHABLE_KEY` = `<your-supabase-publishable/anon-key>`
-   - `NODE_VERSION` = `20` *(Note: `.node-version` is also committed to ensure Node 20 is used)*
-7. Click **Save and Deploy**. Cloudflare will build and publish your site with a `*.pages.dev` URL.
+5. Click **Save and Deploy**. Cloudflare will build and publish your site.
 
 > [!TIP]
-> **Cloudflare Workers Builds vs Pages**:
-> If your project was connected in Cloudflare as a **Worker** (which runs `Workers Builds: fitbox`), FitBox provides a root [wrangler.toml](file:///C:/Users/deepa/Downloads/musclewebsite%20test%202/art-decoder-tool/wrangler.toml) and [worker.js](file:///C:/Users/deepa/Downloads/musclewebsite%20test%202/art-decoder-tool/worker.js) that automatically compiles the SPA via `npm run build` and serves `./dist` with SPA fallback routing. Ensure that **Root directory** in your Cloudflare dashboard (Settings > Builds) is **empty/blank**.
+> **Cloudflare Workers Builds**:
+> FitBox provides a root [wrangler.toml](file:///C:/Users/deepa/Downloads/musclewebsite%20test%202/art-decoder-tool/wrangler.toml) and [worker.js](file:///C:/Users/deepa/Downloads/musclewebsite%20test%202/art-decoder-tool/worker.js) that automatically compiles the SPA via `npm run build` and serves `./dist` with native SPA fallback routing (`not_found_handling = "single-page-application"`). Ensure that **Root directory** in your Cloudflare dashboard (Settings > Builds) is **empty/blank**.
 
 ---
 
@@ -88,13 +84,14 @@ If you prefer to build locally and deploy directly from your terminal:
 
 ## 3. How SPA Routing & Caching Work
 
-We have preconfigured two critical files in [`public/`](file:///C:/Users/deepa/Downloads/musclewebsite%20test%202/art-decoder-tool/public) that are bundled directly into `dist/`:
-
-1. **`public/_redirects`**:
-   ```text
-   /*    /index.html   200
+1. **`wrangler.toml` SPA Routing**:
+   ```toml
+   [assets]
+   directory = "./dist"
+   binding = "ASSETS"
+   not_found_handling = "single-page-application"
    ```
-   Ensures that direct visits or browser refreshes on client-side routes (e.g., `/exercise/1`, `/nutrition`, `/auth`, `/gymbuddy`) are correctly served by `index.html` without returning HTTP 404.
+   Cloudflare Workers Static Assets natively routes all deep links and client refreshes (e.g., `/exercises`, `/nutrition`, `/gymbuddy`) to `index.html` with HTTP 200, without needing any redirect rules (avoiding redirect loop issues).
 
 2. **`public/_headers`**:
    ```text
