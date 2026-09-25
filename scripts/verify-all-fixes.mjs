@@ -290,7 +290,13 @@ test("Deployment & Migrations: wrangler.toml SPA routing and non-recursive RLS p
   assert(fs.existsSync(wranglerPath), "wrangler.toml exists for Cloudflare Workers Builds");
   const wranglerContent = fs.readFileSync(wranglerPath, "utf8");
   assert(wranglerContent.includes('name = "fitbox"'), "wrangler.toml specifies name = fitbox");
+  assert(wranglerContent.includes('main = "worker.js"'), "wrangler.toml specifies main = worker.js");
   assert(wranglerContent.includes('not_found_handling = "single-page-application"'), "wrangler.toml enables SPA fallback routing");
+
+  const workerPath = path.join(rootDir, "worker.js");
+  assert(fs.existsSync(workerPath), "worker.js entry point exists");
+  const workerContent = fs.readFileSync(workerPath, "utf8");
+  assert(workerContent.includes("env.ASSETS.fetch"), "worker.js delegates to env.ASSETS.fetch");
 
   const recursionFixPath = path.join(rootDir, "supabase/migrations/20260925120000_fix_gymbuddy_profiles_recursion.sql");
   assert(fs.existsSync(recursionFixPath), "Recursion fix migration file exists");

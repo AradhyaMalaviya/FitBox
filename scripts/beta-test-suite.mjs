@@ -298,7 +298,13 @@ await runTest("Build", "Cloudflare Workers Builds: wrangler.toml SPA routing con
   assert(fs.existsSync(wranglerPath), "wrangler.toml exists");
   const config = fs.readFileSync(wranglerPath, "utf8");
   assert(config.includes('name = "fitbox"'), "Worker name configured as fitbox");
+  assert(config.includes('main = "worker.js"'), "Worker specifies main = worker.js");
   assert(config.includes('not_found_handling = "single-page-application"'), "SPA routing enabled");
+
+  const workerPath = path.join(rootDir, "worker.js");
+  assert(fs.existsSync(workerPath), "worker.js entry point exists");
+  const workerContent = fs.readFileSync(workerPath, "utf8");
+  assert(workerContent.includes("env.ASSETS.fetch"), "worker.js delegates to env.ASSETS.fetch");
 });
 
 console.log("\n======================================================================");

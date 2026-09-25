@@ -48,12 +48,16 @@ Choose either **Method A** (Git-connected, recommended for automated continuous 
    - **Framework preset**: `Vite`
    - **Build command**: `npm run build`
    - **Build output directory**: `dist`
-   - **Root directory**: `art-decoder-tool` (leave blank if your repo root is already `art-decoder-tool`)
+   - **Root directory**: **Leave blank / empty** (do NOT enter `art-decoder-tool` — the repository root contains `package.json` directly)
 6. Expand **Environment variables (advanced)** and add:
    - `VITE_SUPABASE_URL` = `<your-supabase-project-url>`
    - `VITE_SUPABASE_PUBLISHABLE_KEY` = `<your-supabase-publishable/anon-key>`
    - `NODE_VERSION` = `20` *(Note: `.node-version` is also committed to ensure Node 20 is used)*
 7. Click **Save and Deploy**. Cloudflare will build and publish your site with a `*.pages.dev` URL.
+
+> [!TIP]
+> **Cloudflare Workers Builds vs Pages**:
+> If your project was connected in Cloudflare as a **Worker** (which runs `Workers Builds: fitbox`), FitBox provides a root [wrangler.toml](file:///C:/Users/deepa/Downloads/musclewebsite%20test%202/art-decoder-tool/wrangler.toml) and [worker.js](file:///C:/Users/deepa/Downloads/musclewebsite%20test%202/art-decoder-tool/worker.js) that automatically compiles the SPA via `npm run build` and serves `./dist` with SPA fallback routing. Ensure that **Root directory** in your Cloudflare dashboard (Settings > Builds) is **empty/blank**.
 
 ---
 

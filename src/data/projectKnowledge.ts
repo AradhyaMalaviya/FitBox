@@ -2,7 +2,7 @@
 // Regenerate: npm run build:knowledge
 // Secret-free: contains docs, routes, and file names only. No .env values.
 export const PROJECT_KNOWLEDGE_META = {
-  generatedAt: "2026-09-25T08:54:13.325Z",
+  generatedAt: "2026-09-25T09:58:37.085Z",
   maxChars: 30000,
   chars: 25190,
 } as const;
