@@ -1,362 +1,530 @@
 <div align="center">
 
-# ⚡ FitBox — AI-Powered Fitness & Nutrition Ecosystem
+# ⚡ FitBox
 
-### *An Intelligent, Biomechanically Accurate, and Culturally Rooted Health Platform*
+### **Your all-in-one fitness, workout & nutrition companion.**
 
-[![React 18](https://img.shields.io/badge/React-18.3.1-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
-[![TypeScript 5](https://img.shields.io/badge/TypeScript-5.8.3-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Vite 5](https://img.shields.io/badge/Vite-5.4.19-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4.17-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-[![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL_%2B_RLS-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com/)
-[![Cloudflare](https://img.shields.io/badge/Cloudflare-Workers_%26_Pages-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)](https://pages.cloudflare.com/)
-[![Google Gemini](https://img.shields.io/badge/Google_Gemini-2.5_Flash_Lite-8E75C2?style=for-the-badge&logo=google&logoColor=white)](https://deepmind.google/technologies/gemini/)
-[![Tests Passing](https://img.shields.io/badge/Test_Suites-53_Passing-brightgreen?style=for-the-badge&logo=checkmarx&logoColor=white)](#-test-suites--system-verification)
+**Train smarter. Eat better. Stay consistent.**
 
-<p align="center">
-  <a href="#-core-pillars">Core Pillars</a> •
-  <a href="#-ai-engine--assistants">AI Engine</a> •
-  <a href="#-interactive-anatomy-lab">Anatomy Lab</a> •
-  <a href="#-indian-nutrition-roadmap">Indian Nutrition</a> •
-  <a href="#-gymbuddy-matchmaking">GymBuddy Social</a> •
-  <a href="#-technical-architecture">Architecture</a> •
-  <a href="#-database-migrations">Database</a> •
-  <a href="#-quick-start">Quick Start</a>
+FitBox brings personalized workouts, interactive muscle discovery, nutrition planning, AI coaching, and workout-partner accountability into one modern fitness experience.
+
+<p>
+  <a href="#-what-is-fitbox">What is FitBox?</a> •
+  <a href="#-what-you-can-do-with-fitbox">Features</a> •
+  <a href="#-ai-fitness-coach">AI Coach</a> •
+  <a href="#-nutrition">Nutrition</a> •
+  <a href="#-gymbuddy">GymBuddy</a> •
+  <a href="#-for-developers">Developers</a>
 </p>
 
----
+[![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Supabase](https://img.shields.io/badge/Supabase-Backend-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com/)
+[![Gemini](https://img.shields.io/badge/Google_Gemini-AI_Coach-8E75C2?style=for-the-badge&logo=google&logoColor=white)](https://deepmind.google/technologies/gemini/)
+[![Cloudflare](https://img.shields.io/badge/Cloudflare-Deployment-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)](https://www.cloudflare.com/)
 
 </div>
 
-## 📖 Executive Overview
+---
 
-**FitBox** is a modern, full-stack fitness and social ecosystem engineered for athletes, trainers, and fitness enthusiasts. Unifying high-performance **Google Gemini 2.5 Flash Lite** multi-assistant intelligence, a **MuscleWiki-grade 19-muscle vector anatomy map**, live set-by-set workout tracking, an **Indian-first clinical nutrition engine**, and a **gamified GymBuddy matchmaking platform**, FitBox brings elite-tier personal training directly to the browser.
+## 🏋️ What is FitBox?
 
-Built from the ground up for speed, resilience, and offline tolerance, FitBox operates on a reactive single-page architecture deployed across **Cloudflare Pages & Workers edge networks**, with an enterprise **PostgreSQL backend** powered by **Supabase**.
+**FitBox is a full-stack fitness and nutrition platform built around one simple idea: make getting fitter easier to understand, easier to plan, and easier to stick with.**
+
+Instead of jumping between an exercise library, calorie calculator, nutrition app, workout tracker, and fitness community, FitBox brings those experiences together.
+
+Whether your goal is to:
+
+- 💪 Build muscle
+- 🔥 Lose body fat
+- 🏃 Improve athletic performance
+- 🏋️ Get stronger
+- 🥗 Understand what to eat
+- 📈 Track your workouts
+- 🤝 Find someone to train with
+- 🤖 Get personalized fitness guidance
+
+FitBox is designed to give you a single place to work toward your goals.
 
 ---
 
-## 🌟 Core Pillars
+## 🌟 What You Can Do With FitBox
 
-```
-                     ┌─────────────────────────────────────────────────────────┐
-                     │                       FITBOX HUB                        │
-                     └────────────────────────────┬────────────────────────────┘
-                                                  │
-         ┌───────────────────┬────────────────────┼───────────────────┬───────────────────┐
-         ▼                   ▼                    ▼                   ▼                   ▼
-  🧠 Multi-Assistant    🧬 Interactive      🥗 Indian First      🤝 GymBuddy Match    📱 Edge & Mobile
-   Intelligence         Anatomy Lab         Nutrition Engine      Social Network       First Design
-  ─────────────────   ────────────────    ──────────────────   ──────────────────   ────────────────
-   • Gemini 2.5 Coach   • 19 Vector Slugs   • Mifflin-St Jeor    • 5D Radar Synergy   • BottomTabBar
-   • Project AI Vault   • Biomechanic POV   • 150+ Desi Foods    • Spring Swiping     • Safe Area Insets
-   • SSE Streaming      • YouTube Library   • Cloud Sync Prefs   • Live Chat & Streaks • Zero-404 SPA
-```
+### 🧬 Explore Your Muscles
 
----
+Don't just search for random exercises.
 
-## 🤖 AI Engine & Assistants
+Start with **the muscle you want to train**.
 
-FitBox features a sophisticated, **dual-assistant intelligence architecture** operating across distinct architectural layers with server-side credential isolation:
+FitBox includes an interactive body map covering **19 muscle areas**, with front and back views to make exercise discovery more visual and intuitive.
 
-### 1. 🏋️ The Cloud Coach — `fitness-chat`
-* **Model**: Google Gemini 2.5 Flash Lite via Lovable AI Gateway
-* **Protocol**: Real-time **Server-Sent Events (SSE)** streaming token-by-token
-* **Runtime**: Supabase Deno Edge Function (`supabase/functions/fitness-chat`)
-* **Role**: Personalized progressive overload advice, biomechanical form correction, dynamic workout plan generation, and macro-nutrient optimization.
-* **Component**: Embedded in [`GymTrainerChat.tsx`](file:///C:/Users/deepa/Downloads/musclewebsite%20test%202/art-decoder-tool/src/components/GymTrainerChat.tsx) with resilient guest fallback pathways.
+Choose a muscle → explore exercises → learn how to perform them → add them to your training.
 
-### 2. 💡 The Project Assistant — `project-assistant`
-* **Model**: Google Gemini 2.5 Flash Lite via Direct Google Generative Language API
-* **Runtime**: Supabase Edge Function (`supabase/functions/project-assistant`)
-* **Context**: Dynamically compiled from repository architecture, route manifests, environment contracts, and schema migrations (`scripts/build-project-knowledge.mjs`).
-* **Component**: Mounted globally in [`ProjectAssistantChat.tsx`](file:///C:/Users/deepa/Downloads/musclewebsite%20test%202/art-decoder-tool/src/components/ProjectAssistantChat.tsx) for instant project context, architectural queries, and user guidance.
+**Muscle areas include:**
 
-### 3. 🎯 Inspiration Archetype Classifier
-* **Algorithm**: `deriveInspirationScore()` in [`src/lib/onboarding.ts`](file:///C:/Users/deepa/Downloads/musclewebsite%20test%202/art-decoder-tool/src/lib/onboarding.ts)
-* **Mechanics**: Deterministically maps cultural and anime character presets (Goku, Thor, Captain America, Toji Fushiguro) along with custom tags into training archetypes:
-  - 🦁 **Bulk** — Hypertrophy & high-calorie surplus
-  - ⚡ **Cutting** — High-protein aggressive deficit & cardiovascular density
-  - 🏃 **Athletic Performance** — Explosive power, agility, and mobility
-  - 🛡️ **Strength Hybrid** — Powerlifting compound strength & density
+`Chest` · `Back` · `Lats` · `Traps` · `Shoulders` · `Biceps` · `Triceps` · `Forearms` · `Abs` · `Obliques` · `Quads` · `Hamstrings` · `Glutes` · `Calves` · `Adductors` · `Abductors` · `Neck` · `Lower Back` · `Full Body`
 
 ---
 
-## 🧬 Interactive Anatomy Lab
+### 🏋️ Build Better Workouts
 
-The center of exercise discovery is the custom-built **Vector Body Diagram**:
+FitBox helps turn exercise discovery into actual training.
 
-* **Precision Anatomical Mapping**: 19 discrete muscle zones across anterior and posterior views:
-  `chest`, `upper-back`, `lower-back`, `lats`, `traps`, `shoulders`, `biceps`, `triceps`, `forearms`, `abdominals`, `obliques`, `quads`, `hamstrings`, `glutes`, `calves`, `adductors`, `abductors`, `neck`, and `full-body`.
-* **MuscleWiki Synergy**: Seamless toggling between anterior/posterior views and male/female anatomical vector silhouettes.
-* **Smart Equipment Filters**: Filter down instantly by Dumbbell, Barbell, Bodyweight, Cable, Machine, Kettlebell, or Resistance Bands.
-* **Live YouTube Form Demonstrations**: 50+ curated exercises complete with form cues, tempo guidelines, primary/secondary targets, and integrated video players.
-* **Fail-Safe Video Recovery**: Wrapped in strict React `ErrorBoundary` and inline fallback posters to guarantee uninterrupted UI navigation.
+Browse exercises based on:
 
----
+- 🎯 Target muscle
+- 🏋️ Equipment
+- 📚 Exercise information
+- 🎥 Form demonstrations
+- 🔁 Workout structure
+- 📊 Set-by-set tracking
 
-## 🥗 Indian Nutrition Roadmap
+Supported equipment includes:
 
-Clinical sports nutrition tailored specifically for Indian diets and cultural lifestyles:
+**Dumbbells · Barbells · Bodyweight · Cables · Machines · Kettlebells · Resistance Bands**
 
-* **Mifflin-St Jeor Clinical Engine**: Dynamic Basal Metabolic Rate (BMR) and Total Daily Energy Expenditure (TDEE) calculation with goal-based surplus/deficit adjustments (-500 kcal for cutting, +250/500 kcal for bulking).
-* **Clinical Macro Partitioning**:
-  - **Protein**: 2.2g per kg bodyweight
-  - **Fats**: Exactly 25% of daily TDEE
-  - **Carbohydrates**: Fills remaining energy budget (with automatic negative clamp protection)
-* **150+ Indian Food Database**: Complete nutritional breakdowns (Protein, Carbs, Fats, Fiber, INR Cost Estimates, Hindi names, and Vegetarian/Vegan tags) for Paneer, Soya Chunks, Sattu, Dal, Moong Sprout, Curd, Roti, Rajma, and more.
-* **5-Tab Personalized Roadmap**:
-  1. ⚡ **Pre-Workout Fuel** — High GI carbs and natural pre-workout boosters
-  2. 🔋 **Post-Workout Recovery** — High protein rapid repair timing
-  3. 🛌 **Rest Day Nutrition** — Satiety management and recovery macros
-  4. 💊 **Supplements & Desi Alternatives** — Creatine, Whey, Sattu, Chaas & Ashwagandha
-  5. 🔄 **Protein Swaps** — Budget-conscious Indian protein exchange chart
-* **Cross-Device Cloud Sync**: Questionnaires hydrate from and persist directly to `profiles.preferences` JSONB with malformed JSON self-healing.
+You can discover an exercise, understand what it targets, watch its demonstration, and use it as part of your workout.
 
 ---
 
-## 🤝 GymBuddy Matchmaking & Social Layer
+## 🤖 AI Fitness Coach
 
-A social accountability platform designed to match workout partners based on actual training compatibility:
+### **Your fitness questions, answered in context.**
 
-```
-                           ┌───────────────────────────┐
-                           │   GYMBUDDY RADAR ENGINE   │
-                           └─────────────┬─────────────┘
-                                         │
-                 ┌───────────────────────┼───────────────────────┐
-                 ▼                       ▼                       ▼
-          🎯 Goals (30%)          🏋️ Split (20%)          ⏱️ Timings (20%)
-         Overlapping targets      PPL / Bro / Upper-Lower  Morning / Evening sync
-                 │                       │                       │
-                 └───────────────────────┼───────────────────────┘
-                                         │
-                 ┌───────────────────────┴───────────────────────┐
-                 ▼                                               ▼
-          🏆 Experience (20%)                             📍 Location (10%)
-         Beginner / Intermediate / Pro                    Gym & geographic proximity
-```
+FitBox includes an AI-powered fitness coach designed to make fitness guidance more accessible and personalized.
 
-* **Spring Physics Card Swiping**: Built with **Framer Motion** for card drag physics, rotation, and swipe dismissal.
-* **Proximity Radar & Radar Polygon**: Visual synergy analysis using **Recharts Radar** showing compatibility across all 5 dimensions.
-* **Scalable Anti-Join Candidate Discovery**: High-performance PostgreSQL RPC function (`get_gymbuddy_candidates`) executing an indexed anti-join against `gymbuddy_swipes` to discover candidates in constant time.
-* **Instant Mutual Matching**: Atomic PostgreSQL checks enforce mutual match creation, accompanied by haptic vibration and `canvas-confetti` celebrations.
-* **WebSocket Realtime Messaging**: Live chat powered by Supabase Realtime subscriptions with active live session indicators and hype micro-reactions.
-* **Accountability Streaks**: Authoritative milestone notifications triggered only on legitimate, strictly increasing dual-partner session logs.
+The coach can help with areas such as:
+
+- 🏋️ Workout planning
+- 📈 Progressive overload
+- 🧠 Exercise and training guidance
+- 🥗 Macro and nutrition planning
+- 🔄 Training adjustments
+- 💡 Fitness-related questions
+
+The experience uses **Google Gemini** and streams responses in real time, giving FitBox a conversational coaching experience rather than a collection of static recommendations.
+
+> **FitBox isn't just a database of exercises. It's designed to help you understand what to do next.**
 
 ---
 
-## 📱 Mobile-First Architecture & UI Polish
+## 🥗 Nutrition
 
-FitBox provides an app-like experience across iOS and Android browsers:
+### **Nutrition that makes sense for real life.**
 
-* **BottomTabBar Navigation**: 5-point fixed bottom navigation bar with responsive icons (`Dashboard`, `Exercises`, `Workout`, `GymBuddy`, `Nutrition`).
-* **Safe Area Insets**: Full native iOS/Android notch and home-indicator padding (`pb-[env(safe-area-inset-bottom)]`).
-* **Route Aliases**: Built-in support for short convenience route aliases (`/FORPHONE1CLAUDE`, `/exercises_m`, `/workout_m`, `/nutrition_m`, `/gymbuddy_m`).
-* **Workout Session Safeguards**:
-  - `isHydrated` lifecycle protection prevents state wipeouts on page refresh.
-  - Interactive **Discard Workout Confirmation Dialog** prevents accidental workout cancellation.
-  - Smooth string-state set logging prevents numeric input clearing glitches.
-* **Auth & Security Upgrades**: Password visibility eye toggles, strict username regex, email auto-trimming, and a dedicated password recovery route (`/reset-password`).
+Fitness isn't only about training.
 
----
+FitBox includes a nutrition system designed around calorie needs, macronutrients, food choices, and everyday eating.
 
-## 🏗️ Technical Architecture & Stack
+### 🔢 Know Your Numbers
 
-```mermaid
-flowchart TB
-    subgraph Client ["Client Layer (React 18 + Vite SPA)"]
-        UI["UI Primitives<br/>(Tailwind CSS + shadcn/ui)"]
-        Router["Client Routing<br/>(React Router v6)"]
-        State["State Hydration<br/>(TanStack Query + Context)"]
-        Anatomy["Interactive Body Lab<br/>(MuscleWiki SVG Vectors)"]
-    end
+FitBox calculates:
 
-    subgraph Edge ["Cloudflare Global Network"]
-        CF_Pages["Cloudflare Pages / Workers<br/>(Static Assets & SPA Fallback)"]
-        WorkerEntry["worker.js<br/>(env.ASSETS Fetcher)"]
-    end
+- **BMR** — estimated calories your body uses at rest
+- **TDEE** — estimated daily energy expenditure
+- 🎯 Goal-based calorie targets
+- 🥩 Protein targets
+- 🥑 Fat targets
+- 🍚 Carbohydrate targets
 
-    subgraph BaaS ["Supabase Cloud (PostgreSQL 15)"]
-        Auth["Supabase Auth<br/>(JWT + Session Management)"]
-        DB["PostgreSQL Database<br/>(18 Migrations + Strict RLS)"]
-        Storage["Object Storage<br/>(exercise-media & user-media)"]
-        Realtime["Realtime Engine<br/>(Postgres CDC WebSockets)"]
-    end
-
-    subgraph AI ["AI Services"]
-        GeminiCoach["Google Gemini 2.5 Flash Lite<br/>(Lovable SSE Gateway)"]
-        GeminiProject["Google Gemini 2.5 Flash Lite<br/>(Direct Project Assistant)"]
-    end
-
-    Client --> CF_Pages
-    CF_Pages --> WorkerEntry
-    Client --> Auth
-    Client --> DB
-    Client --> Storage
-    Client --> Realtime
-    Client --> GeminiCoach
-    Client --> GeminiProject
-```
+The nutrition system uses the **Mifflin–St Jeor** equation and adjusts calorie targets around goals such as cutting or bulking.
 
 ---
 
-## 🗄️ Database Migrations
+### 🇮🇳 Indian-Friendly Food Database
 
-FitBox maintains a synchronized database schema across **18 timestamped migrations** with strict Row-Level Security (RLS):
+A major part of FitBox's nutrition experience is its focus on **Indian food and eating habits**.
 
-| # | Migration File | Scope & Impact |
-|:---:|:---|:---|
-| **01** | `20251007065542_5c736262-….sql` | Core user profiles, phone index, workouts schema |
-| **02** | `20251101134359_5da3b141-….sql` | Trainer verification & metadata structures |
-| **03** | `20251101134429_3364976a-….sql` | Subscription plans, Razorpay payments, assigned trainers |
-| **04** | `20251102102609_ac2dee1f-….sql` | Profile avatar URL, bio, and social attributes |
-| **05** | `20251103054708_7d8f9601-….sql` | Nutrition dietary preferences & calorie targets |
-| **06** | `20251104092222_cc02532f-….sql` | Profiles security policy hardening |
-| **07** | `20251104092449_46219c0c-….sql` | Strict RLS permissions for public profile lookup |
-| **08** | `20251107094622_51a3f036-….sql` | Auth triggers (`handle_new_user`) & automated profile generation |
-| **09** | `20251225085147_ae0eeca2-….sql` | Trainer sensitive data PII vault & immutable audit logging |
-| **10** | `20251225093341_a0379854-….sql` | Relational workout engine (`sessions → logs → sets`) |
-| **11** | `20260326104045_create_bookings_table.sql` | Booking reservations & calendar management |
-| **12** | `20260327000000_create_exercise_media_bucket.sql` | Storage bucket for exercise demo videos and posters |
-| **13** | `20260427000000_gymbuddy_schema.sql` | Full GymBuddy tables: profiles, swipes, matches, messages, logs |
-| **14** | `20260427000001_gymbuddy_realtime.sql` | Realtime CDC publication for matches & live session logs |
-| **15** | `20260902024538_add_profiles_preferences.sql` | User preferences JSONB column for onboarding & nutrition sync |
-| **16** | `20260921000000_fitbox_remediation.sql` | Phone number null safety, partial unique indexes, swipe RLS |
-| **17** | `20260925000000_storage_and_realtime_remediation.sql` | `user-media` bucket, `REPLICA IDENTITY FULL`, candidate discovery RPC |
-| **18** | `20260925120000_fix_gymbuddy_profiles_recursion.sql` | Non-recursive RLS policy via `is_user_discoverable` `SECURITY DEFINER` |
+The project includes a database of **150+ Indian foods** with nutritional information and practical details.
+
+Examples include:
+
+- 🧀 Paneer
+- 🌱 Soya Chunks
+- 🥣 Sattu
+- 🫘 Dal
+- 🌱 Moong Sprouts
+- 🥛 Curd
+- 🫓 Roti
+- 🫘 Rajma
+- And many more
+
+The database also includes information such as:
+
+**Protein · Carbohydrates · Fats · Fiber · Approximate Cost · Hindi Names · Vegetarian/Vegan Tags**
 
 ---
 
-## 🧪 Test Suites & System Verification
+### 🍽️ Nutrition Around Your Workout
 
-FitBox enforces automated testing before every deployment:
+FitBox organizes nutrition guidance around different parts of your fitness routine:
 
-```bash
-# Run the core 22-suite remediation verification runner
-npm test
+| 🏃 | Nutrition Area | Focus |
+|---|---|---|
+| ⚡ | Pre-Workout | Energy & training fuel |
+| 🔋 | Post-Workout | Recovery & protein |
+| 🛌 | Rest Day | Recovery & satiety |
+| 💊 | Supplements | Supplements & practical alternatives |
+| 🔄 | Protein Swaps | Flexible, budget-conscious food choices |
 
-# Run the comprehensive 31-suite full-system beta-test suite
-node scripts/beta-test-suite.mjs
-```
+---
 
-### 📊 Verification Metrics (53 Passing Suites, 0 Failures)
-```
-  ✅ [Auth] PASS: authSchemas: email trimming, minimum 8-char password, strict username regex
-  ✅ [Auth] PASS: AuthContext: dual-identity separation & safe profile hydration
-  ✅ [Auth] PASS: Auth UI: password eye visibility toggles & mode switches
-  ✅ [Auth] PASS: Password Recovery: query/hash preservation & resetPasswordSchema
-  ✅ [Onboarding] PASS: Inspiration Archetype Scorer: deterministically maps presets to archetypes
-  ✅ [Onboarding] PASS: Onboarding Media: validates MIME types & guarantees fallback preset image
-  ✅ [Anatomy] PASS: Muscle Mapping: all 19 muscle groups have canonical slugs & aliases
-  ✅ [Anatomy] PASS: Exercise Database: 50+ exercises with valid target, equipment, and form
-  ✅ [Workout] PASS: Workout Lifecycle: isHydrated lifecycle guard prevents refresh deletion
-  ✅ [Workout] PASS: Workout Header & Discard: confirmation dialog prevents accidental loss
-  ✅ [Workout] PASS: Exercise Set Logging: numeric input clearing bug resolved with string state
-  ✅ [Workout] PASS: Workout Save Hook: profileId FK targeting & guest local history persistence
-  ✅ [Nutrition] PASS: Macro Engine: clinical Mifflin-St Jeor formula & deficit calculations
-  ✅ [Nutrition] PASS: Indian Food Database: 150+ items including oils & protein swaps
-  ✅ [Nutrition] PASS: Nutrition Cloud Sync: Supabase profiles.preferences sync & error recovery
-  ✅ [GymBuddy] PASS: Upfront Guest Gating: blocks unauthenticated guests before setup
-  ✅ [GymBuddy] PASS: Compatibility Engine: 5 normalized dimensions matching matchmaking inputs
-  ✅ [GymBuddy] PASS: Compatibility Radar: wires GymBuddyCard radar directly to canonical breakdown
-  ✅ [GymBuddy] PASS: Candidate Discovery Scalability: anti-join RPC function & query bounding
-  ✅ [GymBuddy] PASS: Chat Identity Model: sender_id correctly compared against authUserId
-  ✅ [GymBuddy] PASS: Streak Milestone Notifications: authoritative tracking & alert delivery
-  ✅ [Mobile] PASS: BottomTabBar: 5 navigation destinations with safe-area insets
-  ✅ [Mobile] PASS: Header & Safe Spacing: compact mobile header & body padding
-  ✅ [Mobile] PASS: Route Aliases: supports FORPHONE1CLAUDE convenience route paths
-  ✅ [AI] PASS: GymTrainerChat: intentional guest pathway prevents gateway 401 crash
-  ✅ [AI] PASS: Edge Functions: rate limiting, payload bounding, and Gemini 2.5 streaming
-  ✅ [Database] PASS: Migrations: user-media storage bucket, REPLICA IDENTITY FULL, anti-join RPC
-  ✅ [Database] PASS: Dead Code Removal: verified orphaned components deleted
-  ✅ [Database] PASS: Migrations: non-recursive RLS policy via SECURITY DEFINER function
-  ✅ [Build] PASS: Bundle Artifacts: dist contains index.html, assets, CSS, and split chunks
-  ✅ [Build] PASS: Cloudflare Workers Builds: wrangler.toml SPA routing configured
+## 🤝 GymBuddy
+
+### **Training is easier when you don't have to do it alone.**
+
+GymBuddy is FitBox's social accountability experience.
+
+Instead of matching people randomly, FitBox considers training compatibility across multiple dimensions:
+
+- 🎯 Fitness goals
+- 🏋️ Training style / split
+- ⏰ Workout timing
+- 🧠 Experience level
+- 📍 Location / gym proximity
+
+A compatibility view helps users understand how well their training preferences align.
+
+### GymBuddy includes:
+
+- 👥 Workout-partner discovery
+- ❤️ Mutual matching
+- 💬 Real-time messaging
+- 📊 Compatibility visualization
+- 🔥 Accountability streaks
+- 🎉 Match and milestone celebrations
+
+The goal is simple:
+
+> **Find people who train like you, keep each other accountable, and make showing up easier.**
+
+---
+
+## 📱 Designed Like a Fitness App
+
+FitBox is built to feel natural on both desktop and mobile.
+
+The experience includes:
+
+- 📱 Mobile-first navigation
+- 👆 App-like interactions
+- 🧭 Dedicated fitness sections
+- 🔒 Authentication and account recovery
+- 💾 Workout persistence
+- ☁️ Cloud-synced preferences
+- 📐 Mobile safe-area support
+- ⚡ Fast, responsive UI
+
+Core areas include:
+
+**Dashboard · Exercises · Workout · GymBuddy · Nutrition**
+
+---
+
+## 🧠 A Personalized Fitness Experience
+
+FitBox also uses onboarding preferences to help shape the user's training direction.
+
+Users can identify with different fitness inspirations and goals, which map into broad training approaches such as:
+
+### 🦁 Muscle Building
+Hypertrophy-focused training and higher-calorie nutrition.
+
+### ⚡ Cutting
+Fat-loss focused training with higher-protein nutrition.
+
+### 🏃 Athletic Performance
+Power, mobility, agility, and performance-oriented training.
+
+### 🛡️ Strength Hybrid
+A combination of strength and athletic training.
+
+The idea is to make fitness feel more personal from the moment someone starts using FitBox.
+
+---
+
+# 🧩 The FitBox Experience
+
+```text
+                    ┌─────────────────────┐
+                    │       FITBOX        │
+                    │ Your Fitness Hub    │
+                    └──────────┬──────────┘
+                               │
+       ┌──────────────┬────────┼────────┬──────────────┐
+       ▼              ▼        ▼        ▼              ▼
+   🧬 MUSCLES      🏋️ TRAIN   🥗 EAT   🤖 COACH    🤝 CONNECT
+       │              │        │        │              │
+   Discover       Build      Plan     Ask & get      Find a
+   exercises      workouts   meals    guidance       GymBuddy
+       │              │        │        │              │
+       └──────────────┴────────┴────────┴──────────────┘
+                               │
+                               ▼
+                    📈 BUILD CONSISTENCY
 ```
 
 ---
 
-## ⚡ Quick Start
+# 💡 Why I Built FitBox
 
-### Prerequisites
-* **Node.js**: `22.x LTS` recommended (`.node-version` & `.nvmrc` provided)
-* **Package Manager**: `npm` (strictly maintained via `package-lock.json`)
-* **Supabase CLI**: `2.x+`
+Fitness information is everywhere.
 
-### 1. Clone & Install
+The problem is that it is often **fragmented**.
+
+One app tells you what exercise to do.
+
+Another calculates calories.
+
+Another tracks workouts.
+
+Another gives nutrition information.
+
+And another helps you find people to train with.
+
+**FitBox explores what happens when these experiences are designed as one connected fitness platform.**
+
+The project brings together:
+
+> **Training + Nutrition + AI + Exercise Education + Social Accountability**
+
+into a single ecosystem.
+
+---
+
+# 🛠️ Built With
+
+FitBox is a full-stack application built with modern web technologies.
+
+### Frontend
+
+- **React 18**
+- **TypeScript**
+- **Vite**
+- **Tailwind CSS**
+- **React Router**
+- **shadcn/ui + Radix UI**
+- **Recharts**
+- **Framer Motion**
+
+### Backend & Data
+
+- **Supabase**
+- **PostgreSQL**
+- **Supabase Auth**
+- **Row-Level Security**
+- **Supabase Storage**
+- **Supabase Realtime**
+- **Edge Functions**
+
+### AI
+
+- **Google Gemini 2.5 Flash Lite**
+- Real-time streaming AI responses
+- Fitness coaching and project assistance
+
+### Deployment
+
+- **Cloudflare Pages / Workers**
+- SPA routing
+- Edge-oriented deployment
+
+---
+
+# 🏗️ How It Fits Together
+
+At a high level:
+
+```text
+                    ┌──────────────────┐
+                    │    FITBOX UI     │
+                    │ React + Tailwind │
+                    └────────┬─────────┘
+                             │
+              ┌──────────────┼──────────────┐
+              ▼              ▼              ▼
+        🏋️ Fitness       🥗 Nutrition    🤝 GymBuddy
+              │              │              │
+              └──────────────┼──────────────┘
+                             ▼
+                     ☁️ Supabase
+              ┌──────────────┼──────────────┐
+              ▼              ▼              ▼
+            Auth          Database        Realtime
+                             │
+                             ▼
+                       🤖 AI Services
+                         Gemini
+```
+
+The technical architecture is intentionally kept behind the fitness experience in this README—the main goal is to understand **what FitBox does and why it exists**.
+
+---
+
+# 🚀 Run FitBox Locally
+
+## Prerequisites
+
+- **Node.js 22.x LTS** recommended
+- **npm**
+- **Supabase CLI 2.x+**
+
+### 1. Clone the repository
+
 ```bash
 git clone https://github.com/AradhyaMalaviya/FitBox.git
 cd FitBox
+```
+
+### 2. Install dependencies
+
+```bash
 npm install
 ```
 
-### 2. Configure Environment
-Create a `.env` file in the root directory:
+### 3. Configure environment variables
+
+Create a `.env` file:
+
 ```env
 VITE_SUPABASE_URL=https://your-project-id.supabase.co
 VITE_SUPABASE_PUBLISHABLE_KEY=your-supabase-publishable-key
 ```
 
-For Supabase Edge Functions, set the following secrets in your Supabase dashboard or via CLI:
+For the AI-powered Edge Functions, configure the required secrets in Supabase:
+
 ```bash
 supabase secrets set LOVABLE_API_KEY=your_lovable_key
 supabase secrets set GEMINI_API_KEY=your_gemini_key
 ```
 
-### 3. Synchronize Database Migrations
+### 4. Apply database migrations
+
 ```bash
-# Push all 18 database migrations to your Supabase instance
 supabase db push
 ```
 
-### 4. Upload Exercise Media Assets
-```bash
-# Requires SUPABASE_SERVICE_ROLE_KEY in env
-npm run upload:exercise-media
-```
+### 5. Start FitBox
 
-### 5. Start Development Server
 ```bash
 npm run dev
 ```
-Visit `http://localhost:5173` to explore FitBox.
 
----
+Then open:
 
-## 🌐 Production Deployment
-
-### Option A: Cloudflare Pages & Workers (Recommended)
-FitBox includes pre-configured [`public/_headers`](file:///C:/Users/deepa/Downloads/musclewebsite%20test%202/art-decoder-tool/public/_headers), [`wrangler.toml`](file:///C:/Users/deepa/Downloads/musclewebsite%20test%202/art-decoder-tool/wrangler.toml) (with `not_found_handling = "single-page-application"`), and [`worker.js`](file:///C:/Users/deepa/Downloads/musclewebsite%20test%202/art-decoder-tool/worker.js) for zero-configuration Cloudflare deployment:
-
-1. Connect your repository (`AradhyaMalaviya/FitBox`) to **Cloudflare Pages** or **Cloudflare Workers**.
-2. **Build Settings**:
-   - **Framework Preset**: `Vite`
-   - **Build Command**: `npm run build`
-   - **Deploy Command**: `npx wrangler deploy`
-   - **Output Directory**: `dist`
-   - **Root Directory**: *Leave empty / blank* (`/`)
-3. **Environment Variables**: Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`.
-4. Deploy! All client-side React routes (`/exercises`, `/gymbuddy`, `/nutrition`) will resolve with zero 404 errors.
-
-### Option B: Local Production Build
-```bash
-npm run build
-npm run preview
+```text
+http://localhost:5173
 ```
 
 ---
 
-## 👨‍💻 Author & Architecture
+# 🌐 Deployment
 
-**Aaradhya Malaviya**  
-*Full-Stack Engineer & AI Systems Architect*  
-* [GitHub Profile](https://github.com/AradhyaMalaviya)
-* [LinkedIn](https://linkedin.com/in/aaradhyamalaviya)
-* [Repository](https://github.com/AradhyaMalaviya/FitBox)
+FitBox is configured for deployment using **Cloudflare Pages / Workers**.
+
+Typical production settings:
+
+```text
+Framework:       Vite
+Build command:   npm run build
+Deploy command:  npx wrangler deploy
+Output:          dist
+```
+
+Set the required environment variables in your deployment environment and deploy.
+
+---
+
+# 🧪 Project Quality
+
+FitBox includes automated test and verification suites covering major areas of the application, including:
+
+- 🔐 Authentication
+- 🧬 Muscle and exercise mapping
+- 🏋️ Workout lifecycle
+- 🥗 Nutrition calculations
+- 🇮🇳 Indian food database
+- 🤝 GymBuddy matching
+- 💬 Chat identity and messaging
+- 📱 Mobile navigation
+- 🤖 AI interactions
+- 🗄️ Database migrations
+- ☁️ Production build configuration
+
+The current project README records **53 passing verification suites with 0 failures**.
+
+---
+
+# 📌 Project Highlights
+
+| Area | FitBox |
+|---|---|
+| 🏋️ Workout Tracking | ✅ |
+| 🧬 Interactive Muscle Map | ✅ |
+| 🎥 Exercise Demonstrations | ✅ |
+| 🤖 AI Fitness Coach | ✅ |
+| 🥗 Calorie & Macro Planning | ✅ |
+| 🇮🇳 Indian Food Database | ✅ 150+ foods |
+| 🤝 Workout Partner Matching | ✅ |
+| 💬 Real-Time Chat | ✅ |
+| 🔥 Accountability Streaks | ✅ |
+| 📱 Mobile-Friendly Experience | ✅ |
+| ☁️ Cloud Sync | ✅ |
+| 🔐 Authentication | ✅ |
+
+---
+
+# 🗺️ Vision for FitBox
+
+FitBox is more than an exercise website.
+
+The long-term idea is to build a **personal fitness ecosystem** where training, nutrition, education, AI guidance, and accountability work together.
+
+```text
+             DISCOVER
+                ↓
+          🧬 Understand
+             your body
+                ↓
+             PLAN
+                ↓
+          🏋️ Train smarter
+                ↓
+              EAT
+                ↓
+          🥗 Fuel your goal
+                ↓
+             LEARN
+                ↓
+           🤖 Improve
+          with guidance
+                ↓
+           CONNECT
+                ↓
+          🤝 Stay accountable
+                ↓
+             REPEAT
+                ↓
+          📈 Get stronger
+```
+
+### **Train smarter. Eat better. Stay consistent.**
+
+That's the idea behind **FitBox**.
+
+---
+
+# 👨‍💻 Built By
+
+**Aaradhya Malviya**  
+*Full-Stack Engineer & AI Systems Architect*
+
+- GitHub: https://github.com/AradhyaMalaviya
+- LinkedIn: https://linkedin.com/in/aaradhyamalaviya
+- Project: https://github.com/AradhyaMalaviya/FitBox
 
 ---
 
 ## 📄 License
 
-Proprietary © 2026 Aaradhya Malaviya. All rights reserved.
+**Proprietary © 2026 Aaradhya Malviya. All rights reserved.**
