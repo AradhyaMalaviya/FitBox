@@ -130,7 +130,8 @@ export const exercises: Exercise[] = [
     muscleGroup: 'Legs',
     difficulty: 'Beginner',
     duration: '4 sets x 12-15 reps',
-    equipment: 'Bodyweight'
+    equipment: 'Bodyweight',
+    description: 'A foundational lower body compound movement for building quadriceps, glutes, and core stability'
   },
 
   // Beginner - Arms

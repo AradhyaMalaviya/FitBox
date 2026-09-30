@@ -2,529 +2,254 @@
 
 # ⚡ FitBox
 
-### **Your all-in-one fitness, workout & nutrition companion.**
+### **Your Friendly, All-in-One Fitness & Nutrition Companion**
 
-**Train smarter. Eat better. Stay consistent.**
+**Train Smarter. Eat What You Love. Never Train Alone.**
 
-FitBox brings personalized workouts, interactive muscle discovery, nutrition planning, AI coaching, and workout-partner accountability into one modern fitness experience.
+FitBox makes getting in shape simple, visual, and motivating. Whether you want to build muscle, lose body fat, understand what to eat, or find a reliable workout partner at your local gym, FitBox brings everything into one easy-to-use app.
 
-<p>
-  <a href="#-what-is-fitbox">What is FitBox?</a> •
-  <a href="#-what-you-can-do-with-fitbox">Features</a> •
-  <a href="#-ai-fitness-coach">AI Coach</a> •
-  <a href="#-nutrition">Nutrition</a> •
-  <a href="#-gymbuddy">GymBuddy</a> •
-  <a href="#-for-developers">Developers</a>
+---
+
+[![Release](https://img.shields.io/badge/Release-v1.2.0-blue.svg?style=for-the-badge&logo=git&logoColor=white)](https://github.com/AradhyaMalaviya/FitBox)
+[![Quality](https://img.shields.io/badge/Reliability-88%20Tests%20Passed%20(100%25)-success?style=for-the-badge&logo=checkmarx&logoColor=white)](scripts/run-deep-beta-tests.mjs)
+[![Mobile Ready](https://img.shields.io/badge/Experience-Mobile%20%26%20Desktop-orange?style=for-the-badge&logo=googlechrome&logoColor=white)](https://react.dev/)
+[![Nutrition](https://img.shields.io/badge/Diet-Indian%20Food%20Guide-green?style=for-the-badge)](src/data/indianFoodDatabase.ts)
+[![AI Coach](https://img.shields.io/badge/AI%20Coach-Google%20Gemini-purple?style=for-the-badge&logo=google&logoColor=white)](https://deepmind.google/technologies/gemini/)
+
+<p align="center">
+  <a href="#-why-fitbox">Why FitBox?</a> •
+  <a href="#-features-at-a-glance">Features</a> •
+  <a href="#-explore-your-muscles">Body Map</a> •
+  <a href="#-live-workout-tracker">Workout Tracker</a> •
+  <a href="#-desi-nutrition--indian-foods">Indian Nutrition</a> •
+  <a href="#-gymbuddy-find-a-workout-partner">GymBuddy</a> •
+  <a href="#-your-ai-fitness-coach">AI Coach</a> •
+  <a href="#-how-to-try-fitbox">Try It Out</a> •
+  <a href="#-frequently-asked-questions">FAQ</a>
 </p>
-
-[![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Supabase](https://img.shields.io/badge/Supabase-Backend-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com/)
-[![Gemini](https://img.shields.io/badge/Google_Gemini-AI_Coach-8E75C2?style=for-the-badge&logo=google&logoColor=white)](https://deepmind.google/technologies/gemini/)
-[![Cloudflare](https://img.shields.io/badge/Cloudflare-Deployment-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)](https://www.cloudflare.com/)
 
 </div>
 
 ---
 
-## 🏋️ What is FitBox?
+## 💡 Why FitBox?
 
-**FitBox is a full-stack fitness and nutrition platform built around one simple idea: make getting fitter easier to understand, easier to plan, and easier to stick with.**
+Getting in shape often feels confusing and overwhelming:
 
-Instead of jumping between an exercise library, calorie calculator, nutrition app, workout tracker, and fitness community, FitBox brings those experiences together.
+* **Too many apps**: You use one app to learn how to do an exercise, another app to count calories, a notes app to write down your weights, and WhatsApp to message your gym friends.
+* **Western diets that don't fit**: Most fitness apps tell you to eat avocado toast, salmon, and kale. But if you eat *paneer, dal, roti, sattu, or soya chunks*, those apps leave you guessing.
+* **Confusing fitness jargon**: Trying to understand which muscle an exercise works or how to fix your form can feel like reading a medical textbook.
+* **Training alone is tough**: Sticking to a workout routine is hard when nobody is waiting for you at the gym.
 
-Whether your goal is to:
+### The FitBox Difference
 
-- 💪 Build muscle
-- 🔥 Lose body fat
-- 🏃 Improve athletic performance
-- 🏋️ Get stronger
-- 🥗 Understand what to eat
-- 📈 Track your workouts
-- 🤝 Find someone to train with
-- 🤖 Get personalized fitness guidance
-
-FitBox is designed to give you a single place to work toward your goals.
-
----
-
-## 🌟 What You Can Do With FitBox
-
-### 🧬 Explore Your Muscles
-
-Don't just search for random exercises.
-
-Start with **the muscle you want to train**.
-
-FitBox includes an interactive body map covering **19 muscle areas**, with front and back views to make exercise discovery more visual and intuitive.
-
-Choose a muscle → explore exercises → learn how to perform them → add them to your training.
-
-**Muscle areas include:**
-
-`Chest` · `Back` · `Lats` · `Traps` · `Shoulders` · `Biceps` · `Triceps` · `Forearms` · `Abs` · `Obliques` · `Quads` · `Hamstrings` · `Glutes` · `Calves` · `Adductors` · `Abductors` · `Neck` · `Lower Back` · `Full Body`
+| Everyday Fitness Struggle | The FitBox Way |
+| :--- | :--- |
+| Juggling 4–5 different apps for exercises, diets, and timers | **Everything in one place**: Workouts, food, tracking, and community |
+| Looking up nutrition info for Indian food and finding nothing | **100% Indian-friendly food guide** with Hindi names and rupee costs |
+| Forgetting what weight you lifted last week | **Frictionless workout logger** with rest timers on your phone |
+| Searching for workouts without knowing what muscles they hit | **Interactive clickable body diagram** (front & back) |
+| Missing workouts because you have no accountability | **GymBuddy partner matching** and shared weekly streaks |
+| Having fitness questions with nobody to ask | **Friendly AI Coach** that answers questions like a personal trainer |
 
 ---
 
-### 🏋️ Build Better Workouts
-
-FitBox helps turn exercise discovery into actual training.
-
-Browse exercises based on:
-
-- 🎯 Target muscle
-- 🏋️ Equipment
-- 📚 Exercise information
-- 🎥 Form demonstrations
-- 🔁 Workout structure
-- 📊 Set-by-set tracking
-
-Supported equipment includes:
-
-**Dumbbells · Barbells · Bodyweight · Cables · Machines · Kettlebells · Resistance Bands**
-
-You can discover an exercise, understand what it targets, watch its demonstration, and use it as part of your workout.
-
----
-
-## 🤖 AI Fitness Coach
-
-### **Your fitness questions, answered in context.**
-
-FitBox includes an AI-powered fitness coach designed to make fitness guidance more accessible and personalized.
-
-The coach can help with areas such as:
-
-- 🏋️ Workout planning
-- 📈 Progressive overload
-- 🧠 Exercise and training guidance
-- 🥗 Macro and nutrition planning
-- 🔄 Training adjustments
-- 💡 Fitness-related questions
-
-The experience uses **Google Gemini** and streams responses in real time, giving FitBox a conversational coaching experience rather than a collection of static recommendations.
-
-> **FitBox isn't just a database of exercises. It's designed to help you understand what to do next.**
-
----
-
-## 🥗 Nutrition
-
-### **Nutrition that makes sense for real life.**
-
-Fitness isn't only about training.
-
-FitBox includes a nutrition system designed around calorie needs, macronutrients, food choices, and everyday eating.
-
-### 🔢 Know Your Numbers
-
-FitBox calculates:
-
-- **BMR** — estimated calories your body uses at rest
-- **TDEE** — estimated daily energy expenditure
-- 🎯 Goal-based calorie targets
-- 🥩 Protein targets
-- 🥑 Fat targets
-- 🍚 Carbohydrate targets
-
-The nutrition system uses the **Mifflin–St Jeor** equation and adjusts calorie targets around goals such as cutting or bulking.
-
----
-
-### 🇮🇳 Indian-Friendly Food Database
-
-A major part of FitBox's nutrition experience is its focus on **Indian food and eating habits**.
-
-The project includes a database of **150+ Indian foods** with nutritional information and practical details.
-
-Examples include:
-
-- 🧀 Paneer
-- 🌱 Soya Chunks
-- 🥣 Sattu
-- 🫘 Dal
-- 🌱 Moong Sprouts
-- 🥛 Curd
-- 🫓 Roti
-- 🫘 Rajma
-- And many more
-
-The database also includes information such as:
-
-**Protein · Carbohydrates · Fats · Fiber · Approximate Cost · Hindi Names · Vegetarian/Vegan Tags**
-
----
-
-### 🍽️ Nutrition Around Your Workout
-
-FitBox organizes nutrition guidance around different parts of your fitness routine:
-
-| 🏃 | Nutrition Area | Focus |
-|---|---|---|
-| ⚡ | Pre-Workout | Energy & training fuel |
-| 🔋 | Post-Workout | Recovery & protein |
-| 🛌 | Rest Day | Recovery & satiety |
-| 💊 | Supplements | Supplements & practical alternatives |
-| 🔄 | Protein Swaps | Flexible, budget-conscious food choices |
-
----
-
-## 🤝 GymBuddy
-
-### **Training is easier when you don't have to do it alone.**
-
-GymBuddy is FitBox's social accountability experience.
-
-Instead of matching people randomly, FitBox considers training compatibility across multiple dimensions:
-
-- 🎯 Fitness goals
-- 🏋️ Training style / split
-- ⏰ Workout timing
-- 🧠 Experience level
-- 📍 Location / gym proximity
-
-A compatibility view helps users understand how well their training preferences align.
-
-### GymBuddy includes:
-
-- 👥 Workout-partner discovery
-- ❤️ Mutual matching
-- 💬 Real-time messaging
-- 📊 Compatibility visualization
-- 🔥 Accountability streaks
-- 🎉 Match and milestone celebrations
-
-The goal is simple:
-
-> **Find people who train like you, keep each other accountable, and make showing up easier.**
-
----
-
-## 📱 Designed Like a Fitness App
-
-FitBox is built to feel natural on both desktop and mobile.
-
-The experience includes:
-
-- 📱 Mobile-first navigation
-- 👆 App-like interactions
-- 🧭 Dedicated fitness sections
-- 🔒 Authentication and account recovery
-- 💾 Workout persistence
-- ☁️ Cloud-synced preferences
-- 📐 Mobile safe-area support
-- ⚡ Fast, responsive UI
-
-Core areas include:
-
-**Dashboard · Exercises · Workout · GymBuddy · Nutrition**
-
----
-
-## 🧠 A Personalized Fitness Experience
-
-FitBox also uses onboarding preferences to help shape the user's training direction.
-
-Users can identify with different fitness inspirations and goals, which map into broad training approaches such as:
-
-### 🦁 Muscle Building
-Hypertrophy-focused training and higher-calorie nutrition.
-
-### ⚡ Cutting
-Fat-loss focused training with higher-protein nutrition.
-
-### 🏃 Athletic Performance
-Power, mobility, agility, and performance-oriented training.
-
-### 🛡️ Strength Hybrid
-A combination of strength and athletic training.
-
-The idea is to make fitness feel more personal from the moment someone starts using FitBox.
-
----
-
-# 🧩 The FitBox Experience
-
-```text
-                    ┌─────────────────────┐
-                    │       FITBOX        │
-                    │ Your Fitness Hub    │
-                    └──────────┬──────────┘
-                               │
-       ┌──────────────┬────────┼────────┬──────────────┐
-       ▼              ▼        ▼        ▼              ▼
-   🧬 MUSCLES      🏋️ TRAIN   🥗 EAT   🤖 COACH    🤝 CONNECT
-       │              │        │        │              │
-   Discover       Build      Plan     Ask & get      Find a
-   exercises      workouts   meals    guidance       GymBuddy
-       │              │        │        │              │
-       └──────────────┴────────┴────────┴──────────────┘
-                               │
-                               ▼
-                    📈 BUILD CONSISTENCY
+## ✨ Features at a Glance
+
+```
+                         ┌───────────────────────────────────────────────┐
+                         │                    FITBOX                     │
+                         │          Your Everyday Fitness Hub            │
+                         └───────────────────────┬───────────────────────┘
+                                                 │
+         ┌───────────────────┬───────────────────┼───────────────────┬───────────────────┐
+         ▼                   ▼                   ▼                   ▼                   ▼
+  🧬 BODY MAP         🏋️ WORKOUTS         🥗 REAL FOOD        🤝 GYMBUDDY         🤖 AI COACH
+  Click any muscle    Log sets & reps     90+ Indian foods,   Find partners at    Friendly advice
+  to see the best     with rest timers    simple calorie &    your gym & share    on exercises, form
+  exercises for it    and zero data loss  protein targets     workout streaks     and meal ideas
 ```
 
 ---
 
-# 💡 Why I Built FitBox
+## 🧬 Explore Your Muscles
 
-Fitness information is everywhere.
+Don't just scroll through random exercise lists. Start with **the muscle you want to train**:
 
-The problem is that it is often **fragmented**.
-
-One app tells you what exercise to do.
-
-Another calculates calories.
-
-Another tracks workouts.
-
-Another gives nutrition information.
-
-And another helps you find people to train with.
-
-**FitBox explores what happens when these experiences are designed as one connected fitness platform.**
-
-The project brings together:
-
-> **Training + Nutrition + AI + Exercise Education + Social Accountability**
-
-into a single ecosystem.
+* **Tap the Interactive Body Map**: Easily switch between **Front** and **Back** views of the body to select muscles like chest, shoulders, arms, back, abs, and legs.
+* **Understands Everyday Gym Language**: Search for exercises using natural terms like **"pecs"**, **"abs"**, **"quads"**, **"lats"**, or **"traps"** and get instant results.
+* **Clear Exercise Demos**: Browse over 50+ guided exercises with video demonstrations and simple instructions.
+* **Filter by Equipment**: Pick the gear you actually have available—whether it's **Dumbbells**, **Barbells**, **Cables**, **Gym Machines**, or just **Bodyweight at home**.
 
 ---
 
-# 🛠️ Built With
+## 🏋️ Live Workout Tracker
 
-FitBox is a full-stack application built with modern web technologies.
+Bring FitBox to the gym floor—it's designed to be fast and effortless on your smartphone:
 
-### Frontend
-
-- **React 18**
-- **TypeScript**
-- **Vite**
-- **Tailwind CSS**
-- **React Router**
-- **shadcn/ui + Radix UI**
-- **Recharts**
-- **Framer Motion**
-
-### Backend & Data
-
-- **Supabase**
-- **PostgreSQL**
-- **Supabase Auth**
-- **Row-Level Security**
-- **Supabase Storage**
-- **Supabase Realtime**
-- **Edge Functions**
-
-### AI
-
-- **Google Gemini 2.5 Flash Lite**
-- Real-time streaming AI responses
-- Fitness coaching and project assistance
-
-### Deployment
-
-- **Cloudflare Pages / Workers**
-- SPA routing
-- Edge-oriented deployment
+* **Log Your Sets in Seconds**: Tap to enter your weight and reps. Check off sets as you complete them.
+* **Built-in Rest Timer**: Keep your workout moving with automatic rest countdowns between sets.
+* **"Refresh-Proof" Protection**: If your phone screen turns off, you switch apps, or you accidentally refresh the page, your active workout stays completely safe.
+* **Try as a Guest**: You don't even need to create an account to start your first workout—just jump right in.
 
 ---
 
-# 🏗️ How It Fits Together
+## 🥗 Desi Nutrition & Indian Foods
 
-At a high level:
+Dieting shouldn't mean giving up the food you grew up eating. FitBox includes a dedicated nutrition section tailored for Indian lifestyles:
 
-```text
-                    ┌──────────────────┐
-                    │    FITBOX UI     │
-                    │ React + Tailwind │
-                    └────────┬─────────┘
-                             │
-              ┌──────────────┼──────────────┐
-              ▼              ▼              ▼
-        🏋️ Fitness       🥗 Nutrition    🤝 GymBuddy
-              │              │              │
-              └──────────────┼──────────────┘
-                             ▼
-                     ☁️ Supabase
-              ┌──────────────┼──────────────┐
-              ▼              ▼              ▼
-            Auth          Database        Realtime
-                             │
-                             ▼
-                       🤖 AI Services
-                         Gemini
-```
-
-The technical architecture is intentionally kept behind the fitness experience in this README—the main goal is to understand **what FitBox does and why it exists**.
+* **90+ Authentic Indian Foods**: Look up nutritional info for everyday staples:
+  * *Dairy*: Paneer, curd, milk, chaas, ghee
+  * *High-Protein Staples*: Soya chunks, sattu, moong dal, rajma, chana, tofu, eggs, chicken
+  * *Grains*: Roti, brown rice, oats, dalia, poha
+  * *Meals & Snacks*: Besan chilla, idli, dhokla, roasted chana, sprout salads
+* **Practical Information**: Each item shows clear serving sizes, protein, carbs, fats, and an approximate cost in Rupees (₹).
+* **Smart Protein Swaps**: Get affordable, high-protein alternatives (like swapping regular milk tea for a protein-rich sattu drink, or adding soya chunks to your favorite sabzi).
+* **Personalized Calorie Goal**: Enter your age, height, and weight to get a personalized daily calorie and protein target—whether your goal is to **burn fat**, **build muscle**, or **maintain health**.
 
 ---
 
-# 🚀 Run FitBox Locally
+## 🤝 GymBuddy: Find a Workout Partner
 
-## Prerequisites
+Training is ten times more fun—and consistent—when you have a friend pushing you:
 
-- **Node.js 22.x LTS** recommended
-- **npm**
-- **Supabase CLI 2.x+**
+* **Smart Matching**: Connect with workout partners who train at your gym branch, go at the same time of day (morning, evening, or flexible), and share your fitness goals.
+* **Visual Match Score**: See a simple compatibility percentage showing how well your schedules and training styles align.
+* **Swipe to Connect**: Swipe right on athletes who match your vibe, and get celebrated with confetti when it's a mutual match!
+* **Built-in Chat**: Plan your workouts and message your partner directly inside the app.
+* **Shared Weekly Streaks**: Build a shared workout streak that only increments when *both* of you show up, creating genuine mutual accountability.
 
-### 1. Clone the repository
+---
 
+## 🤖 Your AI Fitness Coach
+
+Have a fitness or nutrition question at 11 PM? FitBox comes with an AI coach ready to help:
+
+* **Friendly, Practical Advice**: Ask things like *"What's a good alternative to bench press if my shoulders hurt?"* or *"How much protein do I need if I weigh 70 kg?"*
+* **Grounding in Real Food & Exercises**: The coach suggests exercises and meal ideas that actually exist inside FitBox.
+* **Project Assistant**: Curious about how FitBox was built or how to use a specific feature? A global helper is always one click away in the corner of your screen.
+
+---
+
+## 🛡️ Recent Upgrades & Reliability
+
+We believe software should just work without glitches or lost data:
+
+* **88 Quality Tests Passed (100% Reliable)**: The entire app—including password reset, workout saving, streak calculations, and food numbers—is backed by 88 automated quality checks.
+* **Natural Gym Terminology**: You can now search for muscles using common terms like *"pecs"* or *"delts"* without needing scientific Latin names.
+* **Beginner-Friendly Exercise Tips**: Key movements like Squats now have simple form cues so beginners feel confident from day one.
+* **Thumb-Friendly Mobile Design**: A clean bottom bar makes switching between Dashboard, Exercises, Workouts, GymBuddy, and Nutrition effortless on any smartphone.
+
+---
+
+## 🚀 How to Try FitBox
+
+You can run FitBox locally on your computer in just a few minutes:
+
+### 1. Download the Project
 ```bash
 git clone https://github.com/AradhyaMalaviya/FitBox.git
 cd FitBox
 ```
 
-### 2. Install dependencies
-
+### 2. Install Dependencies
 ```bash
 npm install
 ```
 
-### 3. Configure environment variables
-
-Create a `.env` file:
-
-```env
-VITE_SUPABASE_URL=https://your-project-id.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=your-supabase-publishable-key
-```
-
-For the AI-powered Edge Functions, configure the required secrets in Supabase:
-
-```bash
-supabase secrets set LOVABLE_API_KEY=your_lovable_key
-supabase secrets set GEMINI_API_KEY=your_gemini_key
-```
-
-### 4. Apply database migrations
-
-```bash
-supabase db push
-```
-
-### 5. Start FitBox
-
+### 3. Start the App
 ```bash
 npm run dev
 ```
 
-Then open:
+Now open **`http://localhost:5173`** in your web browser, and FitBox is ready to use!
 
-```text
-http://localhost:5173
+---
+
+<details>
+<summary><b>🛠️ Click for Developer Setup, Environment Variables & Testing Details</b></summary>
+
+### For Software Engineers & Contributors
+
+If you are a developer looking to configure backend services or run tests:
+
+#### Requirements
+* **Node.js**: v22 LTS recommended
+* **npm**: v10+
+* **Supabase CLI**: For local or remote migrations
+
+#### Environment Variables (`.env`)
+Create a `.env` file in the root folder:
+```env
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=your-anon-key
 ```
 
----
+#### Running the Test Battery (88 Tests)
+```bash
+# Run all 88 automated tests
+npm run test:all
 
-# 🌐 Deployment
-
-FitBox is configured for deployment using **Cloudflare Pages / Workers**.
-
-Typical production settings:
-
-```text
-Framework:       Vite
-Build command:   npm run build
-Deploy command:  npx wrangler deploy
-Output:          dist
+# Or run individual test suites:
+npm test                   # Remediation suite (22 tests)
+npm run test:beta          # Full-system beta suite (31 tests)
+npm run test:deep          # Deep runtime & math audit (35 tests)
 ```
 
-Set the required environment variables in your deployment environment and deploy.
+#### Production Build & Cloudflare Deployment
+```bash
+# Build the production bundle
+npm run build
 
----
-
-# 🧪 Project Quality
-
-FitBox includes automated test and verification suites covering major areas of the application, including:
-
-- 🔐 Authentication
-- 🧬 Muscle and exercise mapping
-- 🏋️ Workout lifecycle
-- 🥗 Nutrition calculations
-- 🇮🇳 Indian food database
-- 🤝 GymBuddy matching
-- 💬 Chat identity and messaging
-- 📱 Mobile navigation
-- 🤖 AI interactions
-- 🗄️ Database migrations
-- ☁️ Production build configuration
-
-The current project README records **53 passing verification suites with 0 failures**.
-
----
-
-# 📌 Project Highlights
-
-| Area | FitBox |
-|---|---|
-| 🏋️ Workout Tracking | ✅ |
-| 🧬 Interactive Muscle Map | ✅ |
-| 🎥 Exercise Demonstrations | ✅ |
-| 🤖 AI Fitness Coach | ✅ |
-| 🥗 Calorie & Macro Planning | ✅ |
-| 🇮🇳 Indian Food Database | ✅ 150+ foods |
-| 🤝 Workout Partner Matching | ✅ |
-| 💬 Real-Time Chat | ✅ |
-| 🔥 Accountability Streaks | ✅ |
-| 📱 Mobile-Friendly Experience | ✅ |
-| ☁️ Cloud Sync | ✅ |
-| 🔐 Authentication | ✅ |
-
----
-
-# 🗺️ Vision for FitBox
-
-FitBox is more than an exercise website.
-
-The long-term idea is to build a **personal fitness ecosystem** where training, nutrition, education, AI guidance, and accountability work together.
-
-```text
-             DISCOVER
-                ↓
-          🧬 Understand
-             your body
-                ↓
-             PLAN
-                ↓
-          🏋️ Train smarter
-                ↓
-              EAT
-                ↓
-          🥗 Fuel your goal
-                ↓
-             LEARN
-                ↓
-           🤖 Improve
-          with guidance
-                ↓
-           CONNECT
-                ↓
-          🤝 Stay accountable
-                ↓
-             REPEAT
-                ↓
-          📈 Get stronger
+# Deploy to Cloudflare Pages
+npm run deploy:pages
 ```
 
-### **Train smarter. Eat better. Stay consistent.**
-
-That's the idea behind **FitBox**.
+</details>
 
 ---
 
-# 👨‍💻 Built By
+## ❓ Frequently Asked Questions
+
+<details>
+<summary><b>Is FitBox free to use?</b></summary>
+Yes! You can explore all exercises, use the interactive body map, track your workouts, and check nutrition guidelines completely free.
+</details>
+
+<details>
+<summary><b>Do I need an account to start tracking a workout?</b></summary>
+No! You can click "Start Workout" and begin logging immediately as a guest. When you are ready, you can create a free account to sync your history across devices.
+</details>
+
+<details>
+<summary><b>Does FitBox support vegetarian and vegan diets?</b></summary>
+Absolutely. A large portion of the Indian food database is specifically tagged for vegetarian and vegan athletes, highlighting plant-based protein sources like soya chunks, sattu, lentils, tofu, and nuts.
+</details>
+
+<details>
+<summary><b>Can I use FitBox on my phone?</b></summary>
+Yes! FitBox is built mobile-first. Open it in Chrome, Safari, or Brave on your phone, and it functions just like a native mobile app with a bottom navigation bar.
+</details>
+
+<details>
+<summary><b>How does GymBuddy match me with workout partners?</b></summary>
+GymBuddy looks at five key things: your fitness goals, your training split (e.g. Push/Pull/Legs), what time of day you train, your experience level, and your gym location. It calculates a compatibility score so you can connect with people on the same schedule as you.
+</details>
+
+---
+
+## 👨‍💻 Created By
 
 **Aaradhya Malviya**  
 *Full-Stack Engineer & AI Systems Architect*
 
-- GitHub: https://github.com/AradhyaMalaviya
-- LinkedIn: https://linkedin.com/in/aaradhyamalaviya
-- Project: https://github.com/AradhyaMalaviya/FitBox
+* 🌐 **GitHub**: [@AradhyaMalaviya](https://github.com/AradhyaMalaviya)
+* 💼 **LinkedIn**: [in/aaradhyamalaviya](https://linkedin.com/in/aaradhyamalaviya)
+* 📦 **Project**: [AradhyaMalaviya/FitBox](https://github.com/AradhyaMalaviya/FitBox)
 
 ---
 
-## 📄 License
+### License
 
-**Proprietary © 2026 Aaradhya Malviya. All rights reserved.**
+**Proprietary © 2026 Aaradhya Malviya. All rights reserved.**  
+Made with ❤️ to help people train smarter, eat better, and stay consistent.
