@@ -296,3 +296,155 @@ FitBox is built on 70+ modular components and isolated route controllers.
 ---
 
 *End of Master Specification. This document serves as the absolute authority for FitBox Development.*
+
+
+---
+
+# VOLUME IX: USER STORIES & DETAILED ACCEPTANCE CRITERIA
+
+## 15. User Personas & Real-World Training Scenarios
+
+### 15.1 Persona 1: Rohan Sharma — The College Athlete & Budget Vegetarian
+- **Profile**: 21-year-old student, trains 5 days/week on a Push-Pull-Legs split.
+- **Pain Points**: Mainstream apps assume chicken breast and expensive whey protein; struggles with meal prep costs and hitting 130g+ daily protein on a student budget.
+- **Key FitBox Interactions**: Uses the Desi Nutrition Roadmap to calculate macros, utilizes the Protein Swapping Engine to discover high-protein sattu and soya chunk combinations with INR pricing, and tracks workouts via mobile.
+
+### 15.2 Persona 2: Ananya Patel — The Hybrid Corporate Professional
+- **Profile**: 29-year-old tech professional, transitions between home dumbbell workouts and commercial gym sessions.
+- **Pain Points**: Inconsistent schedule, loses motivation when training alone, forgets exercise form after long workdays.
+- **Key FitBox Interactions**: Uses the Interactive SVG Body Diagram to isolate muscle fatigue, accesses embedded video demonstrations with form cues, and uses GymBuddy to find a training partner with flexible evening timings.
+
+### 15.3 Persona 3: Vikram Singh — The Strength Enthusiast & Mentor
+- **Profile**: 34-year-old powerlifter focused on compound lifts and steady progressive overload.
+- **Pain Points**: Needs seamless, zero-lag logging during heavy sets; frustrated by apps that lose workout state on phone screen timeout.
+- **Key FitBox Interactions**: Relies on the refresh-proof Active Workout tracker, auto rest timer, and GymBuddy Shared Streaks to build mutual accountability with his lifting partner.
+
+---
+
+## 16. Detailed Epic Specifications & Acceptance Criteria
+
+### Epic 1: Interactive Muscle Mapping & Exercise Discovery
+
+#### User Story 1.1: Anatomical Muscle Selection
+> **As a** gym trainee,  
+> **I want to** visually tap a specific muscle on an interactive front/back body diagram,  
+> **So that** I immediately see all relevant exercises tailored for that anatomical group.
+
+- **Acceptance Criteria**:
+  1. **Given** the user navigates to `/exercises` or the dashboard body diagram,  
+     **When** the user clicks "Back View",  
+     **Then** the SVG seamlessly transitions to posterior muscle groups (`latissimus_dorsi`, `trapezius`, `rhomboids`, `erector_spinae`, `hamstrings`, `glutes`).
+  2. **Given** the user hovers over or taps a muscle group (e.g. `chest_upper`),  
+     **When** clicked,  
+     **Then** the active selection highlights with brand accent styling, and the exercise list dynamically filters to display matching exercises.
+  3. **Given** a user inputs gym vernacular such as "pecs", "quads", or "traps" in the search bar,  
+     **When** querying,  
+     **Then** the system maps colloquial terms to anatomical IDs and displays corresponding exercises.
+
+#### User Story 1.2: Equipment & Difficulty Filtering
+> **As an** athlete with limited gym gear,  
+> **I want to** filter exercises by available equipment (Dumbbells, Barbells, Cables, Bodyweight),  
+> **So that** I only see movements I can perform in my current training environment.
+
+- **Acceptance Criteria**:
+  1. Multiple equipment tags can be toggled simultaneously without clearing the active muscle filter.
+  2. If zero exercises match the compound filter, a helpful empty-state UI appears with a "Clear Filters" button.
+  3. Exercise cards display visual difficulty indicators (Beginner, Intermediate, Advanced) and video poster placeholders.
+
+---
+
+### Epic 2: Workout Plan Generation & Live Session Tracking
+
+#### User Story 2.1: Multi-Step Personalized Workout Creation
+> **As a** user setting up a new training cycle,  
+> **I want to** complete a structured workout generation wizard,  
+> **So that** FitBox compiles a balanced routine based on my experience, split, and equipment.
+
+- **Acceptance Criteria**:
+  1. Wizard captures: Split (`push_pull_legs`, `upper_lower`, `full_body`, etc.), Target Muscle Focus, Experience Level, and Session Duration.
+  2. On completion, the system outputs an ordered exercise list with suggested set and rep schemes.
+  3. The completion action routes directly to `/dashboard` with immediate state synchronization.
+
+#### User Story 2.2: Live Workout Execution & State Resilience
+> **As an** active gym-goer,  
+> **I want to** log my weights and reps in real time with an automated rest timer,  
+> **So that** I can track progressive overload without losing data if my screen turns off or the browser refreshes.
+
+- **Acceptance Criteria**:
+  1. Active workout state is synchronized to `localStorage` via `WorkoutContext`, preventing data loss on accidental browser refresh or mobile sleep.
+  2. Marking a set as complete initiates an automated countdown rest timer with audio/visual completion indicators.
+  3. Adding, removing, or reordering exercises operates optimistically with zero perceptible input latency.
+  4. Finalizing a workout writes records targeting `public.profiles(id)` (`profileId`) and clears the active session from storage upon successful response.
+
+---
+
+### Epic 3: Desi Nutrition Engine & Protein Optimization
+
+#### User Story 3.1: Personalized TDEE & Macro Roadmap
+> **As a** health-conscious individual,  
+> **I want to** calculate my BMR, TDEE, and macronutrient targets based on Indian dietary habits,  
+> **So that** I know exactly how many calories, protein, carbs, and fats to consume daily.
+
+- **Acceptance Criteria**:
+  1. Uses the Mifflin-St Jeor formula calculating BMR and applies validated activity multipliers.
+  2. Allows goal selection: Cut (-500 kcal), Maintenance (0 kcal), Lean Bulk (+250 kcal), Aggressive Bulk (+500 kcal).
+  3. Calculates protein target at 1.8g–2.2g per kg of bodyweight, displaying interactive macro proportion charts using Recharts.
+
+#### User Story 3.2: 1:1 Vegetarian Protein Swapping
+> **As a** vegetarian athlete,  
+> **I want to** swap traditional non-vegetarian staples for Indian vegetarian equivalents,  
+> **So that** I hit my daily protein target without exceeding my fat or calorie threshold.
+
+- **Acceptance Criteria**:
+  1. Provides exact macro-equivalent pairings (e.g. 150g Chicken Breast ↔ 50g Dry Soya Chunks or 150g Paneer with fat adjustment).
+  2. Displays localized serving metrics (grams, scoops, katoris) and estimated cost per serving in Indian Rupees (₹).
+  3. Food items link to nutritional breakdowns from the 150+ item Indian food database.
+
+---
+
+### Epic 4: GymBuddy Social Matchmaking & Shared Accountability
+
+#### User Story 4.1: Radar Proximity Scanning & Discovery
+> **As a** solo trainee,  
+> **I want to** scan for nearby gym-goers matching my training schedule and workout split,  
+> **So that** I can find a committed workout partner at my gym branch.
+
+- **Acceptance Criteria**:
+  1. Proximity radar allows interactive radius adjustment (2km to 30km) with animated conic sonar scanning.
+  2. Ranks candidate cards using the 100-point compatibility algorithm (Goals: 30%, Experience: 20%, Split: 20%, Timings: 20%, Location: 10%).
+  3. Card interactions support touch swipe gestures via `framer-motion` spring physics with interactive Recharts radar breakdown drawers.
+
+#### User Story 4.2: Mutual Match Flow & Real-Time Chat
+> **As a** user who swiped right on a prospective gym partner,  
+> **I want to** receive immediate feedback upon a mutual match,  
+> **So that** we can start coordinating sessions immediately.
+
+- **Acceptance Criteria**:
+  1. A mutual right-swipe triggers confetti animation (`canvas-confetti`) and mobile haptic feedback (`navigator.vibrate`).
+  2. Automatically instantiates a match channel in `gymbuddy_matches` targeting `auth.users(id)` (`authUserId`).
+  3. Real-time chat supports instant messaging, read receipts, and live session status indicators powered by Supabase Realtime WebSockets.
+  4. Mutual session logging updates `gymbuddy_session_logs`; the `shared_streak` counter increments by 1 only when both partners confirm attendance for the active week.
+
+---
+
+### Epic 5: Layered AI Assistance Architecture
+
+#### User Story 5.1: Real-Time Fitness Coaching via SSE
+> **As a** user with workout questions,  
+> **I want to** ask conversational fitness and technique questions,  
+> **So that** I receive instant, streamed coaching advice grounded in safe exercise science.
+
+- **Acceptance Criteria**:
+  1. Connects to `fitness-chat` Supabase Edge Function via Server-Sent Events (SSE).
+  2. First token latency remains under 1.5 seconds under standard network conditions.
+  3. System prompt strictly prevents harmful exercise advice and provides culturally relevant Indian nutrition guidance.
+
+#### User Story 5.2: In-App Codebase & Architecture Consultation
+> **As a** developer or curious user,  
+> **I want to** ask technical questions about FitBox features and implementation,  
+> **So that** I can understand how the application functions under the hood.
+
+- **Acceptance Criteria**:
+  1. Accessible globally via `ProjectAssistantChat` mounted in `App.tsx`.
+  2. Pulls up-to-date architectural knowledge generated from `projectKnowledge.ts`.
+  3. Returns formatted markdown answers with file paths, component references, and code syntax highlighting.

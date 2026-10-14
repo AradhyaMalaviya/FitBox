@@ -200,3 +200,61 @@ npm install
 
 Do not add npm packages to `requirements.txt`. If Python code is added later,
 only then should pip dependencies be listed in `requirements.txt`.
+
+
+---
+
+## Detailed Dependency Directory & Documentation Links
+
+The following table documents the essential dependencies driving FitBox, including pinned version ranges, architectural roles within the application, and links to official documentation for contributor reference:
+
+### Production Runtime Dependencies
+
+| Package Name | Version Range | Documentation | Role & Project Purpose |
+| :--- | :--- | :--- | :--- |
+| **`react`** | `^18.3.1` | [React Docs](https://react.dev/) | Core UI library powering component lifecycle, Hooks, and concurrent rendering. |
+| **`react-dom`** | `^18.3.1` | [ReactDOM Docs](https://react.dev/reference/react-dom) | DOM rendering engine for the React component hierarchy. |
+| **`react-router-dom`** | `^6.30.1` | [React Router Docs](https://reactrouter.com/en/v6) | Declarative client-side SPA routing across 17 distinct application routes. |
+| **`@tanstack/react-query`** | `^5.83.0` | [TanStack Query Docs](https://tanstack.com/query/latest) | Asynchronous server-state synchronization, background caching, and optimistic mutations. |
+| **`@supabase/supabase-js`** | `^2.58.0` | [Supabase JS Docs](https://supabase.com/docs/reference/javascript/introduction) | Official client for Supabase PostgreSQL, Authentication, Realtime WebSockets, and Storage. |
+| **`zod`** | `^3.25.76` | [Zod Docs](https://zod.dev/) | TypeScript-first schema declaration and runtime validation for auth and onboarding. |
+| **`react-hook-form`** | `^7.61.1` | [React Hook Form Docs](https://react-hook-form.com/) | High-performance, un-opinionated form state management with minimal re-renders. |
+| **`@hookform/resolvers`** | `^3.10.0` | [Resolvers Docs](https://github.com/react-hook-form/resolvers) | Seamless integration bridge connecting Zod validation schemas with React Hook Form. |
+| **`lucide-react`** | `^0.462.0` | [Lucide Docs](https://lucide.dev/) | Clean, customizable SVG icon library optimized for tree-shaking. |
+| **`recharts`** | `^2.15.4` | [Recharts Docs](https://recharts.org/) | Composable D3-based SVG charting library powering GymBuddy compatibility radar and macro graphs. |
+| **`vaul`** | `^0.9.9` | [Vaul Docs](https://vaul.emilkowal.ski/) | Smooth, drawer primitive for mobile fitness workouts and exercise selectors. |
+| **`sonner`** | `^1.7.4` | [Sonner Docs](https://sonner.emilkowal.ski/) | Opinionated toast notification component for user feedback and alert triggers. |
+| **`class-variance-authority`** | `^0.7.1` | [CVA Docs](https://cva.style/docs) | Utility for constructing typed, variant-driven UI component styles. |
+| **`clsx`** | `^2.1.1` | [clsx Docs](https://github.com/lukeed/clsx) | Fast utility for conditionally joining CSS class names together. |
+| **`tailwind-merge`** | `^2.6.0` | [tailwind-merge Docs](https://github.com/dcastil/tailwind-merge) | Utility to merge conflicting Tailwind CSS classes without stylesheet specificity bugs. |
+| **`date-fns`** | `^3.6.0` | [date-fns Docs](https://date-fns.org/) | Modern JavaScript date utility library for streak calculations and session scheduling. |
+| **`cmdk`** | `^1.1.1` | [cmdk Docs](https://cmdk.paco.me/) | Fast, accessible command menu primitive for exercise search and filter palettes. |
+| **`embla-carousel-react`** | `^8.6.0` | [Embla Docs](https://www.embla-carousel.com/) | Lightweight carousel library for onboarding inspiration carousels and exercise galleries. |
+
+### Radix UI Accessible Primitives (`@radix-ui/*`)
+
+FitBox utilizes unstyled, accessible UI primitives from Radix UI to construct shadcn/ui components:
+
+| Package | Version | Documentation | Purpose |
+| :--- | :--- | :--- | :--- |
+| `@radix-ui/react-dialog` | `^1.1.14` | [Dialog Docs](https://www.radix-ui.com/primitives/docs/components/dialog) | Accessible modal dialogs for exercise previews and gym partner overlays. |
+| `@radix-ui/react-dropdown-menu` | `^2.1.15` | [Dropdown Docs](https://www.radix-ui.com/primitives/docs/components/dropdown-menu) | User profile actions and contextual navigation menus. |
+| `@radix-ui/react-tabs` | `^1.1.12` | [Tabs Docs](https://www.radix-ui.com/primitives/docs/components/tabs) | Tabbed navigation for front/back body diagram and nutrition breakdown. |
+| `@radix-ui/react-slider` | `^1.3.5` | [Slider Docs](https://www.radix-ui.com/primitives/docs/components/slider) | GymBuddy radar search radius control (2km–30km). |
+| `@radix-ui/react-tooltip` | `^1.2.7` | [Tooltip Docs](https://www.radix-ui.com/primitives/docs/components/tooltip) | Hover descriptions for muscle anatomy and macro abbreviations. |
+| `@radix-ui/react-switch` | `^1.2.5` | [Switch Docs](https://www.radix-ui.com/primitives/docs/components/switch) | Toggles for GymBuddy discoverability and gender view selection. |
+| `@radix-ui/react-accordion` | `^1.2.11` | [Accordion Docs](https://www.radix-ui.com/primitives/docs/components/accordion) | Expandable FAQ items and workout exercise details. |
+| `@radix-ui/react-avatar` | `^1.1.10` | [Avatar Docs](https://www.radix-ui.com/primitives/docs/components/avatar) | User avatar thumbnails with fallback monogram generation. |
+| `@radix-ui/react-progress` | `^1.1.7` | [Progress Docs](https://www.radix-ui.com/primitives/docs/components/progress) | Workout session completion bars and daily macro targets. |
+
+### Development, Compilation & Quality Tooling
+
+| Tool Name | Version Range | Documentation | Purpose |
+| :--- | :--- | :--- | :--- |
+| **`vite`** | `^5.4.19` | [Vite Docs](https://vitejs.dev/) | High-speed frontend build tool and dev server featuring ESM and HMR. |
+| **`typescript`** | `^5.8.3` | [TypeScript Docs](https://www.typescriptlang.org/) | Static type checker providing robust interfaces across frontend and data models. |
+| **`@vitejs/plugin-react-swc`**| `^3.11.0` | [Plugin SWC Docs](https://github.com/vitejs/vite-plugin-react-swc) | Ultra-fast SWC compiler plugin for React Fast Refresh and JSX transformation. |
+| **`tailwindcss`** | `^3.4.17` | [Tailwind CSS Docs](https://tailwindcss.com/) | Utility-first CSS framework for mobile-first styling and theme tokens. |
+| **`postcss`** | `^8.5.6` | [PostCSS Docs](https://postcss.org/) | CSS transformation engine processing Tailwind and Autoprefixer rules. |
+| **`eslint`** | `^9.32.0` | [ESLint Docs](https://eslint.org/) | Pluggable JavaScript and TypeScript linting utility. |
+| **`typescript-eslint`** | `^8.38.0` | [TS ESLint Docs](https://typescript-eslint.io/) | Tooling allowing ESLint to analyze and enforce TypeScript code standards. |

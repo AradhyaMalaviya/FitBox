@@ -1,16 +1,12 @@
 import { Link } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { MuscleMapContainer } from "@/components/muscle-map";
-import { GymTrainerChat } from "@/components/GymTrainerChat";
 import { exercises } from "@/data/exercises";
 
 const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-
-      {/* AI Gym Trainer Chatbot (mock) */}
-      <GymTrainerChat />
 
       {/* Interactive Muscle Map - Main Feature */}
       <section className="pb-4 pt-2 px-4">
@@ -119,6 +115,139 @@ const Index = () => {
                 </svg>
               </div>
             </Link>
+
+            {/* MuscleWiki Workout Generator */}
+            <Link
+              to="/generator"
+              className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-amber-500/20 to-amber-500/5 border border-amber-500/30 p-8 hover:shadow-xl hover:shadow-amber-500/20 transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+            >
+              <div className="relative z-10">
+                <div className="text-5xl mb-4">⚡</div>
+                <h3 className="text-2xl font-bold text-foreground mb-2">Workout Generator</h3>
+                <p className="text-muted-foreground">
+                  Build custom routines by selecting muscles & equipment
+                </p>
+              </div>
+              <div className="absolute top-4 right-4 text-amber-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </Link>
+
+            {/* MuscleWiki Calculators & 1RM Suite */}
+            <Link
+              to="/tools"
+              className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-purple-500/20 to-purple-500/5 border border-purple-500/30 p-8 hover:shadow-xl hover:shadow-purple-500/20 transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+            >
+              <div className="relative z-10">
+                <div className="text-5xl mb-4">🧮</div>
+                <h3 className="text-2xl font-bold text-foreground mb-2">Fitness Calculators</h3>
+                <p className="text-muted-foreground">
+                  1RM, Olympic plate loader, TDEE, & macro meal splits
+                </p>
+              </div>
+              <div className="absolute top-4 right-4 text-purple-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </Link>
+
+            {/* MuscleWiki Stretches & Mobility */}
+            <Link
+              to="/stretches"
+              className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-teal-500/20 to-teal-500/5 border border-teal-500/30 p-8 hover:shadow-xl hover:shadow-teal-500/20 transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+            >
+              <div className="relative z-10">
+                <div className="text-5xl mb-4">🧘</div>
+                <h3 className="text-2xl font-bold text-foreground mb-2">Stretches & Mobility</h3>
+                <p className="text-muted-foreground">
+                  32 targeted stretches across all major muscle groups
+                </p>
+              </div>
+              <div className="absolute top-4 right-4 text-teal-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </Link>
+
+            {/* MuscleWiki Weekly Split Builder */}
+            <Link
+              to="/split-builder"
+              className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-500/20 to-blue-500/5 border border-blue-500/30 p-8 hover:shadow-xl hover:shadow-blue-500/20 transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+            >
+              <div className="relative z-10">
+                <div className="text-5xl mb-4">📅</div>
+                <h3 className="text-2xl font-bold text-foreground mb-2">Weekly Split Builder</h3>
+                <p className="text-muted-foreground">
+                  PPL, Upper/Lower, Full Body splits & weekly volume audit
+                </p>
+              </div>
+              <div className="absolute top-4 right-4 text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </Link>
+
+            {/* MuscleWiki Curated Workouts */}
+            <Link
+              to="/workouts"
+              className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-red-500/20 to-red-500/5 border border-red-500/30 p-8 hover:shadow-xl hover:shadow-red-500/20 transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+            >
+              <div className="relative z-10">
+                <div className="text-5xl mb-4">🏋️</div>
+                <h3 className="text-2xl font-bold text-foreground mb-2">Workout Library</h3>
+                <p className="text-muted-foreground">
+                  Curated single-session strength, hypertrophy & HIIT protocols
+                </p>
+              </div>
+              <div className="absolute top-4 right-4 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </Link>
+
+            {/* MuscleWiki Structured Routine Library */}
+            <Link
+              to="/routines"
+              className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-indigo-500/20 to-indigo-500/5 border border-indigo-500/30 p-8 hover:shadow-xl hover:shadow-indigo-500/20 transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+            >
+              <div className="relative z-10">
+                <div className="text-5xl mb-4">🗓️</div>
+                <h3 className="text-2xl font-bold text-foreground mb-2">Routine Library</h3>
+                <p className="text-muted-foreground">
+                  3 to 6-day periodized programs with microcycle schedules
+                </p>
+              </div>
+              <div className="absolute top-4 right-4 text-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </Link>
+
+            {/* MuscleWiki Fitness Knowledge & Articles */}
+            <Link
+              to="/articles"
+              className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 border border-cyan-500/30 p-8 hover:shadow-xl hover:shadow-cyan-500/20 transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+            >
+              <div className="relative z-10">
+                <div className="text-5xl mb-4">📖</div>
+                <h3 className="text-2xl font-bold text-foreground mb-2">Fitness Articles</h3>
+                <p className="text-muted-foreground">
+                  Evidence-based biomechanics, nutrition & hypertrophy guides
+                </p>
+              </div>
+              <div className="absolute top-4 right-4 text-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </Link>
           </div>
         </div>
       </section>
@@ -132,7 +261,7 @@ const Index = () => {
               <div className="text-sm md:text-base text-muted-foreground">Exercises</div>
             </div>
             <div className="space-y-2">
-              <div className="text-3xl md:text-4xl font-bold text-secondary">6</div>
+              <div className="text-3xl md:text-4xl font-bold text-secondary">{new Set(exercises.map(e => e.muscleGroup)).size}</div>
               <div className="text-sm md:text-base text-muted-foreground">Muscle Groups</div>
             </div>
             <div className="space-y-2">

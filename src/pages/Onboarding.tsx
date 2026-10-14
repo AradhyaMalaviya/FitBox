@@ -286,12 +286,25 @@ const Onboarding = () => {
 
       if (user && !user.isGuest) {
         // Logged-in user: persist to the profile row.
-        // `preferences` is typed as `Json` (a recursive union) in Database, but our
-        // `UserPreferencePayload` is a plain interface with named keys. JSON-wise
-        // the payload is valid; cast at the boundary so the typed client accepts it.
+        // First fetch existing preferences so we merge, not overwrite (preserves
+        // nutrition questionnaire data and other custom prefs).
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("preferences")
+          .eq("auth_user_id", user.authUserId)
+          .maybeSingle();
+
+        const currentPrefs = (profile?.preferences as Record<string, unknown>) || {};
+
         const { error: updateError } = await supabase
           .from("profiles")
-          .update({ preferences: payload as unknown as Database["public"]["Tables"]["profiles"]["Update"]["preferences"] })
+          .update({
+            preferences: {
+              ...currentPrefs,
+              ...payload,
+              onboardingUpdatedAt: new Date().toISOString(),
+            } as unknown as Database["public"]["Tables"]["profiles"]["Update"]["preferences"]
+          })
           .eq("auth_user_id", user.authUserId);
 
         if (updateError) {

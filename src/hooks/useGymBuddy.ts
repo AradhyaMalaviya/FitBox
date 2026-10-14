@@ -3,6 +3,16 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { GymBuddyProfile, GymBuddyCandidate } from '@/lib/gymBuddyTypes';
 import { calculateCompatibilityScore } from '@/lib/compatibilityScore';
+import {
+  cacheLocalMatches,
+  cacheLocalProfiles,
+  ensureLocalProfile,
+  getLocalCandidates,
+  getLocalProfile,
+  isOfflineError,
+  recordLocalSwipe,
+  upsertLocalProfile,
+} from '@/lib/mockDatabase';
 
 export function useGymBuddy() {
   const { user, authUserId } = useAuth();
@@ -14,12 +24,20 @@ export function useGymBuddy() {
   const [error, setError] = useState<string | null>(null);
 
   const fetchProfile = useCallback(async () => {
-    if (!effectiveUserId || isGuest) {
+    if (!effectiveUserId) {
+      setProfile(null);
+      setLoading(false);
+      return;
+    }
+    if (isGuest) {
+      setProfile(ensureLocalProfile(effectiveUserId, user?.username || 'FitBox Guest'));
+      setError(null);
       setLoading(false);
       return;
     }
     try {
       setLoading(true);
+      setError(null);
       const { data, error } = await supabase
         .from('gymbuddy_profiles')
         .select('*')
@@ -27,33 +45,80 @@ export function useGymBuddy() {
         .maybeSingle();
 
       if (error) throw error;
-      setProfile(data as GymBuddyProfile | null);
+      const nextProfile = data as GymBuddyProfile | null;
+      if (nextProfile) {
+        upsertLocalProfile(nextProfile);
+        setProfile(nextProfile);
+      } else {
+        const cachedProfile = getLocalProfile(effectiveUserId);
+        if (!cachedProfile) {
+          setProfile(null);
+          return;
+        }
+        const { data: syncedProfile, error: syncError } = await supabase
+          .from('gymbuddy_profiles')
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .upsert(cachedProfile as any)
+          .select()
+          .maybeSingle();
+        if (syncError) {
+          if (!isOfflineError(syncError)) throw syncError;
+          setProfile(cachedProfile);
+          return;
+        }
+        const savedProfile = (syncedProfile as GymBuddyProfile | null) || cachedProfile;
+        upsertLocalProfile(savedProfile);
+        setProfile(savedProfile);
+      }
     } catch (err: unknown) {
+      if (isOfflineError(err)) {
+        setProfile(getLocalProfile(effectiveUserId) || ensureLocalProfile(effectiveUserId, user?.username || 'FitBox Guest'));
+        setError(null);
+        return;
+      }
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
-  }, [effectiveUserId, isGuest]);
+  }, [effectiveUserId, isGuest, user?.username]);
 
   useEffect(() => {
     fetchProfile();
   }, [fetchProfile]);
 
   const saveProfile = async (updates: Partial<GymBuddyProfile>) => {
-    if (isGuest) throw new Error('Sign up to save your GymBuddy profile!');
     if (!effectiveUserId) throw new Error('No authenticated user found');
+    const nextProfile = {
+      ...(profile || ensureLocalProfile(effectiveUserId, user?.username || 'FitBox Guest')),
+      ...updates,
+      id: effectiveUserId,
+      updated_at: new Date().toISOString(),
+    } as GymBuddyProfile;
+    if (isGuest) {
+      upsertLocalProfile(nextProfile);
+      setProfile(nextProfile);
+      return nextProfile;
+    }
     try {
       const { data, error } = await supabase
         .from('gymbuddy_profiles')
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .upsert({ id: effectiveUserId, ...updates } as any)
+        .upsert(nextProfile as any)
         .select()
         .single();
 
       if (error) throw error;
+      upsertLocalProfile(data as GymBuddyProfile);
       setProfile(data as GymBuddyProfile);
-      return data;
+      setError(null);
+      return data as GymBuddyProfile;
     } catch (err: unknown) {
+      if (isOfflineError(err)) {
+        upsertLocalProfile(nextProfile);
+        setProfile(nextProfile);
+        setError(null);
+        return nextProfile;
+      }
       const msg = err instanceof Error ? err.message : String(err);
       setError(msg);
       if (msg === 'Failed to fetch') {
@@ -63,9 +128,9 @@ export function useGymBuddy() {
     }
   };
 
-  const getCandidates = async (): Promise<GymBuddyCandidate[]> => {
-    if (isGuest) return [];
+  const getCandidates = useCallback(async (): Promise<GymBuddyCandidate[]> => {
     if (!effectiveUserId || !profile) return [];
+    if (isGuest) return getLocalCandidates(effectiveUserId, profile);
     
     try {
       let filteredCandidates: GymBuddyProfile[] = [];
@@ -112,19 +177,25 @@ export function useGymBuddy() {
         };
       });
 
+      cacheLocalProfiles(filteredCandidates);
+
       // 4. Sort by score descending
       scoredCandidates.sort((a, b) => (b.compatibility_score || 0) - (a.compatibility_score || 0));
 
       return scoredCandidates;
     } catch (err: unknown) {
+      if (isOfflineError(err)) {
+        setError(null);
+        return getLocalCandidates(effectiveUserId, profile);
+      }
       console.error('Error fetching candidates:', err);
       return [];
     }
-  };
+  }, [effectiveUserId, isGuest, profile]);
 
   const swipe = async (targetId: string, direction: 'right' | 'left'): Promise<{ match: boolean }> => {
-    if (isGuest) throw new Error('Sign up to use GymBuddy matching!');
     if (!effectiveUserId) throw new Error('No authenticated user found');
+    if (isGuest) return recordLocalSwipe(effectiveUserId, targetId, direction);
     
     try {
       // 1. Record the swipe
@@ -140,37 +211,56 @@ export function useGymBuddy() {
 
       // 2. Check for match if swiped right
       if (direction === 'right') {
-        const { data: mutualSwipe } = await supabase
+        const { data: mutualSwipe, error: mutualError } = await supabase
           .from('gymbuddy_swipes')
           .select('*')
           .eq('swiper_id', targetId)
           .eq('target_id', effectiveUserId)
           .eq('direction', 'right')
           .maybeSingle();
+        if (mutualError) throw mutualError;
 
         if (mutualSwipe) {
           // It's a match!
           const user1_id = effectiveUserId < targetId ? effectiveUserId : targetId;
           const user2_id = effectiveUserId < targetId ? targetId : effectiveUserId;
 
-          const { error: matchError } = await supabase
+          const { data: createdMatch, error: matchError } = await supabase
             .from('gymbuddy_matches')
             .insert({
               user1_id,
               user2_id,
               shared_streak: 0
-            });
+            })
+            .select()
+            .maybeSingle();
 
           if (matchError && matchError.code !== '23505') {
             throw matchError;
           }
-          
+
+          if (createdMatch?.id && createdMatch.user1_id && createdMatch.user2_id) {
+            cacheLocalMatches([{
+              id: createdMatch.id,
+              user1_id: createdMatch.user1_id,
+              user2_id: createdMatch.user2_id,
+              matched_at: createdMatch.matched_at ?? undefined,
+              shared_streak: createdMatch.shared_streak ?? 0,
+              last_session_logged: createdMatch.last_session_logged ?? undefined,
+            }]);
+          }
+          recordLocalSwipe(effectiveUserId, targetId, direction);
           return { match: true };
         }
       }
 
+      recordLocalSwipe(effectiveUserId, targetId, direction);
       return { match: false };
     } catch (err: unknown) {
+      if (isOfflineError(err)) {
+        setError(null);
+        return recordLocalSwipe(effectiveUserId, targetId, direction);
+      }
       console.error('Error swiping:', err);
       const msg = err instanceof Error ? err.message : String(err);
       if (msg === 'Failed to fetch') {

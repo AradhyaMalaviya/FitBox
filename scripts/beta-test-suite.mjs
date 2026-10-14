@@ -58,8 +58,8 @@ await runTest("Auth", "Auth UI: password eye visibility toggles & direct sign-in
 });
 
 await runTest("Auth", "Password Recovery: URL query and hash preservation & canonical resetPasswordSchema", () => {
-  const appFile = fs.readFileSync(path.join(rootDir, "src/App.tsx"), "utf8");
-  assert(appFile.includes("window.location.search") && appFile.includes("window.location.hash"), "URL search and hash preserved on recovery redirect");
+  const protectedRouteFile = fs.readFileSync(path.join(rootDir, "src/components/ProtectedRoute.tsx"), "utf8");
+  assert(protectedRouteFile.includes("window.location.search") && protectedRouteFile.includes("window.location.hash"), "URL search and hash preserved on recovery redirect");
   const resetFile = fs.readFileSync(path.join(rootDir, "src/pages/ResetPassword.tsx"), "utf8");
   assert(resetFile.includes("resetPasswordSchema"), "ResetPassword uses unified validation schema");
 });
@@ -266,9 +266,11 @@ await runTest("Database", "Migrations: user-media storage bucket, REPLICA IDENTI
   assert(mig.includes("idx_gymbuddy_swipes_swiper_target"), "Composite index on swipes created");
 });
 
-await runTest("Database", "Dead Code Removal: verified orphaned FitnessChat.tsx is deleted", () => {
-  const legacyChatPath = path.join(rootDir, "src/components/FitnessChat.tsx");
-  assert(!fs.existsSync(legacyChatPath), "Orphaned FitnessChat.tsx successfully removed");
+await runTest("AI", "Dual AI Coaching: FitnessChat component active and mounted in App", () => {
+  const chatPath = path.join(rootDir, "src/components/FitnessChat.tsx");
+  assert(fs.existsSync(chatPath), "Dual AI Coach FitnessChat.tsx exists");
+  const app = fs.readFileSync(path.join(rootDir, "src/App.tsx"), "utf8");
+  assert(app.includes("<FitnessChat />"), "FitnessChat mounted globally in App.tsx");
 });
 
 await runTest("Database", "Migrations: non-recursive RLS policy via SECURITY DEFINER function", () => {

@@ -30,8 +30,11 @@ export const ExerciseCard = ({ exercise }: ExerciseCardProps) => {
       className="group overflow-hidden border-border/50 bg-card/80 backdrop-blur-sm transition-all duration-300 hover:border-primary/50 hover:bg-card hover:shadow-lg hover:shadow-primary/20 hover:-translate-y-1 animate-slide-up cursor-pointer"
     >
       {exercise.video && (
-        <div className="relative w-full aspect-video bg-black/20">
-          <ExercisePoster exercise={exercise} />
+        <div className="relative w-full aspect-video bg-black/20 overflow-hidden">
+          <ExercisePoster
+            exercise={exercise}
+            className="transition-transform duration-500 ease-out group-hover:scale-105"
+          />
         </div>
       )}
       <div className="p-6 space-y-4">

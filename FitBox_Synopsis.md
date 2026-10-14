@@ -13,7 +13,7 @@
 | Styling | Tailwind CSS + shadcn/ui component library |
 | State Management | React Context API (`AuthContext`, `WorkoutContext`, `GymBuddyNotificationContext`) |
 | Form Validation | Zod schema validation (`authSchemas.ts`, `onboarding.ts`) |
-| Routing | React Router DOM v6 (17 routes, protected navigation) |
+| Routing | React Router DOM v7 (17 routes, protected navigation) |
 | Backend-as-a-Service | Supabase (PostgreSQL, Auth, Edge Functions, Row Level Security) |
 | AI/ML — Fitness | Google Gemini 2.5 Flash Lite via Lovable Gateway (`fitness-chat` Edge Function, SSE) |
 | AI/ML — Project | Google Gemini 2.5 Flash Lite via direct `project-assistant` Edge Function |
@@ -227,3 +227,49 @@ The database consists of **14 migrations** defining profiles, workout sessions, 
 ---
 
 *End of Comprehensive Project Synopsis.*
+
+
+---
+
+## 11. Target Audience Analysis & Strategic Needs Fulfillment
+
+FitBox is architected to address distinct pain points across modern fitness culture, with specialized focus on the Indian subcontinent and international fitness enthusiasts seeking structured personalization and community accountability.
+
+### 11.1 Target Demographics & Core Personas
+
+1. **The Modern Indian Gym-Goer & Fitness Enthusiast**:
+   - **Characteristics**: Trains in commercial, university, or local gyms across metros and Tier 1/2 cities; consumes traditional regional diets (North, South, East, West Indian cuisines).
+   - **Unmet Need**: Mainstream international fitness apps rely exclusively on Western dietary templates (avocado, salmon, turkey, quinoa) and fail to accurately evaluate vegetarian staples such as paneer, sattu, soya chunks, dal-chawal, or curd.
+   - **FitBox Solution**: The 150+ item Indian Food Database combined with the Mifflin-St Jeor TDEE calculator and the 1:1 Vegetarian Protein Swapping Engine provides culturally native, cost-conscious nutrition planning in Indian Rupees (₹).
+
+2. **The Solo Lifter Seeking Motivation & Accountability**:
+   - **Characteristics**: Struggles with workout consistency, plateaus due to missing training partners, or feels intimidated training alone.
+   - **Unmet Need**: Social networks like Instagram or generic chat apps lack structured gym scheduling, exercise alignment, and mutual accountability metrics.
+   - **FitBox Solution**: The GymBuddy matching engine pairs lifters based on a 100-point algorithm analyzing split synergy, training timing, experience level, and gym location, reinforced by gamified Shared Weekly Streaks that require mutual logging.
+
+3. **Beginner to Intermediate Trainees Confused by Anatomy & Form**:
+   - **Characteristics**: Desires to build muscle or lose fat effectively without injury, but lacks deep biomechanics knowledge.
+   - **Unmet Need**: Exercise databases that present text-heavy lists without visual anatomical clarity or guidance on which muscle groups are targeted.
+   - **FitBox Solution**: The Interactive SVG Body Diagram allows one-tap visual filtering of 19 muscle groups across anterior and posterior views, mapped to 50+ curated exercise demonstrations with embedded video players and form pointers.
+
+4. **Data-Driven Athletes Demanding Low-Friction Tracking**:
+   - **Characteristics**: Logs sets, weights, and reps during fast-paced workouts; cannot afford slow UI rendering or accidental data loss when switching apps.
+   - **Unmet Need**: Clunky multi-screen workout apps with sluggish form validation that lose progress when the phone screen locks.
+   - **FitBox Solution**: A lightweight React 18 SPA powered by `WorkoutContext` with automatic rest timers, optimistic UI updates, and refresh-proof local state persistence.
+
+### 11.2 Strategic Needs Fulfillment Matrix
+
+| User Need / Frustration | Conventional Fitness App Experience | FitBox Architectural Solution |
+| :--- | :--- | :--- |
+| **Vegetarian High-Protein Diet** | Requires tedious custom recipe creation; flags Indian vegetarian food as deficient. | Built-in macro profiles for paneer, soya chunks, sattu, chana, and bespoke 1:1 vegetarian protein swaps. |
+| **Finding Compatible Gym Partners** | Awkward in-person conversations or fragmented WhatsApp groups. | Conic Radar Scanner with 100-point compatibility scoring, split alignment, and mutual swipe confirmations. |
+| **Visual Exercise Discovery** | Alphabetical or keyword-only lists requiring anatomical jargon. | Clickable front/back SVG anatomy map with natural gym language support ("pecs", "quads", "traps"). |
+| **Real-Time Coaching Advice** | Expensive personal trainers ($50–$100/hr) or static generic FAQ sheets. | Cloud Gemini 2.5 Flash Lite assistant streaming responses via Server-Sent Events with exercise grounding. |
+| **Uninterrupted Mobile Logging** | Loss of active workout data on phone screen timeout or app refresh. | Real-time session synchronization backed by TanStack Query and resilient local state hydration. |
+
+### 11.3 Ergonomics, Usability & Cross-Device Strategy
+
+FitBox adopts an ergonomics-first design language tailored for one-handed smartphone use on the gym floor:
+- **Thumb-Zone Navigation**: Bottom tab bar allows seamless one-handed switching between Dashboard, Muscle Map, Workouts, Nutrition, and GymBuddy.
+- **High-Contrast Dark Mode Aesthetics**: Engineered for high-glare gym lighting environments with clear visual hierarchy, accessible Radix UI primitives, and animated state transitions.
+- **Progressive Hydration & Guest Support**: Prospective users can immediately launch active workouts or test the interactive anatomy diagram without mandatory initial authentication barriers.

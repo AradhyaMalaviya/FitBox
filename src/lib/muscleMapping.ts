@@ -860,3 +860,7 @@ export function normalizeMuscleSlug(slug: string): string {
   const lower = slug.toLowerCase().replace(/_/g, "-");
   return CANONICAL_SLUG_MAP[lower] || CANONICAL_SLUG_MAP[slug.toLowerCase()] || lower;
 }
+
+export const MUSCLE_SLUGS = Object.keys(MUSCLE_MAPPINGS);
+export const getMuscleDisplayName = getDisplayNameFromDiagramId;
+

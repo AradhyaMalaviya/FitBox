@@ -12,6 +12,14 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, MessageCircle, MapPin, Calendar, Flame, Dumbbell, ArrowLeft, Users, Settings } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { GymBuddySessionModal } from "@/components/gymbuddy/GymBuddySessionModal";
+import {
+  cacheLocalMatches,
+  cacheLocalProfiles,
+  getLocalMatches,
+  getLocalMessages,
+  getLocalProfiles,
+  isOfflineError,
+} from "@/lib/mockDatabase";
 
 type MatchWithPartner = GymBuddyMatch & {
   partner: GymBuddyProfile;
@@ -28,8 +36,28 @@ export default function GymBuddyMatches() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  const getSavedMatches = useCallback((): MatchWithPartner[] => {
+    if (!activeAuthUserId) return [];
+    const profiles = new Map(getLocalProfiles().map((profile) => [profile.id, profile]));
+    return getLocalMatches()
+      .filter((match) => match.user1_id === activeAuthUserId || match.user2_id === activeAuthUserId)
+      .flatMap((match) => {
+        const partnerId = match.user1_id === activeAuthUserId ? match.user2_id : match.user1_id;
+        const partner = profiles.get(partnerId);
+        if (!partner) return [];
+        const unreadCount = getLocalMessages(match.id).filter((message) => message.sender_id !== activeAuthUserId && !message.is_read).length;
+        return [{ ...match, partner, unreadCount }];
+      });
+  }, [activeAuthUserId]);
+
   const loadMatches = useCallback(async () => {
     if (!activeAuthUserId) {
+      setLoading(false);
+      return;
+    }
+
+    if (user?.isGuest) {
+      setMatches(getSavedMatches());
       setLoading(false);
       return;
     }
@@ -47,7 +75,7 @@ export default function GymBuddyMatches() {
       if (matchError) throw matchError;
 
       if (!matchData || matchData.length === 0) {
-        setMatches([]);
+        setMatches(getSavedMatches());
         return;
       }
 
@@ -95,8 +123,14 @@ export default function GymBuddyMatches() {
         } as MatchWithPartner;
       }).filter(m => m.partner);
 
+      cacheLocalMatches(validMatches);
+      cacheLocalProfiles((profileData || []) as GymBuddyProfile[]);
       setMatches(combined);
     } catch (error: unknown) {
+      if (isOfflineError(error)) {
+        setMatches(getSavedMatches());
+        return;
+      }
       toast({
         title: "Error loading matches",
         description: error instanceof Error ? error.message : String(error),
@@ -105,7 +139,7 @@ export default function GymBuddyMatches() {
     } finally {
       setLoading(false);
     }
-  }, [activeAuthUserId, toast]);
+  }, [activeAuthUserId, getSavedMatches, toast, user?.isGuest]);
 
   useEffect(() => {
     if (activeAuthUserId) {

@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Body, { ExtendedBodyPart, Slug } from "react-muscle-highlighter";
 import {
   MUSCLE_MAPPINGS,
@@ -10,6 +10,7 @@ import {
   type MuscleMapping,
 } from "@/lib/muscleMapping";
 import { exercises, type Exercise } from "@/data/exercises";
+import { getStretchesForMuscleGroup } from "@/data/stretches";
 import { ExerciseVideoPlayer } from "@/components/exercise/ExerciseVideoPlayer";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import {
@@ -199,12 +200,15 @@ const EquipmentIcon: React.FC<{ id: string }> = ({ id }) => {
 
 export const InteractiveBodyDiagram: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // ─── STATE (Matching MuscleWiki Reference Layout) ───
+  const urlMuscle = searchParams.get("muscle");
+  const [bodyView, setBodyView] = useState<"dual" | "front" | "back">("dual");
   const [currentGender, setCurrentGender] = useState<"male" | "female">("male");
   const [advancedMode, setAdvancedMode] = useState<boolean>(false);
   const [jointsMode, setJointsMode] = useState<boolean>(false);
-  const [selectedMuscle, setSelectedMuscle] = useState<string | null>(null);
+  const [selectedMuscle, setSelectedMuscle] = useState<string | null>(urlMuscle || null);
   const [hoveredMuscle, setHoveredMuscle] = useState<string | null>(null);
   const [selectedEquipment, setSelectedEquipment] = useState<string[]>(["featured"]);
   const [isEquipmentOpen, setIsEquipmentOpen] = useState<boolean>(true);
@@ -212,6 +216,12 @@ export const InteractiveBodyDiagram: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [zoomLevel, setZoomLevel] = useState(1);
   const [previewExercise, setPreviewExercise] = useState<Exercise | null>(null);
+
+  useEffect(() => {
+    if (urlMuscle && urlMuscle !== selectedMuscle) {
+      setSelectedMuscle(urlMuscle);
+    }
+  }, [urlMuscle, selectedMuscle]);
 
   // Floating Cursor Tooltip State
   const [tooltip, setTooltip] = useState<{
@@ -358,8 +368,20 @@ export const InteractiveBodyDiagram: React.FC = () => {
   // ─── CLICK & HOVER EVENT HANDLERS ───
   const handleMuscleClick = useCallback((slug?: string) => {
     if (!slug) return;
-    setSelectedMuscle((prev) => (prev === slug ? null : slug));
-  }, []);
+    setSelectedMuscle((prev) => {
+      const next = prev === slug ? null : slug;
+      setSearchParams((params) => {
+        const nextParams = new URLSearchParams(params);
+        if (next) {
+          nextParams.set("muscle", next);
+        } else {
+          nextParams.delete("muscle");
+        }
+        return nextParams;
+      }, { replace: true });
+      return next;
+    });
+  }, [setSearchParams]);
 
   const handleStageMouseOver = useCallback((e: React.MouseEvent) => {
     const target = e.target as SVGElement;
@@ -395,9 +417,29 @@ export const InteractiveBodyDiagram: React.FC = () => {
     return { allExercises: res.exercises, mapping: res.mapping };
   }, [selectedMuscle]);
 
-  // Filter exercises according to checked equipment checklist
-  const filteredExercises = useMemo(() => {
-    if (!selectedMuscle || allExercises.length === 0) return [];
+  // Filter exercises according to checked equipment checklist (including Stretches)
+  const filteredExercises: Exercise[] = useMemo(() => {
+    if (!selectedMuscle || !mapping) return [];
+
+    const isStretchesSelected = selectedEquipment.includes("stretches");
+    const matchingStretches: Exercise[] = isStretchesSelected
+      ? getStretchesForMuscleGroup(mapping.exerciseGroup).map((s) => ({
+          id: s.id,
+          name: s.name,
+          muscleGroup: s.muscleGroup,
+          difficulty: s.difficulty,
+          duration: s.holdDuration,
+          equipment: "Stretches",
+          description: s.description,
+          poster: undefined,
+          video: undefined,
+        }))
+      : [];
+
+    if (selectedEquipment.length === 1 && isStretchesSelected) {
+      return matchingStretches;
+    }
+
     if (selectedEquipment.includes("featured")) {
       return allExercises;
     }
@@ -411,11 +453,15 @@ export const InteractiveBodyDiagram: React.FC = () => {
 
     if (activeKeywords.length === 0) return allExercises;
 
-    return allExercises.filter((ex) => {
+    const matchedFromExercises = allExercises.filter((ex) => {
       const eqLower = (ex.equipment || "").toLowerCase();
       return activeKeywords.some((kw) => eqLower.includes(kw));
     });
-  }, [selectedMuscle, allExercises, selectedEquipment]);
+
+    return isStretchesSelected
+      ? [...matchedFromExercises, ...matchingStretches]
+      : matchedFromExercises;
+  }, [selectedMuscle, allExercises, selectedEquipment, mapping]);
 
   // Hovered muscle details for floating cursor badge
   const hoveredInfo = useMemo(() => {
@@ -438,9 +484,74 @@ export const InteractiveBodyDiagram: React.FC = () => {
         <div className="mw-diagram-stage">
           {/* Quick Header / Stage Info */}
           <div className="mw-stage-header">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="mw-brand-title">MuscleWiki Interactive Stage</span>
               <span className="mw-brand-pill">Vector Dual-View</span>
+
+              {/* Accessible Non-Visual Keyboard Muscle Selector (WCAG 2.1 AA) */}
+              <div className="relative">
+                <label htmlFor="mw-accessible-muscle-select" className="sr-only">
+                  Select muscle group (accessible screen reader & keyboard alternative)
+                </label>
+                <select
+                  id="mw-accessible-muscle-select"
+                  aria-label="Select muscle group (accessible keyboard alternative)"
+                  value={selectedMuscle || ""}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val) handleMuscleClick(val);
+                    else setSelectedMuscle(null);
+                  }}
+                  className="bg-slate-900 border border-slate-700 hover:border-slate-500 text-slate-200 text-xs rounded-lg px-2.5 py-1 focus:ring-2 focus:ring-cyan-400 focus:outline-none transition-all cursor-pointer"
+                >
+                  <option value="">🎯 Quick Muscle Select (A11y)...</option>
+                  {Object.entries(MUSCLE_MAPPINGS).map(([slug, m]) => (
+                    <option key={slug} value={slug}>
+                      {m.displayName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Front / Back / Both View Toggle */}
+            <div className="flex items-center gap-1 bg-slate-900 border border-slate-700 rounded-lg p-0.5 text-xs">
+              <button
+                type="button"
+                onClick={() => setBodyView("dual")}
+                className={`px-2 py-0.5 rounded transition-all ${
+                  bodyView === "dual"
+                    ? "bg-cyan-500 text-slate-950 font-bold"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+                title="Show both Anterior and Posterior models"
+              >
+                Both
+              </button>
+              <button
+                type="button"
+                onClick={() => setBodyView("front")}
+                className={`px-2 py-0.5 rounded transition-all ${
+                  bodyView === "front"
+                    ? "bg-cyan-500 text-slate-950 font-bold"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+                title="Show Front (Anterior) model only"
+              >
+                Front
+              </button>
+              <button
+                type="button"
+                onClick={() => setBodyView("back")}
+                className={`px-2 py-0.5 rounded transition-all ${
+                  bodyView === "back"
+                    ? "bg-cyan-500 text-slate-950 font-bold"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+                title="Show Back (Posterior) model only"
+              >
+                Back
+              </button>
             </div>
 
             {/* Quick Zoom & Reset Controls */}
@@ -474,52 +585,77 @@ export const InteractiveBodyDiagram: React.FC = () => {
             </div>
           </div>
 
-          {/* Side-by-Side Anatomical SVGs Canvas */}
-          <div
-            className="mw-canvas-wrapper"
-            style={{ transform: `scale(${zoomLevel})` }}
-            onMouseOver={handleStageMouseOver}
-            onMouseMove={handleStageMouseMove}
-            onMouseLeave={handleStageMouseLeave}
+          {/* Anatomical SVGs Canvas with ErrorBoundary */}
+          <ErrorBoundary
+            fallback={
+              <div className="p-8 text-center bg-slate-900 border border-slate-700 rounded-xl my-4">
+                <p className="text-slate-200 font-bold mb-2">Interactive Anatomical Diagram</p>
+                <p className="text-xs text-slate-400 mb-4">Select a muscle group directly using the quick selector or shortcuts:</p>
+                <div className="flex flex-wrap justify-center gap-2 max-w-lg mx-auto">
+                  {Object.entries(MUSCLE_MAPPINGS).slice(0, 12).map(([slug, m]) => (
+                    <button
+                      key={slug}
+                      type="button"
+                      onClick={() => handleMuscleClick(slug)}
+                      className="px-2.5 py-1 text-xs rounded bg-slate-800 hover:bg-cyan-600 text-slate-200 border border-slate-700"
+                    >
+                      {m.displayName}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            }
           >
-            {/* Anterior (Front) Body */}
-            <div className="mw-figure-card">
-              <span className="mw-figure-caption">Anterior (Front)</span>
-              <div className="mw-body-svg-box">
-                <Body
-                  side="front"
-                  gender={currentGender}
-                  data={bodyData}
-                  scale={1.35}
-                  border="#ffffff"
-                  defaultFill="#4d515a"
-                  defaultStroke="#ffffff"
-                  defaultStrokeWidth={1.2}
-                  disabledParts={disabledParts}
-                  onBodyPartPress={(b) => handleMuscleClick(b.slug)}
-                />
-              </div>
-            </div>
+            <div
+              className="mw-canvas-wrapper"
+              style={{ transform: `scale(${zoomLevel})` }}
+              onMouseOver={handleStageMouseOver}
+              onMouseMove={handleStageMouseMove}
+              onMouseLeave={handleStageMouseLeave}
+            >
+              {/* Anterior (Front) Body */}
+              {(bodyView === "dual" || bodyView === "front") && (
+                <div className="mw-figure-card">
+                  <span className="mw-figure-caption">Anterior (Front)</span>
+                  <div className="mw-body-svg-box">
+                    <Body
+                      side="front"
+                      gender={currentGender}
+                      data={bodyData}
+                      scale={bodyView === "front" ? 1.6 : 1.35}
+                      border="#ffffff"
+                      defaultFill="#4d515a"
+                      defaultStroke="#ffffff"
+                      defaultStrokeWidth={1.2}
+                      disabledParts={disabledParts}
+                      onBodyPartPress={(b) => handleMuscleClick(b.slug)}
+                    />
+                  </div>
+                </div>
+              )}
 
-            {/* Posterior (Back) Body */}
-            <div className="mw-figure-card">
-              <span className="mw-figure-caption">Posterior (Back)</span>
-              <div className="mw-body-svg-box">
-                <Body
-                  side="back"
-                  gender={currentGender}
-                  data={bodyData}
-                  scale={1.35}
-                  border="#ffffff"
-                  defaultFill="#4d515a"
-                  defaultStroke="#ffffff"
-                  defaultStrokeWidth={1.2}
-                  disabledParts={disabledParts}
-                  onBodyPartPress={(b) => handleMuscleClick(b.slug)}
-                />
-              </div>
+              {/* Posterior (Back) Body */}
+              {(bodyView === "dual" || bodyView === "back") && (
+                <div className="mw-figure-card">
+                  <span className="mw-figure-caption">Posterior (Back)</span>
+                  <div className="mw-body-svg-box">
+                    <Body
+                      side="back"
+                      gender={currentGender}
+                      data={bodyData}
+                      scale={bodyView === "back" ? 1.6 : 1.35}
+                      border="#ffffff"
+                      defaultFill="#4d515a"
+                      defaultStroke="#ffffff"
+                      defaultStrokeWidth={1.2}
+                      disabledParts={disabledParts}
+                      onBodyPartPress={(b) => handleMuscleClick(b.slug)}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
+          </ErrorBoundary>
 
           {/* Quick Target System Split Selector */}
           <div className="mw-stage-footer">
@@ -871,6 +1007,7 @@ export const InteractiveBodyDiagram: React.FC = () => {
                 >
                   <ExerciseVideoPlayer
                     exercise={previewExercise}
+                    className="w-full aspect-video object-cover"
                   />
                 </ErrorBoundary>
               </div>

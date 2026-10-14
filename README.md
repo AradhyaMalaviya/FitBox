@@ -253,3 +253,101 @@ GymBuddy looks at five key things: your fitness goals, your training split (e.g.
 
 **Proprietary © 2026 Aaradhya Malviya. All rights reserved.**  
 Made with ❤️ to help people train smarter, eat better, and stay consistent.
+
+
+---
+
+## 🏁 Comprehensive Getting Started & Developer Onboarding Guide
+
+Follow this detailed setup guide to clone, configure, run, and contribute to FitBox in your local development environment.
+
+### 📋 Prerequisites & Tooling
+
+Ensure your workstation meets the following requirements before starting:
+
+| Tool | Version Requirement | Description & Verification |
+| :--- | :--- | :--- |
+| **Node.js** | `>= 22.0.0` (v22 LTS recommended) | Modern JavaScript runtime. Check with `node -v`. |
+| **npm** | `>= 10.0.0` | Package manager for dependency resolution. Check with `npm -v`. |
+| **Git** | `>= 2.40.0` | Distributed version control. Check with `git --version`. |
+| **Browser** | Modern Evergreen (Brave, Chrome, Edge, Firefox, Safari) | For testing interactive SVG diagrams and WebSockets. |
+| **Python** | *None required* | `requirements.txt` contains informational comments only. No Python runtime or pip packages are needed for FitBox. |
+
+### 🛠️ Step-by-Step Installation & Local Run
+
+#### 1. Clone the GitHub Repository
+```bash
+git clone https://github.com/AradhyaMalaviya/FitBox.git
+cd FitBox
+```
+
+#### 2. Install Node Dependencies
+FitBox strictly uses `npm` as its package manager to maintain deterministic builds via `package-lock.json`:
+```bash
+npm install
+```
+
+#### 3. Configure Local Environment Variables
+Create a `.env` file in the root directory of the project (copying from the template below):
+```env
+# Required Supabase Backend Connection
+VITE_SUPABASE_URL=https://xmbardirxjhdamaeiuhx.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_anon_publishable_key_here
+
+# Optional: Supabase Service Role Key (Used strictly for upload-exercise-media script, NEVER expose to client)
+# SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
+```
+> [!IMPORTANT]
+> Both `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` are validated at application startup by [`src/lib/env.ts`](file:///C:/Users/deepa/Downloads/musclewebsite%20test%202/art-decoder-tool/src/lib/env.ts). If either value is missing, the application deliberately throws a descriptive configuration error to prevent silent runtime failures.
+
+#### 4. Upload Exercise Media & Database Migrations (Optional for Full Backend Access)
+To synchronize exercise demo videos and posters to your Supabase Storage bucket:
+```bash
+npm run upload:exercise-media
+```
+To apply timestamped database migrations to your Supabase instance:
+```bash
+supabase db push
+```
+
+#### 5. Launch the Local Development Server
+```bash
+npm run dev
+```
+The Vite development server will boot and automatically open **`http://localhost:5173`** with Hot Module Replacement (HMR) active.
+
+### 📜 Available NPM Scripts
+
+| Command | Action |
+| :--- | :--- |
+| `npm run dev` | Starts Vite local development server on `http://localhost:5173` |
+| `npm run build` | Compiles TypeScript (`tsc -b`) and bundles production assets via Vite into `dist/` |
+| `npm run build:dev` | Compiles Vite production bundle in development mode |
+| `npm run preview` | Locally serves the production build from `dist/` to verify bundling behavior |
+| `npm run lint` | Executes ESLint across the codebase using `eslint.config.js` |
+| `npm run upload:exercise-media`| Node script to sync exercise demonstration videos and SVGs to Supabase Storage |
+| `npm run build:knowledge` | Regenerates `src/data/projectKnowledge.ts` from documentation and schemas |
+| `npm run deploy:pages` | Builds and deploys the production distribution to Cloudflare Pages via Wrangler |
+
+### 🗂️ Project Directory Overview
+
+```text
+FitBox/
+├── public/                 # Static assets, demo media, robots.txt, and Cloudflare _headers
+├── scripts/                # Node utility scripts (upload media, knowledge builder)
+├── src/
+│   ├── assets/             # Bundled static images and brand marks
+│   ├── components/         # Reusable UI components (muscle-map, workout, gymbuddy, ui)
+│   ├── contexts/           # React Context providers (AuthContext, WorkoutContext)
+│   ├── data/               # Exercises dataset, Indian food database, project knowledge
+│   ├── hooks/              # Custom React hooks (useGymBuddy, useGymBuddyChat, etc.)
+│   ├── lib/                # Utility helpers, env validator, compatibility scoring, auth schemas
+│   ├── pages/              # Top-level page routes (Dashboard, Exercises, Nutrition, etc.)
+│   ├── App.tsx             # Root route definitions and global assistant chat mounting
+│   └── main.tsx            # DOM mounting and application entrypoint
+├── supabase/               # Backend-as-a-Service configuration
+│   ├── config.toml         # Supabase CLI project and Edge Function definitions
+│   ├── functions/          # Deno Edge Functions (fitness-chat, project-assistant)
+│   └── migrations/         # Timestamped SQL migrations for schema and RLS policies
+└── wrangler.toml           # Cloudflare Pages / Workers static assets configuration
+```

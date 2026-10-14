@@ -1,7 +1,7 @@
 import { BottomTabBar } from '@/components/BottomTabBar';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { LogOut, Dumbbell, Compass, Utensils, Users, LayoutDashboard, Menu, X } from 'lucide-react';
+import { LogOut, Dumbbell, Compass, Utensils, Users, LayoutDashboard, Menu, X, Calculator, Sparkles, BookOpen, Calendar } from 'lucide-react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
@@ -56,6 +56,11 @@ export const Header = () => {
     { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { label: 'Exercises', path: '/exercises', icon: Compass },
     { label: 'Workout', path: '/workout/active', icon: Dumbbell },
+    { label: 'Workouts', path: '/workouts', icon: Dumbbell },
+    { label: 'Routines', path: '/routines', icon: Calendar },
+    { label: 'Generator', path: '/generator', icon: Sparkles },
+    { label: 'Tools', path: '/tools', icon: Calculator },
+    { label: 'Articles', path: '/articles', icon: BookOpen },
     { label: 'Nutrition', path: '/nutrition', icon: Utensils },
     { label: 'GymBuddy', path: '/gymbuddy/discover', icon: Users },
   ];

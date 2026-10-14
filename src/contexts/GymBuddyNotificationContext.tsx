@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -123,23 +123,29 @@ export function GymBuddyNotificationProvider({ children }: { children: React.Rea
     };
   }, [activeAuthUserId, navigate, toast]);
 
+  // Stable refs to avoid WebSocket channel thrashing when matches/profiles update
+  const matchesRef = useRef(matches);
+  matchesRef.current = matches;
+  const partnerProfilesRef = useRef(partnerProfiles);
+  partnerProfilesRef.current = partnerProfiles;
+
   // Messages and Logs listeners
   useEffect(() => {
     if (!activeAuthUserId || matches.length === 0) return;
 
-    const matchIds = matches.map(m => m.id);
-
     const channel = supabase.channel('gymbuddy_activity')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'gymbuddy_messages' }, (payload) => {
         const msg = payload.new;
-        if (!matchIds.includes(msg.match_id)) return;
+        const currentMatches = matchesRef.current;
+        const currentMatchIds = currentMatches.map(m => m.id);
+        if (!currentMatchIds.includes(msg.match_id)) return;
         if (msg.sender_id !== activeAuthUserId) {
           if (pathnameRef.current === `/gymbuddy/chat/${msg.match_id}`) return;
           
-          const match = matches.find(m => m.id === msg.match_id);
+          const match = currentMatches.find(m => m.id === msg.match_id);
           if (match) {
             const partnerId = match.user1_id === activeAuthUserId ? match.user2_id : match.user1_id;
-            const partnerName = partnerProfiles[partnerId]?.display_name || 'A partner';
+            const partnerName = partnerProfilesRef.current[partnerId]?.display_name || 'A partner';
             
             toast({
               title: `💬 New message from ${partnerName}`,
@@ -155,12 +161,14 @@ export function GymBuddyNotificationProvider({ children }: { children: React.Rea
       })
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'gymbuddy_session_logs' }, (payload) => {
         const log = payload.new;
-        if (!matchIds.includes(log.match_id)) return;
+        const currentMatches = matchesRef.current;
+        const currentMatchIds = currentMatches.map(m => m.id);
+        if (!currentMatchIds.includes(log.match_id)) return;
         if (log.logged_by !== activeAuthUserId) {
-          const match = matches.find(m => m.id === log.match_id);
+          const match = currentMatches.find(m => m.id === log.match_id);
           if (match) {
             const partnerId = match.user1_id === activeAuthUserId ? match.user2_id : match.user1_id;
-            const partnerName = partnerProfiles[partnerId]?.display_name || 'A partner';
+            const partnerName = partnerProfilesRef.current[partnerId]?.display_name || 'A partner';
             
             toast({
               title: "🏋️ Session Logged!",
@@ -176,7 +184,10 @@ export function GymBuddyNotificationProvider({ children }: { children: React.Rea
       })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'gymbuddy_matches' }, (payload) => {
          const newMatch = payload.new as GymBuddyMatch;
-         if (!newMatch?.id || !matchIds.includes(newMatch.id)) return;
+         if (!newMatch?.id) return;
+         const currentMatches = matchesRef.current;
+         const currentMatchIds = currentMatches.map(m => m.id);
+         if (!currentMatchIds.includes(newMatch.id)) return;
          
          const prevStreak = previousStreaksRef.current[newMatch.id] ?? 0;
          const currentStreak = newMatch.shared_streak ?? 0;
@@ -193,7 +204,7 @@ export function GymBuddyNotificationProvider({ children }: { children: React.Rea
              if (currentStreak >= milestone && prevStreak < milestone && !notifiedMilestonesRef.current.has(milestoneKey)) {
                notifiedMilestonesRef.current.add(milestoneKey);
                const partnerId = newMatch.user1_id === activeAuthUserId ? newMatch.user2_id : newMatch.user1_id;
-               const partnerName = partnerProfiles[partnerId]?.display_name || 'your partner';
+               const partnerName = partnerProfilesRef.current[partnerId]?.display_name || 'your partner';
                toast({
                  title: "🔥 Streak Milestone!",
                  description: `You and ${partnerName} hit a ${milestone}-week streak! Keep it up!`,
@@ -208,7 +219,8 @@ export function GymBuddyNotificationProvider({ children }: { children: React.Rea
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [activeAuthUserId, matches, partnerProfiles, navigate, toast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeAuthUserId, matches.length > 0, navigate, toast]);
 
   return (
     <GymBuddyNotificationContext.Provider value={{}}>

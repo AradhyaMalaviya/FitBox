@@ -151,17 +151,21 @@ export type InspirationScore =
   | "athletic-performance";
 
 export function deriveInspirationScore(tags: string[]): InspirationScore {
-  const lower = tags.map((t) => t.toLowerCase());
+  const lower = (tags || []).map((t) => t.toLowerCase());
 
   const has = (keyword: string) => lower.some((t) => t.includes(keyword));
 
   if (has("cut") || has("shredded") || has("sharp") || has("definition")) {
     return "cutting";
   }
-  if (has("bulky") || has("powerful") || has("strength")) {
+  if (has("bulk") || has("bulky") || has("powerful") || has("strength")) {
     return "bulk";
   }
-  if (has("lean") && (has("explosive") || has("agile") || has("high-energy"))) {
+  if (
+    has("speed") ||
+    has("agility") ||
+    (has("lean") && (has("explosive") || has("agile") || has("high-energy")))
+  ) {
     return "athletic-performance";
   }
   // default hybrid if mixed or unknown
@@ -172,8 +176,8 @@ export function deriveInspirationScore(tags: string[]): InspirationScore {
 export function parseAllergies(allergiesRaw: string | undefined | null): string[] {
   if (!allergiesRaw) return [];
   return allergiesRaw
-    .split(",")
-    .map((a) => a.trim())
+    .split(/[,;]+/)
+    .map((a) => a.trim().toLowerCase())
     .filter((a) => a.length > 0)
     .slice(0, 32);
 }

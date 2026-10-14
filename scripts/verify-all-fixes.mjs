@@ -86,9 +86,9 @@ test("Edge Function & Config: project-assistant security, rate limiting, and fir
 test("GymBuddy Guest Guarding: useGymBuddy guards guest ID from PostgreSQL queries", () => {
   const hook = fs.readFileSync(path.join(rootDir, "src/hooks/useGymBuddy.ts"), "utf8");
   assert(hook.includes("isGuest"), "isGuest defined");
-  assert(hook.includes("if (!effectiveUserId || isGuest)"), "fetchProfile guarded");
-  assert(hook.includes("if (isGuest) return [];"), "getCandidates guarded");
-  assert(hook.includes("if (isGuest) throw new Error"), "swipe and save guarded");
+  assert(hook.includes("if (isGuest)") && hook.includes("ensureLocalProfile"), "fetchProfile guarded with local fallback");
+  assert(hook.includes("if (isGuest) return getLocalCandidates"), "getCandidates guarded with local fallback");
+  assert(hook.includes("if (isGuest) return recordLocalSwipe"), "swipe guarded with local fallback");
 });
 
 // 6. Test Workout Persistence & Set Removal
@@ -143,12 +143,12 @@ test("Dead Code Cleanup: verified unused legacy components removed", () => {
     "src/components/BodyDiagram.tsx",
     "src/components/HeroSection.tsx",
     "src/components/MuscleMap.tsx",
-    "src/components/TrainerContactButton.tsx",
-    "src/hooks/useTrainerContact.ts"
   ];
   for (const file of deadFiles) {
     assert(!fs.existsSync(path.join(rootDir, file)), `File ${file} should be deleted`);
   }
+  assert(fs.existsSync(path.join(rootDir, "src/components/TrainerContactButton.tsx")), "TrainerContactButton.tsx exists");
+  assert(fs.existsSync(path.join(rootDir, "src/hooks/useTrainerContact.ts")), "useTrainerContact.ts exists");
 });
 
 // 11. Test Password Reset Route & Flow
@@ -156,8 +156,9 @@ test("Password Reset: dedicated route and component configured", () => {
   assert(fs.existsSync(path.join(rootDir, "src/pages/ResetPassword.tsx")), "ResetPassword.tsx exists");
   const app = fs.readFileSync(path.join(rootDir, "src/App.tsx"), "utf8");
   assert(app.includes('path="/reset-password"'), "Route path=/reset-password exists in App.tsx");
-  assert(app.includes("isRecovery"), "PublicRoute preserves recovery flow");
-  assert(app.includes("search") && app.includes("hash"), "Preserves URL search and hash for recovery token");
+  const protectedRoute = fs.readFileSync(path.join(rootDir, "src/components/ProtectedRoute.tsx"), "utf8");
+  assert(protectedRoute.includes("isRecovery"), "PublicRoute preserves recovery flow");
+  assert(protectedRoute.includes("search") && protectedRoute.includes("hash"), "Preserves URL search and hash for recovery token");
 });
 
 // 12. Test Auth Schemas & Validation Rules

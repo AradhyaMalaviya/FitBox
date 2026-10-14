@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Play, Dumbbell } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Play, Dumbbell, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +11,7 @@ interface StartWorkoutCardProps {
 }
 
 export const StartWorkoutCard = ({ onStart }: StartWorkoutCardProps) => {
+  const navigate = useNavigate();
   const [workoutName, setWorkoutName] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -28,7 +30,13 @@ export const StartWorkoutCard = ({ onStart }: StartWorkoutCardProps) => {
   ];
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center p-4">
+    <div className="min-h-[80vh] flex flex-col items-center justify-center p-4">
+      <div className="w-full max-w-md mb-4">
+        <Button variant="ghost" size="sm" className="gap-1" onClick={() => navigate('/dashboard')}>
+          <ArrowLeft className="w-4 h-4" />
+          Back to Dashboard
+        </Button>
+      </div>
       <Card className="w-full max-w-md bg-card/50 border-border/50">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 p-4 rounded-full bg-primary/10">

@@ -1,0 +1,22 @@
+{
+  "name": "FitBox — Premium AI Fitness & Social Hub",
+  "short_name": "FitBox",
+  "description": "Elevate your fitness journey with AI-powered coaching, social matching, and personalized nutrition.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    },
+    {
+      "src": "/favicon.ico",
+      "type": "image/x-icon",
+      "sizes": "16x16 32x32 48x48"
+    }
+  ]
+}

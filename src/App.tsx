@@ -4,12 +4,14 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AnalyticsTracker } from "@/components/AnalyticsTracker";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
 import { WorkoutProvider } from "@/contexts/WorkoutContext";
 import { GymBuddyNotificationProvider } from "@/contexts/GymBuddyNotificationContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ProjectAssistantChat } from "@/components/ProjectAssistantChat";
+import { FitnessChat } from "@/components/FitnessChat";
+import { ProtectedRoute, PublicRoute } from "@/components/ProtectedRoute";
 
 const LandingPage = lazy(() => import("./pages/LandingPage"));
 const Index = lazy(() => import("./pages/Index"));
@@ -24,13 +26,19 @@ const NutritionQuestionnaire = lazy(() => import("./pages/NutritionQuestionnaire
 const NutritionRoadmap = lazy(() => import("./pages/NutritionRoadmap"));
 const ActiveWorkout = lazy(() => import("./pages/ActiveWorkout"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
+const MuscleWikiTools = lazy(() => import("./pages/MuscleWikiTools"));
+const MuscleWikiGenerator = lazy(() => import("./pages/MuscleWikiGenerator"));
+const Stretches = lazy(() => import("./pages/Stretches"));
+const WorkoutLibrary = lazy(() => import("./pages/WorkoutLibrary"));
+const RoutineLibrary = lazy(() => import("./pages/RoutineLibrary"));
+const Articles = lazy(() => import("./pages/Articles"));
 
 // GymBuddy Feature Pages
 const GymBuddyProfileSetup = lazy(() => import("./pages/GymBuddyProfileSetup"));
 const GymBuddyDiscover = lazy(() => import("./pages/GymBuddyDiscover"));
 const GymBuddyMatches = lazy(() => import("./pages/GymBuddyMatches"));
 const GymBuddyChat = lazy(() => import("./pages/GymBuddyChat"));
-const GymBuddySettings = lazy(() => import("./components/gymbuddy/GymBuddySettings").then(m => ({ default: m.GymBuddySettings })));
+const GymBuddySettings = lazy(() => import("./pages/GymBuddySettings"));
 
 const queryClient = new QueryClient();
 
@@ -39,58 +47,6 @@ const RouteLoader = () => (
     Loading...
   </div>
 );
-
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-muted-foreground text-sm">Loading session...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
-
-  return <>{children}</>;
-};
-
-const PublicRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-muted-foreground text-sm">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  const hashParams = new URLSearchParams(window.location.hash.substring(1));
-  const searchParams = new URLSearchParams(window.location.search);
-  const isRecovery = hashParams.get('type') === 'recovery' || searchParams.get('type') === 'recovery';
-
-  if (isRecovery) {
-    const search = window.location.search || '';
-    const hash = window.location.hash || '';
-    return <Navigate to={`/reset-password${search}${hash}`} replace />;
-  }
-
-  if (user) {
-    return <Navigate to="/dashboard" replace />;
-  }
-
-  return <>{children}</>;
-};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -130,6 +86,20 @@ const App = () => (
                   <Route path="/active-workout" element={<ProtectedRoute><ActiveWorkout /></ProtectedRoute>} />
                   <Route path="/gymbuddy" element={<ProtectedRoute><GymBuddyDiscover /></ProtectedRoute>} />
                   <Route path="/gymbuddy/profile" element={<ProtectedRoute><GymBuddyProfileSetup /></ProtectedRoute>} />
+                  
+                  {/* MuscleWiki Tools, Calculators & Generator */}
+                  <Route path="/tools" element={<ProtectedRoute><MuscleWikiTools /></ProtectedRoute>} />
+                  <Route path="/tools/:toolTab" element={<ProtectedRoute><MuscleWikiTools /></ProtectedRoute>} />
+                  <Route path="/calculators" element={<ProtectedRoute><MuscleWikiTools /></ProtectedRoute>} />
+                  <Route path="/generator" element={<ProtectedRoute><MuscleWikiGenerator /></ProtectedRoute>} />
+                  <Route path="/workout-generator" element={<ProtectedRoute><MuscleWikiGenerator /></ProtectedRoute>} />
+                  <Route path="/split-builder" element={<ProtectedRoute><MuscleWikiGenerator /></ProtectedRoute>} />
+                  <Route path="/workout-builder" element={<ProtectedRoute><MuscleWikiGenerator /></ProtectedRoute>} />
+                  <Route path="/stretches" element={<ProtectedRoute><Stretches /></ProtectedRoute>} />
+                  <Route path="/workouts" element={<ProtectedRoute><WorkoutLibrary /></ProtectedRoute>} />
+                  <Route path="/routines" element={<ProtectedRoute><RoutineLibrary /></ProtectedRoute>} />
+                  <Route path="/articles" element={<ProtectedRoute><Articles /></ProtectedRoute>} />
+                  <Route path="/articles/:articleId" element={<ProtectedRoute><Articles /></ProtectedRoute>} />
 
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
@@ -137,6 +107,7 @@ const App = () => (
               </Suspense>
                 {/* Global project-aware assistant (free Gemini direct, bottom-left) */}
                 <ProjectAssistantChat />
+                <FitnessChat />
               </ErrorBoundary>
             </GymBuddyNotificationProvider>
           </WorkoutProvider>

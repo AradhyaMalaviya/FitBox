@@ -18,6 +18,7 @@ import {
 import type { UserPreferencePayload } from "@/lib/onboarding";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 
 interface UserData {
   gender: string;
@@ -147,9 +148,12 @@ const NutritionRoadmap = () => {
   }, [user]);
 
   const calculateNutrition = (data: UserData, onboardingData?: UserPreferencePayload | null) => {
-    const weight = parseFloat(data.weight);
-    const height = parseFloat(data.height);
-    const age = parseFloat(data.age);
+    const parsedWeight = parseFloat(data.weight);
+    const weight = isNaN(parsedWeight) || parsedWeight <= 0 ? 70 : parsedWeight;
+    const parsedHeight = parseFloat(data.height);
+    const height = isNaN(parsedHeight) || parsedHeight <= 0 ? 175 : parsedHeight;
+    const parsedAge = parseFloat(data.age);
+    const age = isNaN(parsedAge) || parsedAge <= 0 ? 25 : parsedAge;
 
     let tdee: number;
 
@@ -350,6 +354,37 @@ const NutritionRoadmap = () => {
               <div className="bg-card border border-border rounded-lg p-4 min-w-[150px]">
                 <div className="text-2xl font-bold text-secondary">{macros.fats}g</div>
                 <div className="text-sm text-muted-foreground">Fats</div>
+              </div>
+            </div>
+
+            <div className="w-full max-w-sm mx-auto h-56 mb-6" aria-label="Calories by macronutrient">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={[
+                      { name: "Protein", value: macros.protein * 4, color: "#10b981" },
+                      { name: "Carbs", value: macros.carbs * 4, color: "#3b82f6" },
+                      { name: "Fats", value: macros.fats * 9, color: "#f59e0b" },
+                    ]}
+                    cx="50%"
+                    cy="46%"
+                    innerRadius={48}
+                    outerRadius={76}
+                    paddingAngle={3}
+                    dataKey="value"
+                    nameKey="name"
+                  >
+                    <Cell fill="#10b981" />
+                    <Cell fill="#3b82f6" />
+                    <Cell fill="#f59e0b" />
+                  </Pie>
+                  <Tooltip formatter={(value) => [`${Number(value).toLocaleString()} kcal`, "Calories"]} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="flex justify-center gap-4 text-xs" aria-label="Macro chart legend">
+                <span className="flex items-center gap-1 text-emerald-400"><span className="w-2 h-2 rounded-full bg-emerald-500" />Protein</span>
+                <span className="flex items-center gap-1 text-blue-400"><span className="w-2 h-2 rounded-full bg-blue-500" />Carbs</span>
+                <span className="flex items-center gap-1 text-amber-400"><span className="w-2 h-2 rounded-full bg-amber-500" />Fats</span>
               </div>
             </div>
 

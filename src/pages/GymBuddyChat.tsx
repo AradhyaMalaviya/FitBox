@@ -236,7 +236,7 @@ export default function GymBuddyChat() {
       </div>
 
       {/* Input Area */}
-      <div className="p-4 bg-background border-t space-y-3">
+      <div className="p-4 pb-20 md:pb-4 bg-background border-t space-y-3">
         {/* Quick Reactions Bar */}
         <div className="flex gap-4 justify-center items-center">
           {QUICK_REACTIONS.map(emoji => (

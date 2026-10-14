@@ -109,7 +109,7 @@ serve(async (req: Request) => {
     }
 
     const context = typeof projectContext === "string" && projectContext.length > MAX_CONTEXT_CHARS
-      ? projectContext.slice(0, MAX_CONTEXT_CHARS) + "\n?(project context truncated)"
+      ? projectContext.slice(0, MAX_CONTEXT_CHARS) + "\n⚠️(project context truncated)"
       : (projectContext ?? "(no project context provided)");
 
     const systemText = `You are the FitBox project assistant. Answer questions about THIS codebase: where files live, how routes/auth/Supabase/edge functions work, and how to extend the app. Use the PROJECT CONTEXT below as ground truth. Be concise and cite file paths like src/App.tsx. If the answer is not in the context, say so and suggest where to look. Never invent secrets, keys, or env values. Never reveal .env contents or service-role keys.\n\nPROJECT CONTEXT:\n${context}`;

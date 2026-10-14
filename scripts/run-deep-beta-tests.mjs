@@ -265,14 +265,14 @@ await test("Streak", "Broken streak (missed last week) resets currentStreak to 0
 });
 
 await test("Streak", "Multiple sessions in the same calendar week condense to 1 streak step", () => {
-  const today = new Date();
+  const wednesday = new Date("2026-10-14T12:00:00Z");
   const logs = [
-    today.toISOString().split("T")[0],
-    new Date(today.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-    new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+    "2026-10-14",
+    "2026-10-13",
+    "2026-10-12",
   ];
 
-  const result = calculateStreakFromLogs(logs, today);
+  const result = calculateStreakFromLogs(logs, wednesday);
   assert.strictEqual(result.currentStreak, 1, `Expected multiple sessions in 1 week to count as 1, got ${result.currentStreak}`);
 });
 

@@ -129,3 +129,85 @@ Once deployed, verify the live deployment:
 - [ ] **Deep Link Routing**: Open a direct exercise detail link (e.g., `/exercise/1`) in a new tab.
 - [ ] **Supabase Connectivity**: Open DevTools (`F12` > Console & Network) and verify that authentication, exercise data, and GymBuddy queries load cleanly from Supabase.
 - [ ] **Media Assets**: Verify that posters load properly on the exercise cards and that video streaming begins when focusing on an exercise video player.
+
+
+---
+
+## 6. Step-by-Step Guide for Deploying Updates & Continuous Deployment (CI/CD)
+
+Maintaining and deploying regular updates to FitBox via Cloudflare Pages is automated once configured. Follow these procedures for day-to-day release management:
+
+### 6.1 Connecting or Reconnecting GitHub Repository
+1. In the [Cloudflare Dashboard](https://dash.cloudflare.com/), navigate to **Compute (Workers & Pages)** > **Create application** > **Pages** > **Connect to Git**.
+2. Select your GitHub account and authorize access to the repository: `AradhyaMalaviya/FitBox`.
+3. Choose the production branch (typically `main`).
+4. Set the project name to `fitbox` (or your chosen identifier).
+5. For automatic preview deployments, enable **Automatic deployments** for Pull Requests and feature branches. Each pull request will automatically generate a unique immutable preview URL (e.g. `https://<hash>.fitbox.pages.dev`).
+
+### 6.2 Standard Update Deployment Workflow
+To deploy a new feature, bugfix, or content update:
+1. Ensure your local tests and build pass cleanly:
+   ```bash
+   npm run build
+   ```
+2. Commit your changes following conventional commits:
+   ```bash
+   git add .
+   git commit -m "feat(ui): enhance muscle map responsiveness"
+   git push origin main
+   ```
+3. Cloudflare Pages automatically detects the commit to `main`, triggers a clean virtual build container running Node 22, executes `npm run build`, and deploys the generated `./dist` bundle to Cloudflare's global edge network in under 60 seconds.
+
+---
+
+## 7. Troubleshooting Common Deployment Issues & Edge Pitfalls
+
+When building or deploying FitBox to Cloudflare Pages, the following issues may arise. Use these proven remediation steps:
+
+### 7.1 Build Fails: "Node Version Incompatibility" or "SyntaxError: Unexpected token"
+- **Cause**: Cloudflare Pages defaults to an older LTS version of Node (such as Node 18 or 20) unless specified, which causes build errors with modern ES modules, Vite 5, or TypeScript 5.8 features.
+- **Solution**:
+  1. Open Cloudflare Dashboard > **Workers & Pages** > `fitbox` > **Settings** > **Builds & deployments** > **Environment variables**.
+  2. Add or update the variable `NODE_VERSION` with the value `22.16.0` (or `22`).
+  3. Trigger a manual rebuild via **Deployments** > **View details** > **Retry deployment**.
+
+### 7.2 404 Error on Page Refresh or Deep Link (e.g., `/nutrition/roadmap`, `/exercises`)
+- **Cause**: Client-side routing fails when the static server attempts to find an actual directory or file matching `/nutrition/roadmap/index.html`.
+- **Solution**:
+  1. Confirm that [wrangler.toml](file:///C:/Users/deepa/Downloads/musclewebsite%20test%202/art-decoder-tool/wrangler.toml) contains:
+     ```toml
+     [assets]
+     directory = "./dist"
+     binding = "ASSETS"
+     not_found_handling = "single-page-application"
+     ```
+  2. In Cloudflare Dashboard, verify **Root directory** under Build Settings is **empty/blank** so Cloudflare uses the root `wrangler.toml` and `worker.js` routing logic.
+  3. Ensure `public/_headers` does not define conflicting rewrite rules.
+
+### 7.3 Runtime Crash: "Missing Supabase Environment Variables"
+- **Cause**: FitBox validates required variables on initialization in [`src/lib/env.ts`](file:///C:/Users/deepa/Downloads/musclewebsite%20test%202/art-decoder-tool/src/lib/env.ts). If `VITE_SUPABASE_URL` or `VITE_SUPABASE_PUBLISHABLE_KEY` are undefined, the app throws an unhandled error during bundle initialization.
+- **Solution**:
+  1. Open Cloudflare Dashboard > `fitbox` > **Settings** > **Environment variables**.
+  2. Set both `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` under both **Production** and **Preview** scopes.
+  3. Note that Vite requires the `VITE_` prefix for client-accessible environment variables. Variables without this prefix will not be bundled into the client code.
+
+### 7.4 Stale Assets or Delayed Update Reflection
+- **Cause**: Aggressive browser or intermediary caching of `index.html`.
+- **Solution**:
+  1. Verify [`public/_headers`](file:///C:/Users/deepa/Downloads/musclewebsite%20test%202/art-decoder-tool/public/_headers) includes the revalidation policy:
+     ```text
+     /*.html
+       Cache-Control: public, max-age=0, must-revalidate
+     /index.html
+       Cache-Control: public, max-age=0, must-revalidate
+     ```
+  2. Purge Cloudflare cache via **Workers & Pages** > `fitbox` > **Manage** > **Purge Cache** if an immediate global invalidation is required.
+
+### 7.5 Storage Bucket 403 Forbidden on Exercise Videos
+- **Cause**: Supabase Storage bucket `exercise-media` lacks public read policies or media assets were not uploaded to the target Supabase environment.
+- **Solution**:
+  1. Set your `SUPABASE_SERVICE_ROLE_KEY` locally and run:
+     ```bash
+     npm run upload:exercise-media
+     ```
+  2. Ensure the storage migration `20260320000100_create_exercise_media_bucket.sql` or dashboard RLS policy permits `anon` public read access on `exercise-media`.

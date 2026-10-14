@@ -2,6 +2,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { GymBuddyMessage, GymBuddyMatch, GymBuddyProfile } from '@/lib/gymBuddyTypes';
+import {
+  getLocalMatches,
+  getLocalProfile,
+  getLocalMessages,
+  recordLocalMessage,
+  isOfflineError,
+} from '@/lib/mockDatabase';
 
 export function useGymBuddyChat(matchId: string) {
   const { user, authUserId } = useAuth();
@@ -24,8 +31,27 @@ export function useGymBuddyChat(matchId: string) {
     }
   }, []);
 
+  const loadLocalChatData = useCallback(() => {
+    const localMatches = getLocalMatches();
+    const match = localMatches.find((m) => m.id === matchId);
+    if (match) {
+      setMatchDetails(match);
+      const partnerId = match.user1_id === activeAuthUserId ? match.user2_id : match.user1_id;
+      const localPartner = getLocalProfile(partnerId);
+      if (localPartner) setPartner(localPartner);
+    }
+    const localMsgs = getLocalMessages(matchId);
+    setMessages(localMsgs);
+  }, [activeAuthUserId, matchId]);
+
   const fetchChatData = useCallback(async () => {
     if (!activeAuthUserId || !matchId) return;
+
+    if (user?.isGuest) {
+      loadLocalChatData();
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
     try {
@@ -76,11 +102,15 @@ export function useGymBuddyChat(matchId: string) {
       }
 
     } catch (err) {
-      console.error('Failed to load chat data:', err);
+      if (isOfflineError(err)) {
+        loadLocalChatData();
+      } else {
+        console.error('Failed to load chat data:', err);
+      }
     } finally {
       setLoading(false);
     }
-  }, [activeAuthUserId, matchId, markMessagesAsRead]);
+  }, [activeAuthUserId, matchId, markMessagesAsRead, user?.isGuest, loadLocalChatData]);
 
   useEffect(() => {
     fetchChatData();
@@ -88,7 +118,7 @@ export function useGymBuddyChat(matchId: string) {
 
   // Realtime subscription
   useEffect(() => {
-    if (!matchId || !activeAuthUserId) return;
+    if (!matchId || !activeAuthUserId || user?.isGuest) return;
 
     const channel = supabase
       .channel(`gymbuddy_chat_${matchId}`)
@@ -120,10 +150,16 @@ export function useGymBuddyChat(matchId: string) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [matchId, activeAuthUserId, markMessagesAsRead]);
+  }, [matchId, activeAuthUserId, markMessagesAsRead, user?.isGuest]);
 
   const sendMessage = async (content: string) => {
     if (!activeAuthUserId || !matchId || !content.trim()) return;
+
+    if (user?.isGuest) {
+      const localMsg = recordLocalMessage(matchId, activeAuthUserId, content.trim());
+      setMessages((prev) => [...prev, localMsg]);
+      return localMsg;
+    }
 
     try {
       const { data, error } = await supabase
@@ -139,6 +175,11 @@ export function useGymBuddyChat(matchId: string) {
       if (error) throw error;
       return data;
     } catch (err) {
+      if (isOfflineError(err)) {
+        const localMsg = recordLocalMessage(matchId, activeAuthUserId, content.trim());
+        setMessages((prev) => [...prev, localMsg]);
+        return localMsg;
+      }
       console.error('Failed to send message:', err);
       throw err;
     }

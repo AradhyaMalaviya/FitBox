@@ -130,12 +130,12 @@ export const ExerciseResults = ({
                   <ErrorBoundary
                     fallback={
                       <div
-                        className="flex h-full w-full flex-col items-center justify-center bg-muted p-4 text-center text-muted-foreground"
+                        className="flex h-full w-full flex-col items-center justify-center bg-muted p-4 text-center text-muted-foreground aspect-video"
                         role="img"
-                        aria-label="Video preview unavailable"
+                        aria-label="Demonstration preview"
                       >
-                        <PlayCircle className="mb-2 h-10 w-10 opacity-50" />
-                        <p className="text-xs font-medium">Video preview unavailable</p>
+                        <PlayCircle className="mb-2 h-10 w-10 text-primary opacity-70" />
+                        <p className="text-xs font-medium">Demonstration loading...</p>
                       </div>
                     }
                   >

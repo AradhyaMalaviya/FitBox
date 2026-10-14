@@ -26,6 +26,7 @@ dist-ssr
 # Environment variables
 .env
 .env.*
+!.env.example
 
 # Build cache
 *.tsbuildinfo
@@ -39,3 +40,24 @@ supabase/.temp/
 
 # Wrangler / Cloudflare
 .wrangler/
+
+# Video & Audio Pipeline Artifacts
+*.mp4
+*.wav
+video_assets/
+test_*.png
+test_*.jpg
+test_card.png
+preview_*.png
+eslint-report.txt
+# Video & Audio Pipeline Scratch Scripts
+assemble_video.py
+build_video_pipeline.py
+create_ambient_track.py
+test_card.py
+generate_audio.ps1
+list_voices.ps1
+test_tts.ps1
+capture_all_scenes.mjs
+test_routes.mjs
+prompts/
