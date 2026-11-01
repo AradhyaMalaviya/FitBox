@@ -25,7 +25,7 @@ export default function GymBuddyChat() {
   const { user, authUserId } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { messages, loading, partner, sendMessage } = useGymBuddyChat(matchId || '');
+  const { messages, loading, error, partner, sendMessage } = useGymBuddyChat(matchId || '');
   const activeAuthUserId = authUserId || user?.authUserId || user?.id;
   
   const [inputValue, setInputValue] = useState("");
@@ -80,13 +80,31 @@ export default function GymBuddyChat() {
     }
   };
 
-  if (loading || !partner) {
+  if (loading) {
     return (
       <div className="flex flex-col min-h-screen bg-background">
         <Header />
         <div className="flex-1 flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
+      </div>
+    );
+  }
+
+  if (error || !partner) {
+    return (
+      <div className="flex flex-col min-h-screen bg-background">
+        <Header />
+        <main className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
+          <h1 className="text-xl font-semibold">Chat unavailable</h1>
+          <p className="max-w-md text-sm text-muted-foreground">
+            {error || 'This GymBuddy match could not be found or you no longer have access to it.'}
+          </p>
+          <Button variant="outline" onClick={() => navigate('/gymbuddy/matches', { replace: true })}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to matches
+          </Button>
+        </main>
       </div>
     );
   }

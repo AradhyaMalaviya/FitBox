@@ -30,6 +30,8 @@ export interface OneRepMaxResult {
   }>;
 }
 
+export type OneRepMaxConsensus = OneRepMaxResult;
+
 export function calculateOneRepMax(
   weight: number,
   reps: number,

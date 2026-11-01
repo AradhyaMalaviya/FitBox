@@ -162,6 +162,17 @@ npm install
 npm run dev
 ```
 
+### Browser automation (Microsoft Playwright)
+
+The Microsoft Playwright CLI is installed as a local development dependency:
+
+```bash
+npm run playwright:cli -- --help
+npm run playwright:cli -- open http://127.0.0.1:5173
+```
+
+VS Code can also connect to the Playwright MCP server from the workspace configuration in `.vscode/mcp.json`. After opening this project in VS Code, enable the `playwright` server in the MCP picker. The MCP server is launched with `npx` on demand and does not need a separate global install.
+
 Now open **`http://localhost:5173`** in your web browser, and FitBox is ready to use!
 
 ---

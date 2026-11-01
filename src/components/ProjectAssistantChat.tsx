@@ -99,7 +99,7 @@ export const ProjectAssistantChat = () => {
     return (
       <Button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 left-6 rounded-full w-16 h-16 shadow-lg bg-secondary hover:bg-secondary/90 z-50"
+        className="fixed bottom-24 md:bottom-6 left-6 rounded-full w-16 h-16 shadow-lg bg-secondary hover:bg-secondary/90 z-50"
         size="icon"
         aria-label="Open project assistant"
       >
@@ -111,7 +111,7 @@ export const ProjectAssistantChat = () => {
   return (
     <>
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60]" onClick={() => setIsOpen(false)} />
-      <Card className="fixed bottom-6 left-6 w-96 h-[500px] flex flex-col shadow-2xl border-2 border-secondary/50 bg-background z-[70]">
+      <Card className="fixed bottom-24 md:bottom-6 left-6 w-[calc(100vw_-_3rem)] sm:w-96 h-[min(500px,calc(100dvh_-_8rem))] flex flex-col shadow-2xl border-2 border-secondary/50 bg-background z-[70]">
         <div className="flex items-center justify-between p-4 border-b border-border bg-secondary text-secondary-foreground">
           <h3 className="font-semibold">Project Assistant</h3>
           <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="hover:bg-secondary-foreground/20 text-secondary-foreground">

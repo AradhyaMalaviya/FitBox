@@ -247,6 +247,7 @@ test("Onboarding Media: user-media bucket with MIME restrictions, RLS policies, 
   const onboardingPage = fs.readFileSync(path.join(rootDir, "src/pages/Onboarding.tsx"), "utf8");
   assert(onboardingPage.includes("user-media"), "Onboarding attempts upload to user-media bucket");
   assert(onboardingPage.includes("ALLOWED_MIME_TYPES"), "Onboarding validates MIME types before upload");
+  assert(onboardingPage.includes(".upload(fileName, img.file") && onboardingPage.includes("images: finalImages"), "Onboarding stores image bytes in Storage and persists URLs rather than Base64 in profile preferences");
   assert(onboardingPage.includes("fallbackPresetImage"), "Onboarding guarantees fallback preset image to avoid Step 5 schema trap");
 });
 
@@ -255,6 +256,9 @@ test("GymBuddy: canonical authUserId comparisons, RPC candidate discovery, and m
   const chatPage = fs.readFileSync(path.join(rootDir, "src/pages/GymBuddyChat.tsx"), "utf8");
   assert(chatPage.includes("activeAuthUserId"), "GymBuddyChat computes activeAuthUserId");
   assert(chatPage.includes("msg.sender_id === activeAuthUserId"), "GymBuddyChat compares sender_id to activeAuthUserId");
+  assert(chatPage.includes("Chat unavailable") && chatPage.includes("Back to matches"), "Missing or deleted matches show a recovery path instead of a permanent spinner");
+  const chatHook = fs.readFileSync(path.join(rootDir, "src/hooks/useGymBuddyChat.ts"), "utf8");
+  assert(chatHook.includes("error,") && chatHook.includes("setLoading(false)"), "Chat hook ends loading and returns its error state");
 
   const hook = fs.readFileSync(path.join(rootDir, "src/hooks/useGymBuddy.ts"), "utf8");
   assert(hook.includes("get_gymbuddy_candidates"), "useGymBuddy leverages get_gymbuddy_candidates RPC");
@@ -270,6 +274,7 @@ test("GymBuddy: canonical authUserId comparisons, RPC candidate discovery, and m
 // 20. Test GymBuddy Streak Milestone Idempotency
 test("GymBuddy Notifications: authoritative previous streak tracking and idempotent milestone alerts", () => {
   const notifCtx = fs.readFileSync(path.join(rootDir, "src/contexts/GymBuddyNotificationContext.tsx"), "utf8");
+  assert(notifCtx.includes("user?.isGuest ? null : session?.user?.id"), "Guest users cannot query or subscribe with the placeholder guest ID");
   assert(notifCtx.includes("previousStreaksRef"), "Notification context tracks previousStreaksRef");
   assert(notifCtx.includes("notifiedMilestonesRef"), "Notification context enforces idempotent notifiedMilestonesRef");
   assert(notifCtx.includes("currentStreak > prevStreak"), "Notifications fire only on strictly increasing streak transitions");
@@ -286,7 +291,7 @@ test("Nutrition: robust malformed JSON recovery and cross-device Supabase prefer
 });
 
 // 22. Test Cloudflare Workers Configuration & Supabase Migration Alignment
-test("Deployment & Migrations: wrangler.toml SPA routing and non-recursive RLS policies", () => {
+test("Deployment & Migrations: Workers config, Pages deployment target, and non-recursive RLS policies", () => {
   const wranglerPath = path.join(rootDir, "wrangler.toml");
   assert(fs.existsSync(wranglerPath), "wrangler.toml exists for Cloudflare Workers Builds");
   const wranglerContent = fs.readFileSync(wranglerPath, "utf8");
@@ -298,6 +303,21 @@ test("Deployment & Migrations: wrangler.toml SPA routing and non-recursive RLS p
   assert(fs.existsSync(workerPath), "worker.js entry point exists");
   const workerContent = fs.readFileSync(workerPath, "utf8");
   assert(workerContent.includes("env.ASSETS.fetch"), "worker.js delegates to env.ASSETS.fetch");
+
+  const packageJson = JSON.parse(fs.readFileSync(path.join(rootDir, "package.json"), "utf8"));
+  assert(packageJson.scripts["deploy:pages"].includes("npx --yes wrangler pages deploy dist --project-name=fitbox"), "Pages deployment command targets the existing fitbox project");
+  const deploymentGuide = fs.readFileSync(path.join(rootDir, "CLOUDFLARE_PAGES_DEPLOYMENT.md"), "utf8");
+  assert(deploymentGuide.includes("no top-level `404.html`"), "Pages route behavior is documented using its native SPA fallback");
+
+  const protectedRoute = fs.readFileSync(path.join(rootDir, "src/components/ProtectedRoute.tsx"), "utf8");
+  const authPage = fs.readFileSync(path.join(rootDir, "src/pages/Auth.tsx"), "utf8");
+  assert(protectedRoute.includes("state={{ from }}") && authPage.includes("navigate(postAuthDestination"), "Auth preserves and restores the original protected deep link");
+
+  const assistant = fs.readFileSync(path.join(rootDir, "src/components/ProjectAssistantChat.tsx"), "utf8");
+  assert(assistant.includes("bottom-24 md:bottom-6"), "Project assistant clears mobile bottom navigation");
+
+  const viteConfig = fs.readFileSync(path.join(rootDir, "vite.config.ts"), "utf8");
+  assert(viteConfig.includes("VITE_SUPABASE_URL") && viteConfig.includes("VITE_SUPABASE_PUBLISHABLE_KEY"), "Build validates required Supabase variables before bundling");
 
   const recursionFixPath = path.join(rootDir, "supabase/migrations/20260925120000_fix_gymbuddy_profiles_recursion.sql");
   assert(fs.existsSync(recursionFixPath), "Recursion fix migration file exists");

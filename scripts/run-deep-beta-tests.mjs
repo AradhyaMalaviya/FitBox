@@ -10,6 +10,15 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, "..");
 
+const localDateString = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+const localDateOffset = (date, days) =>
+  new Date(date.getFullYear(), date.getMonth(), date.getDate() + days, 12);
+
 // Ensure mock environment variables so src/lib/env.ts loads cleanly in Node
 process.env.VITE_SUPABASE_URL = "https://mock-fitbox.supabase.co";
 process.env.VITE_SUPABASE_PUBLISHABLE_KEY = "mock-publishable-key";
@@ -216,7 +225,7 @@ await test("Streak", "Empty session logs return 0 streak and false loggedThisWee
 
 await test("Streak", "Single workout logged today returns 1 streak and true loggedThisWeek", () => {
   const today = new Date();
-  const dateStr = today.toISOString().split("T")[0];
+  const dateStr = localDateString(today);
   const result = calculateStreakFromLogs([dateStr], today);
   assert.strictEqual(result.currentStreak, 1);
   assert.strictEqual(result.loggedThisWeek, true);
@@ -227,8 +236,8 @@ await test("Streak", "Multi-week consecutive streak increments correctly", () =>
   const logs = [];
   // Add logs for today, 7 days ago, 14 days ago, 21 days ago (4 consecutive weeks)
   for (let i = 0; i < 4; i++) {
-    const d = new Date(today.getTime() - i * 7 * 24 * 60 * 60 * 1000);
-    logs.push(d.toISOString().split("T")[0]);
+    const d = localDateOffset(today, -i * 7);
+    logs.push(localDateString(d));
   }
 
   const result = calculateStreakFromLogs(logs, today);
@@ -238,12 +247,12 @@ await test("Streak", "Multi-week consecutive streak increments correctly", () =>
 
 await test("Streak", "Session logged last week preserves streak while allowing this week's check-in", () => {
   const today = new Date();
-  const lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-  const twoWeeksAgo = new Date(today.getTime() - 14 * 24 * 60 * 60 * 1000);
+  const lastWeek = localDateOffset(today, -7);
+  const twoWeeksAgo = localDateOffset(today, -14);
 
   const logs = [
-    lastWeek.toISOString().split("T")[0],
-    twoWeeksAgo.toISOString().split("T")[0],
+    localDateString(lastWeek),
+    localDateString(twoWeeksAgo),
   ];
 
   const result = calculateStreakFromLogs(logs, today);
@@ -251,12 +260,23 @@ await test("Streak", "Session logged last week preserves streak while allowing t
   assert.strictEqual(result.loggedThisWeek, false, "Should indicate not yet logged this week");
 });
 
+await test("Streak", "Sunday-to-Monday local calendar boundary keeps workout weeks separate", () => {
+  const mondayMorning = new Date(2026, 10, 2, 9, 0, 0);
+  const result = calculateStreakFromLogs(["2026-11-01"], mondayMorning);
+  assert.strictEqual(result.currentStreak, 1, "Sunday's workout remains part of the previous week's streak");
+  assert.strictEqual(result.loggedThisWeek, false, "A Sunday workout does not mark the new Monday week complete");
+
+  const mondayWorkout = calculateStreakFromLogs(["2026-11-02"], mondayMorning);
+  assert.strictEqual(mondayWorkout.currentStreak, 1);
+  assert.strictEqual(mondayWorkout.loggedThisWeek, true);
+});
+
 await test("Streak", "Broken streak (missed last week) resets currentStreak to 0", () => {
   const today = new Date();
   // Logged 21 days ago and 28 days ago, but missed 7 and 14 days ago
   const logs = [
-    new Date(today.getTime() - 21 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-    new Date(today.getTime() - 28 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+    localDateString(localDateOffset(today, -21)),
+    localDateString(localDateOffset(today, -28)),
   ];
 
   const result = calculateStreakFromLogs(logs, today);
@@ -265,7 +285,7 @@ await test("Streak", "Broken streak (missed last week) resets currentStreak to 0
 });
 
 await test("Streak", "Multiple sessions in the same calendar week condense to 1 streak step", () => {
-  const wednesday = new Date("2026-10-14T12:00:00Z");
+  const wednesday = new Date(2026, 9, 14, 12);
   const logs = [
     "2026-10-14",
     "2026-10-13",

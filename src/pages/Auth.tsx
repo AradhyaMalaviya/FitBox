@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Dumbbell, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { getPostAuthDestination } from '@/lib/navigation';
 
 type AuthMode = 'welcome' | 'signup' | 'signin' | 'guest' | 'forgot';
 
@@ -23,6 +24,8 @@ const Auth = () => {
   const { signUp, signIn, resetPassword, continueAsGuest } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
+  const postAuthDestination = getPostAuthDestination(location.state) || '/dashboard';
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +47,7 @@ const Auth = () => {
         title: 'Welcome to FitBox! 🎉',
         description: 'Your account has been created successfully.',
       });
-      navigate('/dashboard');
+      navigate(postAuthDestination, { replace: true });
     } else {
       toast({
         title: 'Signup failed',
@@ -74,7 +77,7 @@ const Auth = () => {
         title: 'Welcome back!',
         description: `Signed in successfully`,
       });
-      navigate('/dashboard');
+      navigate(postAuthDestination, { replace: true });
     } else {
       toast({
         title: 'Sign in failed',
@@ -100,7 +103,7 @@ const Auth = () => {
       title: 'Welcome! 🎉',
       description: `Continuing as ${guestName.trim()}`,
     });
-    navigate('/dashboard');
+    navigate(postAuthDestination, { replace: true });
   };
 
   return (

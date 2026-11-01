@@ -2,11 +2,15 @@
 
 This guide walks you through deploying **FitBox** to **Cloudflare Pages**. 
 
+**Canonical production website:** [https://fitbox-cto.pages.dev/](https://fitbox-cto.pages.dev/)
+
+**Cloudflare Pages project name:** `fitbox` (serves the canonical `fitbox-cto.pages.dev` hostname)
+
 Cloudflare Pages provides:
 - **Free unlimited bandwidth** & global Anycast CDN.
 - **Instant cache invalidation** and zero cold starts.
 - Automatic custom domain management with free SSL.
-- Full SPA client-side routing via `wrangler.toml` (`not_found_handling = "single-page-application"`).
+- Automatic SPA fallback to `/` for unknown routes when the output has no top-level `404.html`.
 
 ---
 
@@ -28,6 +32,14 @@ supabase db push
 ```
 *(Or execute the SQL files in `supabase/migrations/` via the Supabase Dashboard SQL Editor).*
 
+### 1.3 Verify Edge Function Secrets
+
+The Supabase `fitness-chat` and `project-assistant` functions require `LOVABLE_API_KEY` and `GEMINI_API_KEY`, respectively. Check that both secret names exist in the linked Supabase project:
+```bash
+supabase secrets list --project-ref xmbardirxjhdamaeiuhx
+```
+Keep these provider keys in Supabase Edge Function secrets; they must not be added to the frontend's `VITE_` variables.
+
 ---
 
 ## 2. Deployment Methods
@@ -39,21 +51,18 @@ Choose either **Method A** (Git-connected, recommended for automated continuous 
 ### Method A: Git Integration via Cloudflare Dashboard (Recommended)
 
 1. Log into your [Cloudflare Dashboard](https://dash.cloudflare.com/).
-2. In the left navigation, select **Compute (Workers & Pages)** > **fitbox**.
-3. Configure the build settings (under **Settings > Builds**):
+2. In the left navigation, select **Workers & Pages** > **fitbox**.
+3. Configure the Pages build settings under **Settings > Builds**:
    - **Build command**: `npm run build`
-   - **Deploy command**: `npx wrangler deploy`
-   - **Output directory**: `dist`
+   - **Build output directory**: `dist`
    - **Root directory**: **Leave blank / empty** (`/`)
-4. Under **Build variables**:
+4. Under **Environment variables**, add:
    - `NODE_VERSION` = `22.16.0` (or `22`)
    - `VITE_SUPABASE_URL` = `<your-supabase-project-url>`
    - `VITE_SUPABASE_PUBLISHABLE_KEY` = `<your-supabase-publishable/anon-key>`
-5. Click **Save and Deploy**. Cloudflare will build and publish your site.
+5. Save and deploy. The Vite config checks the required Supabase variables before producing client bundles, so missing values fail the build instead of publishing an app that crashes before React starts.
 
-> [!TIP]
-> **Cloudflare Workers Builds**:
-> FitBox provides a root [wrangler.toml](file:///C:/Users/deepa/Downloads/musclewebsite%20test%202/art-decoder-tool/wrangler.toml) and [worker.js](file:///C:/Users/deepa/Downloads/musclewebsite%20test%202/art-decoder-tool/worker.js) that automatically compiles the SPA via `npm run build` and serves `./dist` with native SPA fallback routing (`not_found_handling = "single-page-application"`). Ensure that **Root directory** in your Cloudflare dashboard (Settings > Builds) is **empty/blank**.
+> **Routing note:** Cloudflare Pages serves the SPA entry point for direct links and refreshes when no top-level `404.html` is present. The separate `wrangler.toml` Worker configuration does not control Pages deployments.
 
 ---
 
@@ -76,22 +85,15 @@ If you prefer to build locally and deploy directly from your terminal:
    ```bash
    npm run deploy:pages
    ```
-   *(Or run: `npx wrangler pages deploy dist --project-name=fitbox`)*
+   *(The `deploy:pages` script targets the existing `fitbox` project, whose production hostname is `fitbox-cto.pages.dev`.)*
 
-4. If prompted to create a new project, select **Create a new project** and confirm the project name `fitbox`.
+4. The `fitbox` Pages project already exists. Do not create a duplicate project; its production hostname is `fitbox-cto.pages.dev`.
 
 ---
 
 ## 3. How SPA Routing & Caching Work
 
-1. **`wrangler.toml` SPA Routing**:
-   ```toml
-   [assets]
-   directory = "./dist"
-   binding = "ASSETS"
-   not_found_handling = "single-page-application"
-   ```
-   Cloudflare Workers Static Assets natively routes all deep links and client refreshes (e.g., `/exercises`, `/nutrition`, `/gymbuddy`) to `index.html` with HTTP 200, without needing any redirect rules (avoiding redirect loop issues).
+1. **Cloudflare Pages SPA Routing**: Pages automatically serves the root app for a route that does not match a static asset when the build output has no top-level `404.html`. This covers direct links and refreshes such as `/exercises`, `/nutrition`, and `/gymbuddy`. Do not add a catch-all `_redirects` rewrite: it can also rewrite requests for assets such as the manifest and JavaScript bundles.
 
 2. **`public/_headers`**:
    ```text
@@ -116,8 +118,7 @@ If you prefer to build locally and deploy directly from your terminal:
 ## 4. Custom Domains & SSL
 
 1. In the Cloudflare Pages dashboard for your project, click **Custom domains**.
-2. Click **Set up a custom domain** (e.g. `fitbox.app` or `fitness.yourdomain.com`).
-3. If your domain's DNS is managed by Cloudflare, it will automatically provision the CNAME record and issue a free SSL/TLS certificate within seconds.
+2. Keep the production hostname set to `fitbox-cto.pages.dev`.
 
 ---
 
@@ -141,8 +142,8 @@ Maintaining and deploying regular updates to FitBox via Cloudflare Pages is auto
 1. In the [Cloudflare Dashboard](https://dash.cloudflare.com/), navigate to **Compute (Workers & Pages)** > **Create application** > **Pages** > **Connect to Git**.
 2. Select your GitHub account and authorize access to the repository: `AradhyaMalaviya/FitBox`.
 3. Choose the production branch (typically `main`).
-4. Set the project name to `fitbox` (or your chosen identifier).
-5. For automatic preview deployments, enable **Automatic deployments** for Pull Requests and feature branches. Each pull request will automatically generate a unique immutable preview URL (e.g. `https://<hash>.fitbox.pages.dev`).
+4. Select the existing Pages project `fitbox` and keep `fitbox-cto.pages.dev` as the production hostname.
+5. For automatic preview deployments, enable **Automatic deployments** for Pull Requests and feature branches. Treat preview hostnames as review-only; the production URL remains `https://fitbox-cto.pages.dev/`.
 
 ### 6.2 Standard Update Deployment Workflow
 To deploy a new feature, bugfix, or content update:
@@ -172,20 +173,14 @@ When building or deploying FitBox to Cloudflare Pages, the following issues may 
   3. Trigger a manual rebuild via **Deployments** > **View details** > **Retry deployment**.
 
 ### 7.2 404 Error on Page Refresh or Deep Link (e.g., `/nutrition/roadmap`, `/exercises`)
-- **Cause**: Client-side routing fails when the static server attempts to find an actual directory or file matching `/nutrition/roadmap/index.html`.
+- **Cause**: A top-level `404.html` disables Pages' default SPA fallback, or the uploaded build does not contain the expected `index.html`.
 - **Solution**:
-  1. Confirm that [wrangler.toml](file:///C:/Users/deepa/Downloads/musclewebsite%20test%202/art-decoder-tool/wrangler.toml) contains:
-     ```toml
-     [assets]
-     directory = "./dist"
-     binding = "ASSETS"
-     not_found_handling = "single-page-application"
-     ```
-  2. In Cloudflare Dashboard, verify **Root directory** under Build Settings is **empty/blank** so Cloudflare uses the root `wrangler.toml` and `worker.js` routing logic.
-  3. Ensure `public/_headers` does not define conflicting rewrite rules.
+  1. Confirm the Pages output directory is `dist` and contains `index.html`.
+  2. Remove a top-level `404.html` only if this project is intended to use SPA routing.
+  3. Test a direct route such as `/exercises` and refresh it. The canonical Pages project has been checked to return the SPA document with HTTP 200.
 
-### 7.3 Runtime Crash: "Missing Supabase Environment Variables"
-- **Cause**: FitBox validates required variables on initialization in [`src/lib/env.ts`](file:///C:/Users/deepa/Downloads/musclewebsite%20test%202/art-decoder-tool/src/lib/env.ts). If `VITE_SUPABASE_URL` or `VITE_SUPABASE_PUBLISHABLE_KEY` are undefined, the app throws an unhandled error during bundle initialization.
+### 7.3 Build Fails: "Missing Supabase Environment Variables"
+- **Cause**: FitBox requires these values to create the Supabase client. The Vite config validates them before bundling, so a missing value stops the build rather than producing a bundle that crashes before React mounts.
 - **Solution**:
   1. Open Cloudflare Dashboard > `fitbox` > **Settings** > **Environment variables**.
   2. Set both `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` under both **Production** and **Preview** scopes.

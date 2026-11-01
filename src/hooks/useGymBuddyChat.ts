@@ -10,6 +10,8 @@ import {
   isOfflineError,
 } from '@/lib/mockDatabase';
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export function useGymBuddyChat(matchId: string) {
   const { user, authUserId } = useAuth();
   const activeAuthUserId = authUserId || user?.authUserId || user?.id;
@@ -18,6 +20,7 @@ export function useGymBuddyChat(matchId: string) {
   const [loading, setLoading] = useState(true);
   const [partner, setPartner] = useState<GymBuddyProfile | null>(null);
   const [matchDetails, setMatchDetails] = useState<GymBuddyMatch | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const markMessagesAsRead = useCallback(async (messageIds: string[]) => {
     if (messageIds.length === 0) return;
@@ -34,21 +37,43 @@ export function useGymBuddyChat(matchId: string) {
   const loadLocalChatData = useCallback(() => {
     const localMatches = getLocalMatches();
     const match = localMatches.find((m) => m.id === matchId);
-    if (match) {
-      setMatchDetails(match);
-      const partnerId = match.user1_id === activeAuthUserId ? match.user2_id : match.user1_id;
-      const localPartner = getLocalProfile(partnerId);
-      if (localPartner) setPartner(localPartner);
-    }
     const localMsgs = getLocalMessages(matchId);
     setMessages(localMsgs);
+
+    if (!match || (match.user1_id !== activeAuthUserId && match.user2_id !== activeAuthUserId)) {
+      return false;
+    }
+
+    const partnerId = match.user1_id === activeAuthUserId ? match.user2_id : match.user1_id;
+    const localPartner = getLocalProfile(partnerId);
+    if (!localPartner) return false;
+
+    setMatchDetails(match);
+    setPartner(localPartner);
+    return true;
   }, [activeAuthUserId, matchId]);
 
   const fetchChatData = useCallback(async () => {
-    if (!activeAuthUserId || !matchId) return;
+    setError(null);
+    setPartner(null);
+    setMatchDetails(null);
+    setMessages([]);
+
+    if (!activeAuthUserId || !matchId) {
+      setError('This chat link is incomplete or invalid.');
+      setLoading(false);
+      return;
+    }
 
     if (user?.isGuest) {
-      loadLocalChatData();
+      const foundLocalChat = loadLocalChatData();
+      if (!foundLocalChat) setError('This chat is unavailable or no longer exists.');
+      setLoading(false);
+      return;
+    }
+
+    if (!UUID_PATTERN.test(matchId)) {
+      setError('This GymBuddy match link is invalid or no longer available.');
       setLoading(false);
       return;
     }
@@ -65,6 +90,9 @@ export function useGymBuddyChat(matchId: string) {
       if (matchError) throw matchError;
       if (!matchData.user1_id || !matchData.user2_id) {
         throw new Error('Match record is missing a participant');
+      }
+      if (matchData.user1_id !== activeAuthUserId && matchData.user2_id !== activeAuthUserId) {
+        throw new Error('You do not have access to this chat.');
       }
       setMatchDetails(matchData as GymBuddyMatch);
 
@@ -103,9 +131,17 @@ export function useGymBuddyChat(matchId: string) {
 
     } catch (err) {
       if (isOfflineError(err)) {
-        loadLocalChatData();
+        if (!loadLocalChatData()) {
+          setError('This chat is unavailable while offline. Check your connection and try again.');
+        }
       } else {
         console.error('Failed to load chat data:', err);
+        const errorCode = typeof err === 'object' && err !== null && 'code' in err
+          ? String((err as { code?: unknown }).code)
+          : '';
+        setError(errorCode === 'PGRST116'
+          ? 'This GymBuddy match could not be found or you no longer have access to it.'
+          : 'We could not load this chat. Return to your matches and try again.');
       }
     } finally {
       setLoading(false);
@@ -118,7 +154,14 @@ export function useGymBuddyChat(matchId: string) {
 
   // Realtime subscription
   useEffect(() => {
-    if (!matchId || !activeAuthUserId || user?.isGuest) return;
+    if (
+      !matchId ||
+      !activeAuthUserId ||
+      user?.isGuest ||
+      !matchDetails ||
+      matchDetails.id !== matchId ||
+      (matchDetails.user1_id !== activeAuthUserId && matchDetails.user2_id !== activeAuthUserId)
+    ) return;
 
     const channel = supabase
       .channel(`gymbuddy_chat_${matchId}`)
@@ -150,7 +193,7 @@ export function useGymBuddyChat(matchId: string) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [matchId, activeAuthUserId, markMessagesAsRead, user?.isGuest]);
+  }, [matchId, activeAuthUserId, markMessagesAsRead, user?.isGuest, matchDetails]);
 
   const sendMessage = async (content: string) => {
     if (!activeAuthUserId || !matchId || !content.trim()) return;
@@ -188,6 +231,7 @@ export function useGymBuddyChat(matchId: string) {
   return {
     messages,
     loading,
+    error,
     partner,
     matchDetails,
     sendMessage

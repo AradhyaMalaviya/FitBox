@@ -11,10 +11,12 @@ node_modules
 dist
 dist-ssr
 *.local
+.playwright-cli/
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
+!.vscode/mcp.json
 .idea
 .DS_Store
 *.suo

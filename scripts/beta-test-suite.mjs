@@ -64,6 +64,14 @@ await runTest("Auth", "Password Recovery: URL query and hash preservation & cano
   assert(resetFile.includes("resetPasswordSchema"), "ResetPassword uses unified validation schema");
 });
 
+await runTest("Auth", "Protected deep links return to the requested route after authentication", () => {
+  const protectedRoute = fs.readFileSync(path.join(rootDir, "src/components/ProtectedRoute.tsx"), "utf8");
+  const authPage = fs.readFileSync(path.join(rootDir, "src/pages/Auth.tsx"), "utf8");
+  assert(protectedRoute.includes("state={{ from }}"), "ProtectedRoute saves the full requested path");
+  assert(protectedRoute.includes("getPostAuthDestination(location.state)"), "PublicRoute restores a safe local destination");
+  assert(authPage.includes("navigate(postAuthDestination"), "Sign in, sign up, and guest entry return to the requested route");
+});
+
 // ======================================================================
 // 2. ONBOARDING & ARCHETYPE PERSONALIZATION
 // ======================================================================
@@ -78,6 +86,7 @@ await runTest("Onboarding", "Onboarding Media: upload validates MIME types and g
   const onboardingPage = fs.readFileSync(path.join(rootDir, "src/pages/Onboarding.tsx"), "utf8");
   assert(onboardingPage.includes("user-media"), "Uploads to dedicated user-media storage bucket");
   assert(onboardingPage.includes("ALLOWED_MIME_TYPES"), "Validates allowed MIME types before attempting upload");
+  assert(onboardingPage.includes(".upload(fileName, img.file") && onboardingPage.includes("images: finalImages"), "Stores image bytes in Storage and persists URLs rather than Base64 in profile preferences");
   assert(onboardingPage.includes("fallbackPresetImage"), "Guarantees fallback preset image so Step 5 schema validation never traps user");
 });
 
@@ -194,10 +203,14 @@ await runTest("GymBuddy", "Chat Identity Model: sender_id correctly compared aga
   const chatPage = fs.readFileSync(path.join(rootDir, "src/pages/GymBuddyChat.tsx"), "utf8");
   assert(chatPage.includes("activeAuthUserId"), "Computes activeAuthUserId from auth.users identity");
   assert(chatPage.includes("msg.sender_id === activeAuthUserId"), "Ownership check compares sender_id to activeAuthUserId");
+  assert(chatPage.includes("Chat unavailable") && chatPage.includes("Back to matches"), "Invalid or deleted matches get a recovery screen instead of an endless spinner");
+  const chatHook = fs.readFileSync(path.join(rootDir, "src/hooks/useGymBuddyChat.ts"), "utf8");
+  assert(chatHook.includes("error,") && chatHook.includes("setLoading(false)"), "Chat hook completes loading and reports unavailable matches");
 });
 
 await runTest("GymBuddy", "Streak Milestone Notifications: authoritative tracking & idempotent alert delivery", () => {
   const notifCtx = fs.readFileSync(path.join(rootDir, "src/contexts/GymBuddyNotificationContext.tsx"), "utf8");
+  assert(notifCtx.includes("user?.isGuest ? null : session?.user?.id"), "Guest notifications never query or subscribe with the placeholder guest ID");
   assert(notifCtx.includes("previousStreaksRef"), "Tracks previous streak in previousStreaksRef");
   assert(notifCtx.includes("notifiedMilestonesRef"), "Guarantees idempotency via notifiedMilestonesRef");
   assert(notifCtx.includes("currentStreak > prevStreak"), "Notifications trigger only on strict upward transition");
@@ -216,6 +229,12 @@ await runTest("Mobile", "BottomTabBar: 5 navigation destinations with safe-area 
   assert(bottomBar.includes("/nutrition"), "Contains Nutrition (/nutrition)");
   assert(bottomBar.includes("/gymbuddy/discover"), "Contains GymBuddy (/gymbuddy/discover)");
   assert(bottomBar.includes("md:hidden"), "Only visible on mobile screens");
+});
+
+await runTest("Mobile", "Project assistant launcher stays above the bottom navigation", () => {
+  const assistant = fs.readFileSync(path.join(rootDir, "src/components/ProjectAssistantChat.tsx"), "utf8");
+  assert(assistant.includes("bottom-24 md:bottom-6"), "Launcher and chat panel clear the mobile bottom tab bar");
+  assert(assistant.includes("w-[calc(100vw_-_3rem)] sm:w-96"), "Chat panel fits narrow mobile viewports");
 });
 
 await runTest("Mobile", "Header & Safe Spacing: compact mobile header & body padding", () => {
@@ -295,7 +314,7 @@ await runTest("Build", "Bundle Artifacts: dist contains index.html, assets, CSS,
   assert(files.some(f => f.startsWith("NutritionRoadmap-") && f.endsWith(".js")), "NutritionRoadmap chunk generated");
 });
 
-await runTest("Build", "Cloudflare Workers Builds: wrangler.toml SPA routing configured", () => {
+await runTest("Build", "Cloudflare Workers static assets configuration", () => {
   const wranglerPath = path.join(rootDir, "wrangler.toml");
   assert(fs.existsSync(wranglerPath), "wrangler.toml exists");
   const config = fs.readFileSync(wranglerPath, "utf8");
@@ -307,6 +326,21 @@ await runTest("Build", "Cloudflare Workers Builds: wrangler.toml SPA routing con
   assert(fs.existsSync(workerPath), "worker.js entry point exists");
   const workerContent = fs.readFileSync(workerPath, "utf8");
   assert(workerContent.includes("env.ASSETS.fetch"), "worker.js delegates to env.ASSETS.fetch");
+});
+
+await runTest("Build", "Cloudflare Pages deploys the existing fitbox project on the canonical hostname", () => {
+  const packageJson = JSON.parse(fs.readFileSync(path.join(rootDir, "package.json"), "utf8"));
+  assert(packageJson.scripts["deploy:pages"].includes("npx --yes wrangler pages deploy dist --project-name=fitbox"), "Deploy command targets the existing Pages project");
+  const deploymentGuide = fs.readFileSync(path.join(rootDir, "CLOUDFLARE_PAGES_DEPLOYMENT.md"), "utf8");
+  assert(deploymentGuide.includes("fitbox-cto.pages.dev"), "Keeps the canonical Pages hostname");
+  assert(deploymentGuide.includes("no top-level `404.html`"), "Documents Cloudflare Pages default SPA routing");
+  assert(deploymentGuide.includes("does not control Pages deployments"), "Does not confuse the separate Workers config with Pages routing");
+});
+
+await runTest("Build", "Supabase client variables are validated before Vite bundles the app", () => {
+  const viteConfig = fs.readFileSync(path.join(rootDir, "vite.config.ts"), "utf8");
+  assert(viteConfig.includes("loadEnv(mode, __dirname, \"VITE_\")"), "Loads local and host-provided Vite variables at config time");
+  assert(viteConfig.includes("VITE_SUPABASE_URL") && viteConfig.includes("VITE_SUPABASE_PUBLISHABLE_KEY"), "Requires both Supabase client variables before build");
 });
 
 console.log("\n======================================================================");

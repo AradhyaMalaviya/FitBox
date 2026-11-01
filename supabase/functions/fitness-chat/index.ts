@@ -104,8 +104,95 @@ serve(async (req: Request) => {
       ? exerciseData.substring(0, 3000) + "..."
       : (typeof exerciseData === 'string' ? exerciseData : "");
 
-    // Build a comprehensive system prompt with the actual exercise data
-    const systemPrompt = `You are an enthusiastic fitness coach for the FitBox app. Help users plan their workouts based on what they feel like doing. Be encouraging, specific, and suggest exercises from the app's library.
+    // Canonical autonomous tools definition for Gemini
+    const fitnessTools = [
+      {
+        type: "function",
+        function: {
+          name: "search_exercises",
+          description: "Search and filter exercises from the verified FitBox catalog by muscle, equipment, or difficulty.",
+          parameters: {
+            type: "object",
+            properties: {
+              query: { type: "string", description: "Search query keywords" },
+              muscle: { type: "string", enum: ["Chest", "Back", "Legs", "Arms", "Shoulders", "Core"] },
+              equipment: { type: "string", description: "Equipment filter" },
+              difficulty: { type: "string", enum: ["Beginner", "Intermediate", "Advanced"] }
+            }
+          }
+        }
+      },
+      {
+        type: "function",
+        function: {
+          name: "calculate_macros",
+          description: "Calculate evidence-based macronutrient targets based on user weight and goal.",
+          parameters: {
+            type: "object",
+            properties: {
+              weightKg: { type: "number", description: "Bodyweight in kg" },
+              goal: { type: "string", enum: ["cutting", "maintenance", "bulking"] },
+              dietaryPreference: { type: "string", enum: ["vegetarian", "vegan", "non-vegetarian"] }
+            },
+            required: ["weightKg", "goal"]
+          }
+        }
+      },
+      {
+        type: "function",
+        function: {
+          name: "add_to_workout",
+          description: "Autonomously add an exercise to the user's active workout session with sets, reps, and target weight.",
+          parameters: {
+            type: "object",
+            properties: {
+              exerciseNameOrId: { type: "string", description: "Exercise name or ID" },
+              sets: { type: "number", description: "Working sets count" },
+              reps: { type: "number", description: "Target repetitions" },
+              targetWeightKg: { type: "number", description: "Target weight in kg" },
+              notes: { type: "string", description: "Form cues" }
+            },
+            required: ["exerciseNameOrId"]
+          }
+        }
+      },
+      {
+        type: "function",
+        function: {
+          name: "calculate_1rm",
+          description: "Compute 1-Rep Max consensus using Brzycki, Epley, and Lander formulas.",
+          parameters: {
+            type: "object",
+            properties: {
+              weight: { type: "number", description: "Lifted weight" },
+              reps: { type: "number", description: "Reps completed (1-12)" },
+              unit: { type: "string", enum: ["kg", "lbs"] }
+            },
+            required: ["weight", "reps"]
+          }
+        }
+      },
+      {
+        type: "function",
+        function: {
+          name: "get_food_nutrition",
+          description: "Lookup verified nutritional facts for Indian and fitness foods.",
+          parameters: {
+            type: "object",
+            properties: {
+              foodQuery: { type: "string", description: "Food name (e.g. soya chunks, paneer, dahi)" },
+              isVegetarian: { type: "boolean", description: "Filter for vegetarian/vegan" }
+            },
+            required: ["foodQuery"]
+          }
+        }
+      }
+    ];
+
+    // Build a comprehensive system prompt with the actual exercise data and autonomous tool calling instructions
+    const systemPrompt = `You are an autonomous AI fitness coach and exercise scientist for the FitBox app.
+You have access to autonomous tools: search_exercises, calculate_macros, add_to_workout, calculate_1rm, and get_food_nutrition.
+When users ask you to calculate macros, calculate 1RM, look up food nutrients, search exercises, or add an exercise to their active session, call the appropriate tool.
 
 IMPORTANT: You have access to the ACTUAL exercises available in the FitBox app. Only recommend exercises from this list. Here are all available exercises organized by muscle group and difficulty:
 
@@ -115,10 +202,9 @@ GUIDELINES:
 1. When users mention body parts or muscle groups, suggest SPECIFIC exercises from the list above that match their experience level.
 2. For beginners, focus on Beginner-level exercises. For more experienced users, suggest Intermediate or Advanced exercises.
 3. Provide helpful tips about form, sets, and reps.
-4. Keep responses concise and actionable.
-5. Be motivating and supportive!
-6. If asked about exercises not in the list, let them know what similar exercises ARE available in the app.
-7. Do NOT make up exercises or provide links to external resources - stick to recommending exercises from the FitBox library.`;
+4. Keep responses concise, motivating, and actionable.
+5. If the user asks to add an exercise to their session, invoke add_to_workout with sensible working sets and reps!
+6. Do NOT make up exercises or provide links to external resources - stick to recommending exercises from the FitBox library.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -135,6 +221,7 @@ GUIDELINES:
           },
           ...boundedMessages,
         ],
+        tools: fitnessTools,
         stream: true,
       }),
     });

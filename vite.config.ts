@@ -1,4 +1,4 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -8,7 +8,31 @@ const __dirname = path.dirname(__filename);
 
 
 // https://vitejs.dev/config/
-export default defineConfig(() => ({
+export default defineConfig(({ mode }) => {
+  const buildEnv = loadEnv(mode, __dirname, "VITE_");
+  const missingEnv = ["VITE_SUPABASE_URL", "VITE_SUPABASE_PUBLISHABLE_KEY"]
+    .filter((name) => !buildEnv[name]?.trim());
+
+  if (missingEnv.length > 0) {
+    throw new Error(
+      `Missing required build environment variable${missingEnv.length > 1 ? "s" : ""}: ${missingEnv.join(", ")}. Set them in the local .env file or Cloudflare Pages build settings before building.`
+    );
+  }
+
+  try {
+    const supabaseUrl = new URL(buildEnv.VITE_SUPABASE_URL);
+    const isLocalSupabase = ["localhost", "127.0.0.1", "[::1]"].includes(supabaseUrl.hostname);
+    if (supabaseUrl.protocol !== "https:" && !isLocalSupabase) {
+      throw new Error("VITE_SUPABASE_URL must use HTTPS outside localhost.");
+    }
+  } catch (error) {
+    if (error instanceof TypeError) {
+      throw new Error("VITE_SUPABASE_URL must be a valid absolute URL.");
+    }
+    throw error;
+  }
+
+  return ({
   server: {
     host: "localhost",
     port: 5173,
@@ -86,4 +110,5 @@ export default defineConfig(() => ({
       }
     });
   },
-}));
+  });
+});

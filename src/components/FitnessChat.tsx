@@ -2,12 +2,21 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Sparkles, Bot, Send, X, Loader2, Cpu } from "lucide-react";
+import { Sparkles, Bot, Send, X, Loader2, Cpu, Wrench } from "lucide-react";
 import { exercises } from "@/data/exercises";
 import { supabase } from "@/integrations/supabase/client";
 import { supabaseUrl, supabasePublishableKey } from "@/lib/env";
+import { useWorkout } from "@/contexts/WorkoutContext";
+import { routeAgenticQuery } from "@/lib/ai/toolCallingRouter";
+import type { ToolCallExecution } from "@/lib/ai/fitnessAgentTools";
+import { AgentToolResultCard } from "@/components/chat/AgentToolResultCard";
 
-type Message = { role: "user" | "assistant"; content: string; isStreaming?: boolean };
+type Message = {
+  role: "user" | "assistant";
+  content: string;
+  isStreaming?: boolean;
+  toolExecution?: ToolCallExecution;
+};
 
 // Canned response generator for simulated Gemini 2.5 Flash Lite SSE Cloud Coach
 function generateCloudCoachResponse(query: string): string {
@@ -75,10 +84,38 @@ function processLocalNLP(input: string): string {
 export const FitnessChat = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"cloud" | "local">("cloud");
+  const { activeWorkout, startWorkout, addExercise } = useWorkout();
+
+  // Autonomous agent action handler for mutating client-side workout tracking state
+  const handleAddToWorkout = (
+    exerciseName: string,
+    exerciseId: string | undefined,
+    prescription: { sets: number; reps: number; targetWeightKg: number },
+  ) => {
+    if (!activeWorkout) {
+      startWorkout("AI Coach Session");
+    }
+    addExercise(exerciseName, exerciseId, {
+      sets: prescription.sets,
+      reps: prescription.reps,
+      weight: prescription.targetWeightKg,
+    });
+  };
+
+  const QUICK_ACTIONS = [
+    { label: "⚡ Bench 3x10", prompt: "Add 3 sets of Bench Press to my active session and tell me my warm-up sets" },
+    { label: "🔥 Macros (75kg Cut)", prompt: "Calculate macros for 75kg cutting" },
+    { label: "💪 Dumbbell Chest", prompt: "Find chest exercises with dumbbells" },
+    { label: "🍛 Soya vs Paneer", prompt: "How much protein in soya chunks and paneer?" },
+    { label: "🎯 1RM 80kg x 6", prompt: "What is my 1rm for 80kg 6 reps" },
+  ];
 
   // Cloud Coach Messages
   const [cloudMessages, setCloudMessages] = useState<Message[]>([
-    { role: "assistant", content: "Namaste! I am your AI Cloud Coach. Ask me about workouts or Indian nutrition!" },
+    {
+      role: "assistant",
+      content: "Namaste! I am your AI Autonomous Coach. I can prescribe routines, calculate macros/1RM, and autonomously add exercises directly to your live workout tracker!",
+    },
   ]);
   const [cloudInput, setCloudInput] = useState("");
   const [isCloudLoading, setIsCloudLoading] = useState(false);
@@ -110,25 +147,39 @@ export const FitnessChat = () => {
     };
   }, []);
 
-  // Cloud Coach: Live Supabase Edge Function with Streaming + Simulated SSE Fallback
-  const sendCloudMessage = async () => {
-    if (!cloudInput.trim() || isCloudLoading) return;
+  // Cloud Coach: Autonomous Agent + Streaming Edge Function + Simulated SSE Fallback
+  const sendCloudMessage = async (overridePrompt?: string) => {
+    const textToSend = (overridePrompt ?? cloudInput).trim();
+    if (!textToSend || isCloudLoading) return;
 
     if (streamIntervalRef.current) {
       clearInterval(streamIntervalRef.current);
       streamIntervalRef.current = null;
     }
 
-    const userText = cloudInput.trim();
+    const userText = textToSend;
     const nextMessages: Message[] = [...cloudMessages, { role: "user", content: userText }];
     setCloudMessages(nextMessages);
     setCloudInput("");
     setIsCloudLoading(true);
 
-    // Shared: append a single placeholder assistant message that both
-    // the streaming path and the simulation fallback will update in-place.
-    // This prevents the "ghost bubble" bug where runSimulation() would
-    // previously push a *second* empty assistant message.
+    // 1. Evaluate Autonomous Agent Tool Calling pipeline
+    const agenticResult = routeAgenticQuery(userText, { onAddToWorkout: handleAddToWorkout });
+    if (agenticResult) {
+      setCloudMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: agenticResult.explanation,
+          toolExecution: agenticResult.toolExecution,
+          isStreaming: false,
+        },
+      ]);
+      setIsCloudLoading(false);
+      return;
+    }
+
+    // Shared: append placeholder for streaming response
     const addPlaceholder = () => {
       setCloudMessages((prev) => [...prev, { role: "assistant", content: "", isStreaming: true }]);
     };
@@ -314,9 +365,9 @@ export const FitnessChat = () => {
           {/* Chat Messages */}
           <div className="flex-1 p-3 overflow-y-auto space-y-3">
             {(activeTab === "cloud" ? cloudMessages : localMessages).map((msg, index) => (
-              <div key={index} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+              <div key={index} className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}>
                 <div
-                  className={`max-w-[85%] rounded-2xl p-3 text-xs leading-relaxed ${
+                  className={`max-w-[88%] rounded-2xl p-3 text-xs leading-relaxed ${
                     msg.role === "user"
                       ? "bg-primary text-primary-foreground rounded-br-none"
                       : "bg-muted text-foreground rounded-bl-none border border-border/50"
@@ -324,10 +375,36 @@ export const FitnessChat = () => {
                 >
                   <p className="whitespace-pre-wrap">{msg.content}</p>
                 </div>
+                {msg.toolExecution && (
+                  <div className="w-full max-w-[94%] mt-1">
+                    <AgentToolResultCard execution={msg.toolExecution} />
+                  </div>
+                )}
               </div>
             ))}
             <div ref={messagesEndRef} />
           </div>
+
+          {/* Quick Action Chips for Cloud Coach */}
+          {activeTab === "cloud" && (
+            <div className="px-3 py-1.5 bg-muted/30 border-t border-border/40 overflow-x-auto flex items-center gap-1.5 scrollbar-none text-[10px]">
+              <span className="font-semibold text-muted-foreground shrink-0 flex items-center gap-1">
+                <Wrench className="w-3 h-3 text-primary" />
+                <span>Agent Tools:</span>
+              </span>
+              {QUICK_ACTIONS.map((action, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => sendCloudMessage(action.prompt)}
+                  disabled={isCloudLoading}
+                  className="shrink-0 px-2.5 py-1 rounded-full bg-background border border-border/70 hover:border-primary/60 hover:bg-primary/10 text-foreground transition-all"
+                >
+                  {action.label}
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* Input Panel */}
           <div className="p-3 border-t border-border bg-card/80">
@@ -342,7 +419,7 @@ export const FitnessChat = () => {
                 <Input
                   value={cloudInput}
                   onChange={(e) => setCloudInput(e.target.value)}
-                  placeholder="Ask Cloud Coach (SSE Sim)..."
+                  placeholder="Ask Coach or command tools (e.g., 'Add bench 3x10')..."
                   className="text-xs bg-background"
                   disabled={isCloudLoading}
                 />

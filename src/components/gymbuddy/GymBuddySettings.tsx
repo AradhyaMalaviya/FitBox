@@ -28,6 +28,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { deleteLocalGymBuddyProfile } from "@/lib/mockDatabase";
 import { Loader2, Settings, UserX, Edit } from "lucide-react";
 
 export function GymBuddySettings() {
@@ -75,6 +76,17 @@ export function GymBuddySettings() {
     if (!activeAuthUserId) return;
     try {
       setIsDeleting(true);
+
+      if (user?.isGuest) {
+        deleteLocalGymBuddyProfile(activeAuthUserId);
+        toast({
+          title: "Profile deleted",
+          description: "Your local GymBuddy profile and guest data have been removed.",
+        });
+        navigate("/dashboard");
+        return;
+      }
+
       const { error } = await supabase
         .from('gymbuddy_profiles')
         .delete()

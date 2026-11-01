@@ -9,6 +9,7 @@ import type {
   GymBuddySwipe,
   GymBuddyMessage,
   GymBuddyCandidate,
+  GymBuddySessionLog,
 } from './gymBuddyTypes';
 import { calculateCompatibilityScore } from './compatibilityScore';
 
@@ -109,6 +110,7 @@ const STORAGE_KEYS = {
   GYMBUDDY_SWIPES: 'fitbox_gymbuddy_swipes',
   GYMBUDDY_MATCHES: 'fitbox_gymbuddy_matches',
   GYMBUDDY_MESSAGES: 'fitbox_gymbuddy_messages',
+  GYMBUDDY_SESSION_LOGS: 'fitbox_gymbuddy_session_logs',
   CURRENT_SESSION: 'fitbox_current_session',
 };
 
@@ -404,6 +406,7 @@ export const initMockDatabase = () => {
   if (!localStorage.getItem(STORAGE_KEYS.GYMBUDDY_SWIPES)) setStorageItem(STORAGE_KEYS.GYMBUDDY_SWIPES, []);
   if (!localStorage.getItem(STORAGE_KEYS.GYMBUDDY_MATCHES)) setStorageItem(STORAGE_KEYS.GYMBUDDY_MATCHES, []);
   if (!localStorage.getItem(STORAGE_KEYS.GYMBUDDY_MESSAGES)) setStorageItem(STORAGE_KEYS.GYMBUDDY_MESSAGES, []);
+  if (!localStorage.getItem(STORAGE_KEYS.GYMBUDDY_SESSION_LOGS)) setStorageItem(STORAGE_KEYS.GYMBUDDY_SESSION_LOGS, []);
 };
 
 // Execute initialization
@@ -483,6 +486,35 @@ export function ensureLocalProfile(userId: string, displayName: string): GymBudd
   };
   upsertLocalProfile(defaultProfile);
   return defaultProfile;
+}
+
+/** Remove a guest GymBuddy profile and its local social data. */
+export function deleteLocalGymBuddyProfile(userId: string): void {
+  const profiles = getLocalProfiles().filter((profile) => profile.id !== userId);
+  setStorageItem(STORAGE_KEYS.GYMBUDDY_PROFILES, profiles);
+
+  const matches = getLocalMatches();
+  const deletedMatchIds = new Set(
+    matches.filter((match) => match.user1_id === userId || match.user2_id === userId).map((match) => match.id),
+  );
+  setStorageItem(
+    STORAGE_KEYS.GYMBUDDY_MATCHES,
+    matches.filter((match) => !deletedMatchIds.has(match.id)),
+  );
+  setStorageItem(
+    STORAGE_KEYS.GYMBUDDY_SWIPES,
+    getLocalSwipes().filter((swipe) => swipe.swiper_id !== userId && swipe.target_id !== userId),
+  );
+  setStorageItem(
+    STORAGE_KEYS.GYMBUDDY_MESSAGES,
+    getStorageItem<GymBuddyMessage[]>(STORAGE_KEYS.GYMBUDDY_MESSAGES, [])
+      .filter((message) => !deletedMatchIds.has(message.match_id)),
+  );
+  setStorageItem(
+    STORAGE_KEYS.GYMBUDDY_SESSION_LOGS,
+    getStorageItem<GymBuddySessionLog[]>(STORAGE_KEYS.GYMBUDDY_SESSION_LOGS, [])
+      .filter((log) => !deletedMatchIds.has(log.match_id)),
+  );
 }
 
 /** Bulk-cache an array of profiles (merge, do not replace). */
@@ -596,6 +628,38 @@ export function cacheLocalMatches(matches: GymBuddyMatch[]): void {
     map.set(m.id, m);
   }
   setStorageItem(STORAGE_KEYS.GYMBUDDY_MATCHES, [...map.values()]);
+}
+
+/** Read locally saved session logs for a guest match. */
+export function getLocalSessionLogs(matchId: string): GymBuddySessionLog[] {
+  return getStorageItem<GymBuddySessionLog[]>(STORAGE_KEYS.GYMBUDDY_SESSION_LOGS, [])
+    .filter((log) => log.match_id === matchId);
+}
+
+/** Save a guest session locally, keeping one log per user, match, and date. */
+export function recordLocalSessionLog(
+  matchId: string,
+  loggedBy: string,
+  sessionDate: string,
+  notes?: string,
+): GymBuddySessionLog {
+  const allLogs = getStorageItem<GymBuddySessionLog[]>(STORAGE_KEYS.GYMBUDDY_SESSION_LOGS, []);
+  const existing = allLogs.find(
+    (log) => log.match_id === matchId && log.logged_by === loggedBy && log.session_date === sessionDate,
+  );
+  if (existing) return existing;
+
+  const newLog: GymBuddySessionLog = {
+    id: `session-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    match_id: matchId,
+    logged_by: loggedBy,
+    session_date: sessionDate,
+    notes,
+    created_at: new Date().toISOString(),
+  };
+  allLogs.push(newLog);
+  setStorageItem(STORAGE_KEYS.GYMBUDDY_SESSION_LOGS, allLogs);
+  return newLog;
 }
 
 // ─── Message helpers ─────────────────────────────────────────────────────────

@@ -1,7 +1,15 @@
 import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { startOfWeek, format, parseISO } from 'date-fns';
+import { startOfWeek, format, parseISO, subWeeks } from 'date-fns';
+import {
+  cacheLocalMatches,
+  getLocalMatches,
+  getLocalSessionLogs,
+  recordLocalSessionLog,
+} from '@/lib/mockDatabase';
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function calculateStreakFromLogs(sessionDates: string[], today = new Date()): { currentStreak: number; loggedThisWeek: boolean } {
   if (!sessionDates.length) {
@@ -13,7 +21,7 @@ export function calculateStreakFromLogs(sessionDates: string[], today = new Date
   ));
   
   const thisWeekStr = format(startOfWeek(today, { weekStartsOn: 1 }), 'yyyy-MM-dd');
-  const lastWeekStr = format(startOfWeek(new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000), { weekStartsOn: 1 }), 'yyyy-MM-dd');
+  const lastWeekStr = format(startOfWeek(subWeeks(today, 1), { weekStartsOn: 1 }), 'yyyy-MM-dd');
   
   const loggedThisWeek = weeks.has(thisWeekStr);
   
@@ -22,13 +30,13 @@ export function calculateStreakFromLogs(sessionDates: string[], today = new Date
   }
 
   let currentStreak = 0;
-  let checkDate = loggedThisWeek ? today : new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+  let checkDate = loggedThisWeek ? today : subWeeks(today, 1);
   
   while (true) {
     const weekStr = format(startOfWeek(checkDate, { weekStartsOn: 1 }), 'yyyy-MM-dd');
     if (weeks.has(weekStr)) {
       currentStreak++;
-      checkDate = new Date(checkDate.getTime() - 7 * 24 * 60 * 60 * 1000);
+      checkDate = subWeeks(checkDate, 1);
     } else {
       break;
     }
@@ -46,31 +54,75 @@ export function useGymBuddyStreak(matchId: string) {
   const [loading, setLoading] = useState(false);
 
   const fetchLogs = useCallback(async () => {
-    if (!matchId) return;
-    setLoading(true);
-    
-    const { data, error } = await supabase
-      .from('gymbuddy_session_logs')
-      .select('session_date')
-      .eq('match_id', matchId)
-      .order('session_date', { ascending: false });
+    if (!matchId) {
+      setStreak(0);
+      setHasLoggedThisWeek(false);
+      setLoading(false);
+      return;
+    }
 
-    if (data && !error) {
-      const { currentStreak, loggedThisWeek } = calculateStreakFromLogs(data.map(d => d.session_date));
+    if (user?.isGuest) {
+      const { currentStreak, loggedThisWeek } = calculateStreakFromLogs(
+        getLocalSessionLogs(matchId).map((log) => log.session_date),
+      );
       setStreak(currentStreak);
       setHasLoggedThisWeek(loggedThisWeek);
+      setLoading(false);
+      return;
     }
-    setLoading(false);
-  }, [matchId]);
+
+    if (!UUID_PATTERN.test(matchId)) {
+      setStreak(0);
+      setHasLoggedThisWeek(false);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('gymbuddy_session_logs')
+        .select('session_date')
+        .eq('match_id', matchId)
+        .order('session_date', { ascending: false });
+
+      if (error) throw error;
+      const { currentStreak, loggedThisWeek } = calculateStreakFromLogs(data?.map((log) => log.session_date) || []);
+      setStreak(currentStreak);
+      setHasLoggedThisWeek(loggedThisWeek);
+    } catch (error) {
+      console.error('Failed to fetch GymBuddy session logs:', error);
+      setStreak(0);
+      setHasLoggedThisWeek(false);
+    } finally {
+      setLoading(false);
+    }
+  }, [matchId, user?.isGuest]);
 
   useEffect(() => {
     fetchLogs();
   }, [fetchLogs]);
 
   const logSession = async (sessionDate: Date, notes: string) => {
-    if (!activeAuthUserId || !matchId) return;
+    if (!activeAuthUserId || !matchId || (!user?.isGuest && !UUID_PATTERN.test(matchId))) {
+      throw new Error('This GymBuddy match is invalid or unavailable.');
+    }
     
     const dateStr = format(sessionDate, 'yyyy-MM-dd');
+
+    if (user?.isGuest) {
+      recordLocalSessionLog(matchId, activeAuthUserId, dateStr, notes || undefined);
+      const { currentStreak } = calculateStreakFromLogs(
+        getLocalSessionLogs(matchId).map((log) => log.session_date),
+      );
+      cacheLocalMatches(getLocalMatches().map((match) =>
+        match.id === matchId
+          ? { ...match, shared_streak: currentStreak, last_session_logged: new Date().toISOString() }
+          : match,
+      ));
+      await fetchLogs();
+      return;
+    }
     
     // Prevent duplicate logging for the same date by this user
     const { data: existingLog } = await supabase

@@ -9,8 +9,9 @@ import { GymBuddyMatch, GymBuddyProfile } from '@/lib/gymBuddyTypes';
 export const GymBuddyNotificationContext = createContext({});
 
 export function GymBuddyNotificationProvider({ children }: { children: React.ReactNode }) {
-  const { user, authUserId } = useAuth();
-  const activeAuthUserId = authUserId || user?.authUserId || user?.id;
+  const { user, session } = useAuth();
+  // GymBuddy rows are keyed by auth.users IDs. Guests only have a local placeholder ID.
+  const activeAuthUserId = user?.isGuest ? null : session?.user?.id ?? null;
 
   const { toast } = useToast();
   const navigate = useNavigate();

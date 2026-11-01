@@ -28,7 +28,7 @@ interface WorkoutContextType {
   startWorkout: (name: string) => void;
   endWorkout: () => void;
   discardWorkout: () => void;
-  addExercise: (exerciseName: string, exerciseId?: string) => void;
+  addExercise: (exerciseName: string, exerciseId?: string, prescription?: { sets?: number; reps?: number; weight?: number }) => void;
   removeExercise: (exerciseLogId: string) => void;
   addSet: (exerciseLogId: string) => void;
   removeSet: (exerciseLogId: string, setId: string) => void;
@@ -130,21 +130,26 @@ export const WorkoutProvider: React.FC<{ children: React.ReactNode }> = ({ child
     localStorage.removeItem('fitbox:activeWorkout');
   }, []);
 
-  const addExercise = useCallback((exerciseName: string, exerciseId?: string) => {
+  const addExercise = useCallback((
+    exerciseName: string,
+    exerciseId?: string,
+    prescription: { sets?: number; reps?: number; weight?: number } = {},
+  ) => {
     setActiveWorkout(prev => {
       if (!prev) return null;
+      const setCount = Math.min(Math.max(Math.floor(prescription.sets ?? 1), 1), 8);
       const newExercise: ExerciseLog = {
         id: generateId(),
         exerciseId,
         exerciseName,
         orderIndex: prev.exercises.length,
-        sets: [{
+        sets: Array.from({ length: setCount }, (_, index) => ({
           id: generateId(),
-          setNumber: 1,
-          weight: 0,
-          reps: 0,
+          setNumber: index + 1,
+          weight: Math.max(prescription.weight ?? 0, 0),
+          reps: Math.max(prescription.reps ?? 0, 0),
           completed: false,
-        }],
+        })),
       };
       return {
         ...prev,

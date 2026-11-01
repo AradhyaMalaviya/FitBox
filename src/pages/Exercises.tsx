@@ -5,7 +5,9 @@ import { MuscleGroupFilter } from "@/components/MuscleGroupFilter";
 import { ExerciseCard } from "@/components/ExerciseCard";
 import { exercises } from "@/data/exercises";
 import { getExerciseGroupFromDiagramId, getDisplayNameFromDiagramId } from "@/lib/muscleMapping";
+import { searchExercisesGuided } from "@/lib/services/semanticSearchService";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Search,
   Dumbbell,
@@ -46,6 +48,31 @@ const Exercises = () => {
   const [selectedDifficulty, setSelectedDifficulty] = useState(urlDiff || "All");
   const [searchTerm, setSearchTerm] = useState(urlQ || "");
   const [sortBy, setSortBy] = useState<SortOption>(urlSort || "name-asc");
+  const [isSemanticMode, setIsSemanticMode] = useState(false);
+
+  // Search the catalog with explicit exercise synonyms and movement constraints.
+  const semanticResults = useMemo(() => {
+    if (!isSemanticMode || !searchTerm.trim()) return null;
+    return searchExercisesGuided(searchTerm, {
+      filterMuscle: selectedMuscleGroup,
+      filterEquipment: selectedEquipment,
+      filterDifficulty: selectedDifficulty,
+      limit: 12,
+    });
+  }, [isSemanticMode, searchTerm, selectedMuscleGroup, selectedEquipment, selectedDifficulty]);
+
+  // Label the top results without presenting ranking scores as confidence percentages.
+  const semanticScoresMap = useMemo(() => {
+    if (!semanticResults) return new Map<string, { isTopMatch: boolean; rationale?: string }>();
+    const map = new Map<string, { isTopMatch: boolean; rationale?: string }>();
+    semanticResults.forEach((result, index) => {
+      map.set(result.exercise.id, {
+        isTopMatch: index === 0,
+        rationale: result.rationale,
+      });
+    });
+    return map;
+  }, [semanticResults]);
 
   // Update selected muscle group when route parameter changes
   useEffect(() => {
@@ -74,6 +101,7 @@ const Exercises = () => {
     setSelectedDifficulty("All");
     setSearchTerm("");
     setSortBy("name-asc");
+    setIsSemanticMode(false);
   };
 
   const hasActiveFilters =
@@ -81,9 +109,15 @@ const Exercises = () => {
     selectedEquipment !== "All" ||
     selectedDifficulty !== "All" ||
     searchTerm.trim().length > 0 ||
+    isSemanticMode ||
     sortBy !== "name-asc";
 
   const filteredExercises = useMemo(() => {
+    // Keep an unmatched guided query empty instead of silently changing search modes.
+    if (isSemanticMode && searchTerm.trim()) {
+      return (semanticResults || []).map((result) => result.exercise);
+    }
+
     const filtered = exercises.filter((exercise) => {
       // Muscle Group Filter
       const matchesGroup =
@@ -124,7 +158,7 @@ const Exercises = () => {
       if (sortBy === "diff-desc") return (difficultyWeight[b.difficulty] || 0) - (difficultyWeight[a.difficulty] || 0);
       return 0;
     });
-  }, [selectedMuscleGroup, selectedEquipment, selectedDifficulty, searchTerm, sortBy]);
+  }, [selectedMuscleGroup, selectedEquipment, selectedDifficulty, searchTerm, sortBy, semanticResults, isSemanticMode]);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -180,26 +214,85 @@ const Exercises = () => {
           </p>
 
           {/* Search Bar */}
-          <div className="mt-6 max-w-2xl">
+          <div className="mt-6 max-w-2xl space-y-2.5">
             <div className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <input
                 type="text"
-                placeholder="Search exercises by name, muscle, barbell, dumbbells, cables..."
+                placeholder={
+                  isSemanticMode
+                    ? "Describe the muscle, equipment, or joint constraint you want..."
+                    : "Search exercises by name, muscle, barbell, dumbbells, cables..."
+                }
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-4 py-3 pl-12 rounded-xl bg-background border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground placeholder:text-muted-foreground text-sm"
+                className={`w-full px-4 py-3 pl-12 rounded-xl bg-background border transition-all text-foreground placeholder:text-muted-foreground text-sm outline-none ${
+                  isSemanticMode
+                    ? "border-purple-500/60 focus:border-purple-400 focus:ring-2 focus:ring-purple-500/20 pr-36"
+                    : "border-border focus:border-primary focus:ring-2 focus:ring-primary/20 pr-32"
+                }`}
               />
-              {searchTerm && (
-                <button
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+                {searchTerm && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchTerm("")}
+                    className="px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    Clear
+                  </button>
+                )}
+                <Button
                   type="button"
-                  onClick={() => setSearchTerm("")}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground"
+                  size="sm"
+                  variant={isSemanticMode ? "default" : "outline"}
+                  onClick={() => setIsSemanticMode(!isSemanticMode)}
+                  className={`text-xs h-8 px-2.5 gap-1.5 rounded-lg transition-all ${
+                    isSemanticMode
+                      ? "bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-sm border-0"
+                      : "text-muted-foreground hover:text-foreground hover:border-purple-500/40"
+                  }`}
+                  title="Toggle guided exercise search"
                 >
-                  Clear
-                </button>
-              )}
+                  <Sparkles className={`w-3.5 h-3.5 ${isSemanticMode ? "text-amber-300 animate-pulse" : "text-primary"}`} />
+                  <span className="font-semibold">{isSemanticMode ? "Guided ON" : "Guided Search"}</span>
+                </Button>
+              </div>
             </div>
+
+            {/* Semantic Mode Helper & Quick Queries */}
+            {isSemanticMode && (
+              <div className="p-3 rounded-xl bg-purple-950/20 border border-purple-500/30 text-xs space-y-2 animate-fade-in">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="flex items-center gap-1.5 font-semibold text-purple-300">
+                    <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                    Guided catalog search using exercise terms and supported movement constraints
+                  </span>
+                  <Badge variant="outline" className="text-[10px] border-purple-500/40 text-purple-300">
+                    Search ranking
+                  </Badge>
+                </div>
+                <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                  <span className="text-muted-foreground text-[11px]">Try queries:</span>
+                  {[
+                    "chest exercise that doesn't hurt front delts",
+                    "knee friendly quad builder",
+                    "lat stretch focused pull",
+                    "explosive glute hypertrophy",
+                    "calisthenics core stability",
+                  ].map((example) => (
+                    <button
+                      key={example}
+                      type="button"
+                      onClick={() => setSearchTerm(example)}
+                      className="px-2 py-0.5 rounded-md bg-purple-900/30 hover:bg-purple-900/50 text-purple-200 border border-purple-700/40 text-[11px] transition-colors"
+                    >
+                      "{example}"
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </header>
@@ -314,7 +407,10 @@ const Exercises = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pt-2">
             {filteredExercises.map((exercise, index) => (
               <div key={exercise.id} style={{ animationDelay: `${index * 0.05}s` }}>
-                <ExerciseCard exercise={exercise} />
+                <ExerciseCard
+                  exercise={exercise}
+                  semanticMatch={isSemanticMode ? semanticScoresMap.get(exercise.id) : undefined}
+                />
               </div>
             ))}
           </div>

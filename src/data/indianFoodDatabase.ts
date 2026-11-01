@@ -29,7 +29,10 @@ export interface FoodItem {
     mealRoles: MealRole[];
     notes?: string;
     category: FoodCategory;
+    tags?: string[];
 }
+
+export type IndianFoodItem = FoodItem;
 
 export interface MealPlanItem {
     meal: string;
