@@ -4,9 +4,21 @@
 
 FitBox is a mobile-friendly fitness and nutrition app that brings exercise discovery, workout planning and tracking, practical Indian nutrition guidance, and GymBuddy training-partner matching into one place. It combines a searchable exercise library and interactive anatomy tools with Supabase-backed accounts and social features, plus AI coaching and project help.
 
-[Open the live app](https://fitbox-cto.pages.dev/) · [View the source](https://github.com/AradhyaMalaviya/FitBox) · [Deployment guide](CLOUDFLARE_PAGES_DEPLOYMENT.md)
+[Cloudflare Pages](https://fitbox-cto.pages.dev/) · [Vercel Deployment](https://fitbox-app.vercel.app/) · [View the source](https://github.com/AradhyaMalaviya/FitBox) · [Deployment guide](CLOUDFLARE_PAGES_DEPLOYMENT.md)
 
 ![FitBox preview showing the interactive muscle map and GymBuddy experience](public/preview.png)
+
+## Demonstration Video
+
+Watch the complete full-length end-to-end demonstration showcasing every accessible part of FitBox—including the 4-step onboarding wizard, interactive anatomical muscle map, live active workout tracker, 5 scientific fitness calculators, Indian nutrition roadmap with food swaps, GymBuddy 5-axis social matchmaking, and dual AI assistants:
+
+<!-- Immediate Autoplay on Scroll: HTML5 video with autoplay, muted, playsinline, loop, and preload="auto" -->
+<video src="artifacts/demo-video/complete-project-end-to-end-demonstration.mp4" autoplay="autoplay" loop="loop" muted="muted" defaultMuted playsinline="playsinline" controls="controls" preload="auto" width="100%" title="FitBox Complete Project Demonstration"></video>
+
+<!-- GitHub Native Instant Autoplay (plays immediately upon scrolling with zero delay on any device) -->
+[![FitBox Live Demonstration](artifacts/demo-video/demo-preview.gif)](artifacts/demo-video/complete-project-end-to-end-demonstration.mp4)
+
+> 🎬 **Full HD Walkthrough**: Click the animated showcase above or open [`artifacts/demo-video/complete-project-end-to-end-demonstration.mp4`](artifacts/demo-video/complete-project-end-to-end-demonstration.mp4) (720p HD · 3m 04s · 6.5 MB · H.264). Plays automatically with zero delay.
 
 ## What you can do
 
@@ -32,7 +44,7 @@ Guided exercise results are ranked using local catalog text matching and fitness
 | Forms and validation | React Hook Form, Zod |
 | Backend | Supabase Auth, PostgreSQL, Row Level Security, Realtime, Storage, Edge Functions |
 | AI services | Gemini 2.5 Flash Lite through the Lovable AI Gateway for fitness chat; Gemini API for the project assistant |
-| Hosting | Cloudflare Pages |
+| Hosting | Cloudflare Pages, Vercel |
 
 ## Get started
 
@@ -158,9 +170,14 @@ VS Code can also launch the Playwright MCP server from `.vscode/mcp.json` when t
 
 ## Deployment
 
-The canonical production app is hosted on [Cloudflare Pages](https://fitbox-cto.pages.dev/). The project deploys the Vite output from `dist/`; the Cloudflare build requires the same two `VITE_SUPABASE_*` variables used locally. AI and trainer-contact functionality also requires the corresponding Supabase Edge Functions and server-side secrets.
+FitBox is deployed to both Cloudflare Pages and Vercel:
 
-For dashboard settings, CLI deployment, migrations, and troubleshooting, see [CLOUDFLARE_PAGES_DEPLOYMENT.md](CLOUDFLARE_PAGES_DEPLOYMENT.md).
+- **Cloudflare Pages (Primary)**: [https://fitbox-cto.pages.dev/](https://fitbox-cto.pages.dev/)
+- **Vercel Deployment**: [https://fitbox-app.vercel.app/](https://fitbox-app.vercel.app/)
+
+The project deploys the Vite output from `dist/`; both environments require the same two `VITE_SUPABASE_*` variables used locally. AI and trainer-contact functionality also requires the corresponding Supabase Edge Functions and server-side secrets.
+
+For dashboard settings, CLI deployment, migrations, and troubleshooting, see [CLOUDFLARE_PAGES_DEPLOYMENT.md](CLOUDFLARE_PAGES_DEPLOYMENT.md) and [VERCEL_DEPLOYMENT.md](VERCEL_DEPLOYMENT.md).
 
 ## Maintainer
 

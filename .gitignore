@@ -45,6 +45,8 @@ supabase/.temp/
 
 # Video & Audio Pipeline Artifacts
 *.mp4
+!artifacts/demo-video/*.mp4
+!artifacts/demo-video/*.gif
 *.wav
 video_assets/
 test_*.png
